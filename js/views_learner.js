@@ -1020,7 +1020,7 @@ function viewActivateAccount(){
     <div class="card">
       <h3>No class code?</h3>
       <p class="page-sub">Individual access is available too \u2014 see <a href="pricing.html" target="_blank" rel="noopener">pricing</a>, then contact us to activate your account.</p>
-      <a href="mailto:sihlangudelso@gmail.com?subject=Iroli%20Career%20Pathway%20-%20Activate%20my%20account&body=My%20account%20email%3A%20${encodeURIComponent(ME.email||'')}" class="btn btn-ghost" style="width:100%;text-align:center;">Contact us to activate</a>
+      <a href="mailto:info@iroli.co.za?subject=Iroli%20Career%20Pathway%20-%20Activate%20my%20account&body=My%20account%20email%3A%20${encodeURIComponent(ME.email||'')}" class="btn btn-ghost" style="width:100%;text-align:center;">Contact us to activate</a>
     </div>
   </div>
   <p class="page-sub" style="text-align:center;margin-top:18px;">Already arranged payment? It can take a short while to activate \u2014 check back soon.</p>
