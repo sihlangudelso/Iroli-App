@@ -326,6 +326,10 @@ td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
 .detail-hero p{color:rgba(255,255,255,.88);}
 .kv{display:flex;gap:8px;margin-bottom:8px;font-size:13.5px;}
 .kv b{min-width:160px;flex-shrink:0;}
+/* Very narrow phones: the 160px label column leaves no room for the value,
+   so the label sits above it instead. */
+@media(max-width:360px){.kv{flex-direction:column;gap:2px;}.kv b{min-width:0;}}
+.kv span{min-width:0;overflow-wrap:anywhere;}
 .pill-list{display:flex;flex-wrap:wrap;gap:8px;}
 .pill-list .pill{background:var(--chip-bg);color:var(--ink);border-radius:999px;padding:6px 13px;font-size:12.5px;font-weight:600;}
 .pill-list .pill.req{background:var(--t-pink);color:var(--on-pink);}
@@ -550,7 +554,7 @@ td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
 .rp-combo ul{margin:0;padding-left:20px;font-size:14.5px;font-weight:600;line-height:1.55;}
 .rp .rp-why{margin:10px 0 0;padding-top:8px;border-top:1px solid var(--line);font-size:12.5px;line-height:1.4;color:var(--muted);}
 .rp-areas{list-style:none;margin:0;padding:0;display:grid;gap:14px;}
-.rp-sec:not(.rp-half) .rp-areas{grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px 28px;}
+.rp-sec:not(.rp-half) .rp-areas{grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:16px 28px;}
 .rp-area{display:flex;gap:12px;align-items:flex-start;}
 .rp-area > div{min-width:0;}
 .rp .rp-area h3{margin:0 0 2px;font-size:15px;line-height:1.25;}
