@@ -249,16 +249,18 @@ function viewAdminCareers(){
 // Cached per learner object and updatedAt: the cohort table, dashboard and
 // both exports ask for it on every render.
 const ADMIN_SC_CACHE = new WeakMap();
-function adminSubjectRecFor(l){
+function adminSubjectRecFor(l){ const c = adminSCEntry(l); return c ? c.rec : null; }
+function adminSubjectReportFor(l){ const c = adminSCEntry(l); return c ? c.rep : null; }
+function adminSCEntry(l){
   if(!l || l.exploringOnly || !scHasSavedAnswers(l)) return null;
   const hit = ADMIN_SC_CACHE.get(l);
-  if(hit && hit.at===l.updatedAt) return hit.rec;
-  const rec = buildAdminSubjectRec(l);
-  ADMIN_SC_CACHE.set(l, { at:l.updatedAt, rec });
-  return rec;
-}
-function buildAdminSubjectRec(l){
+  if(hit && hit.at===l.updatedAt) return hit;
   const rep = buildSubjectChoiceReport(l);
+  const entry = { at:l.updatedAt, rep, rec: buildAdminSubjectRec(l, rep) };
+  ADMIN_SC_CACHE.set(l, entry);
+  return entry;
+}
+function buildAdminSubjectRec(l, rep){
   if(!rep.ready.personality) return { state:'needsPersonality' };
   const m = rep.mathChoice;
   const isMaths = id=>id==='mathematics' || id==='mathematicalLiteracy';
@@ -342,6 +344,9 @@ function buildSchoolDashboardData(classFilter){
   const pathwayDistribution = pathwayDistributionFrom(enriched, assessed.length);
   const subjectDemand = subjectDemandFrom(rows);
   const subjectRecs = subjectRecVsIntendedFrom(rows);
+  const combinations = combinationCountsFrom(rows);
+  const progress = progressByClassFrom(rows);
+  const supportNeeds = supportNeedsFrom(rows);
   const guidanceRows = guidanceRowsFrom(enriched);
   const readinessByPathway = readinessCrossTabFrom(enriched);
 
@@ -351,11 +356,17 @@ function buildSchoolDashboardData(classFilter){
     completionRate: rows.length ? Math.round(100*assessed.length/rows.length) : 0,
     guidanceRequired: rows.filter(l=>isGuidanceRequired(l) || recDiffers(l)).length,
     conflictCount: enriched.filter(e=>e.conflict && e.conflict.hasConflict).length,
+    // Grade 10 planning headline numbers (also kept in snapshots, so a later
+    // term can be compared with this one).
+    subjectChoiceDone: progress.total.subjectChoice,
+    mathsRecommended: subjectRecs.math.mathematics,
+    mathLitRecommended: subjectRecs.math.mathematicalLiteracy,
+    mathsUndecided: subjectRecs.math.either,
   };
 
-  const insights = generateSchoolInsights({ overview, pathwayDistribution, subjectDemand, subjectRecs, readinessByPathway, enriched });
+  const insights = generateSchoolInsights({ overview, pathwayDistribution, subjectDemand, subjectRecs, supportNeeds, readinessByPathway, enriched });
 
-  return { rows, assessed, enriched, overview, pathwayDistribution, subjectDemand, subjectRecs, guidanceRows, readinessByPathway, insights };
+  return { rows, assessed, enriched, overview, pathwayDistribution, subjectDemand, subjectRecs, combinations, progress, supportNeeds, guidanceRows, readinessByPathway, insights };
 }
 
 function pathwayDistributionFrom(enriched, assessedCount){
@@ -428,6 +439,79 @@ function subjectRecVsIntendedFrom(rows){
   };
 }
 
+// How many learners each recommended combination went to -- what a school
+// needs to plan subject streams, classes and teachers.
+function combinationCountsFrom(rows){
+  const recs = rows.map(l=>adminSubjectRecFor(l)).filter(r=>r && r.state==='ready');
+  const counts = {};
+  recs.forEach(r=>{ const n = r.comboName || 'No combination yet'; counts[n] = (counts[n]||0)+1; });
+  return Object.entries(counts).map(([name,count])=>({ name, count, pct: Math.round(100*count/recs.length) }))
+    .sort((a,b)=>(b.count-a.count) || a.name.localeCompare(b.name));
+}
+
+// Each assessment's completion, per class, and who still has something to
+// finish -- the follow-up list for teachers. "Grade 9 results" means the
+// Mathematics result at least: without it there is no Maths recommendation.
+const PROGRESS_STEPS = [
+  { key:'personality',   label:'Personality assessment', done: l=>!!l.assessmentCompletedAt },
+  { key:'subjectChoice', label:'Subject Choice',         done: l=>!!(l.subjectChoice && l.subjectChoice.completedAt) },
+  { key:'results',       label:'Grade 9 results',        done: l=>scAreaPct(l, 'Mathematics')!=null },
+];
+function progressByClassFrom(rows){
+  const tally = list=>{
+    const t = { learners: list.length, all: 0 };
+    PROGRESS_STEPS.forEach(s=>{ t[s.key] = list.filter(s.done).length; });
+    t.all = list.filter(l=>PROGRESS_STEPS.every(s=>s.done(l))).length;
+    return t;
+  };
+  const groups = {};
+  rows.forEach(l=>{ (groups[l.classId||''] = groups[l.classId||''] || []).push(l); });
+  const className = id=>{ const c = CLASSES.find(x=>x.id===id); return c ? c.name : 'No class'; };
+  const byClass = Object.keys(groups).map(id=>({ name: className(id), ...tally(groups[id]) }))
+    .sort((a,b)=>a.name.localeCompare(b.name, undefined, { numeric:true }));
+  const outstanding = rows.map(l=>({
+    learnerId: l.id, learnerName: cohortLearnerName(l.id), className: className(l.classId),
+    missing: PROGRESS_STEPS.filter(s=>!s.done(l)).map(s=>s.label),
+  })).filter(o=>o.missing.length)
+    .sort((a,b)=>a.className.localeCompare(b.className, undefined, { numeric:true }) || a.learnerName.localeCompare(b.learnerName));
+  return { byClass, total: tally(rows), outstanding };
+}
+
+// Where extra lessons are needed: learners interested in a subject (they
+// intend to take it, or their Subject Choice answers show high interest)
+// whose result in a Grade 9 learning area it builds on is below 50%.
+// Grouped by subject and that learning area; only real results count.
+const SUPPORT_BELOW = 50;
+function supportAreaName(area){
+  return { 'Economic and Management Sciences':'EMS', 'Language':'Languages', 'Overall':'Overall average' }[area] || area;
+}
+function supportNeedsFrom(rows){
+  const groups = {};
+  rows.forEach(l=>{
+    const rep = adminSubjectReportFor(l);
+    if(!rep) return;
+    const intended = {};
+    (l.intendedSubjects||[]).forEach(n=>{ const id = SC_CAREER_SUBJECT_IDS[n]; if(id) intended[id] = true; });
+    if(l.intendedMathType==='Mathematics') intended.mathematics = true;
+    if(l.intendedMathType==='MathLit') intended.mathematicalLiteracy = true;
+    rep.results.forEach(r=>{
+      if(SC_SUBJECTS[r.id].fetNames.length!==1) return;
+      if(!intended[r.id] && r.interest.level!=='High') return;
+      // Mathematical Literacy is built for a developing Mathematics result: it
+      // counts only when its own readiness (which allows for that) is low too.
+      if(r.id==='mathematicalLiteracy' && !(r.academic.score!=null && r.academic.score<SUPPORT_BELOW)) return;
+      const low = (r.academic.inputs||[]).filter(i=>i.pct<SUPPORT_BELOW);
+      if(!low.length) return;
+      const weakest = low.reduce((a,b)=>b.pct<a.pct ? b : a);
+      const key = r.id+'|'+weakest.area;
+      const g = groups[key] = groups[key] || { subject: r.label, area: supportAreaName(weakest.area), learners: [] };
+      g.learners.push({ learnerId: l.id, learnerName: cohortLearnerName(l.id), pct: weakest.pct, intends: !!intended[r.id] });
+    });
+  });
+  return Object.values(groups).map(g=>({ ...g, count: g.learners.length }))
+    .sort((a,b)=>(b.count-a.count) || a.subject.localeCompare(b.subject));
+}
+
 function guidanceRowsFrom(enriched){
   return enriched.map(e=>{
     const concern = (e.readiness && e.readiness.pct!=null && e.readiness.pct<50)
@@ -495,6 +579,9 @@ function generateSchoolInsights(d){
     const top = d.subjectDemand.list[0];
     out.push(`${esc(top.subject)} is the most in-demand Grade 10 subject choice among learners who have specified their subjects, selected by ${top.count} (${top.pct}%).`);
   }
+  d.supportNeeds.filter(g=>g.count>=5).slice(0,2).forEach(g=>{
+    out.push(`${g.count} learners interested in ${esc(g.subject)} have ${esc(g.area)} results below ${SUPPORT_BELOW}% and may benefit from targeted support.`);
+  });
   d.readinessByPathway.forEach(r=>{
     if(r.below50>=5) out.push(`${r.below50} learners interested in ${esc(r.pathwayName)} currently have ${esc(r.subject)} results below 50% and may benefit from targeted support.`);
   });
@@ -547,7 +634,6 @@ function viewAdminDashboard(){
     <div class="card">
       <h3>Grade 10 Subjects: Recommended vs. Intended</h3>
       <p class="page-sub">Recommended: from ${d.subjectRecs.withRecCount} of ${d.overview.totalLearners} learners’ Subject Choice reports. Intended: what ${d.subjectRecs.intendedCount} learners say they lean toward.</p>
-      ${d.subjectRecs.withRecCount ? `<div class="kv"><b>Maths recommendation</b><span>${d.subjectRecs.math.mathematics} Mathematics${d.subjectRecs.math.support?` (${d.subjectRecs.math.support} with extra support)`:''} · ${d.subjectRecs.math.mathematicalLiteracy} Maths Literacy${d.subjectRecs.math.either?` · ${d.subjectRecs.math.either} to talk through`:''}</span></div>` : ''}
       ${d.subjectRecs.list.length ? `
       <div class="table-wrap"><table>
         <thead><tr><th>Subject</th><th>Recommended</th><th>Intended</th></tr></thead>
@@ -555,6 +641,8 @@ function viewAdminDashboard(){
       </table></div>` : `<p class="page-sub">No Subject Choice reports or subject intentions yet.</p>`}
     </div>
   </div>
+
+  ${grade10PlanningHTML(d)}
 
   ${d.readinessByPathway.length ? `
   <div class="card" style="margin-bottom:20px;">
@@ -567,6 +655,8 @@ function viewAdminDashboard(){
       </tbody>
     </table></div>
   </div>` : ''}
+
+  ${assessmentProgressHTML(d.progress)}
 
   <div class="section-title"><h2>Learners Requiring Guidance</h2></div>
   <div class="table-wrap"><table>
@@ -595,6 +685,69 @@ function viewAdminDashboard(){
   `;
 }
 
+// Grade 10 planning: the Maths split as headline numbers, how many learners
+// each recommended combination went to (subject streams, class sizes,
+// teachers), and where extra lessons are needed.
+function grade10PlanningHTML(d){
+  const m = d.subjectRecs.math, n = d.subjectRecs.withRecCount;
+  const pct = x=>n ? Math.round(100*x/n) : 0;
+  return `
+  <div class="section-title"><h2>Grade 10 Planning</h2></div>
+  <p class="page-sub" style="margin-top:-6px;">From ${n} of ${d.overview.totalLearners} learners’ Subject Choice reports.</p>
+  <div class="grid grid-3" style="margin-bottom:20px;">
+    <div class="stat-pill"><div class="dot" style="background:var(--indigo)"></div><div><div class="n">${m.mathematics} <span style="font-size:14px;color:var(--muted);">(${pct(m.mathematics)}%)</span></div><div class="l">Mathematics recommended${m.support?` · ${m.support} with extra support`:''}</div></div></div>
+    <div class="stat-pill"><div class="dot" style="background:var(--amber)"></div><div><div class="n">${m.mathematicalLiteracy} <span style="font-size:14px;color:var(--muted);">(${pct(m.mathematicalLiteracy)}%)</span></div><div class="l">Maths Literacy recommended</div></div></div>
+    <div class="stat-pill"><div class="dot" style="background:var(--teal)"></div><div><div class="n">${m.either} <span style="font-size:14px;color:var(--muted);">(${pct(m.either)}%)</span></div><div class="l">Maths choice to talk through</div></div></div>
+  </div>
+  <div class="grid grid-2" style="margin-bottom:20px;">
+    <div class="card">
+      <h3>Recommended Subject Combinations</h3>
+      <p class="page-sub">How many learners each combination was recommended to.</p>
+      ${d.combinations.length ? d.combinations.map(c=>`
+        <div style="margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;gap:10px;font-size:13px;font-weight:600;"><span>${esc(c.name)}</span><span>${c.count} (${c.pct}%)</span></div>
+          <div class="aps-bar"><div style="width:${c.pct}%"></div></div>
+        </div>`).join('') : `<p class="page-sub">No Subject Choice reports yet.</p>`}
+    </div>
+    <div class="card">
+      <h3>Support Planning</h3>
+      <p class="page-sub">Learners interested in a subject (they intend to take it, or show high interest) whose Grade 9 result in a learning area it builds on is below ${SUPPORT_BELOW}%.</p>
+      ${d.supportNeeds.length ? `
+      <div class="table-wrap"><table>
+        <thead><tr><th>Subject</th><th>Learning area below ${SUPPORT_BELOW}%</th><th>Learners</th></tr></thead>
+        <tbody>${d.supportNeeds.slice(0,12).map(g=>`<tr><td>${esc(g.subject)}</td><td>${esc(g.area)}</td><td>${g.count}</td></tr>`).join('')}</tbody>
+      </table></div>
+      ${d.supportNeeds.length>12 ? `<p class="page-sub" style="margin-top:8px;">${d.supportNeeds.length-12} more in the Excel download, with the learners’ names.</p>` : ''}` : `<p class="page-sub">No learners currently below ${SUPPORT_BELOW}% in a subject they are interested in.</p>`}
+    </div>
+  </div>`;
+}
+
+// Completion of each assessment by class, and who still has something to
+// finish. The list is long in a big school, so it opens at 15 names.
+function assessmentProgressHTML(p){
+  const pct = (x,t)=>t ? Math.round(100*x/t) : 0;
+  const cell = (x,t)=>`${x} <span style="color:var(--muted);">(${pct(x,t)}%)</span>`;
+  const row = (r, bold)=>`<tr${bold?' style="font-weight:700;"':''}><td>${esc(r.name)}</td><td>${r.learners}</td>${PROGRESS_STEPS.map(s=>`<td>${cell(r[s.key], r.learners)}</td>`).join('')}<td>${cell(r.all, r.learners)}</td></tr>`;
+  const showAll = !!window.__showAllOutstanding;
+  const list = showAll ? p.outstanding : p.outstanding.slice(0,15);
+  return `
+  <div class="section-title"><h2>Assessment Progress</h2></div>
+  <div class="table-wrap" style="margin-bottom:14px;"><table>
+    <thead><tr><th>Class</th><th>Learners</th>${PROGRESS_STEPS.map(s=>`<th>${esc(s.label)}</th>`).join('')}<th>All done</th></tr></thead>
+    <tbody>${p.byClass.map(r=>row(r,false)).join('')}${p.byClass.length>1 ? row({ name:'All classes', ...p.total }, true) : ''}</tbody>
+  </table></div>
+  <div class="card" style="margin-bottom:20px;">
+    <h3>Still to finish (${p.outstanding.length})</h3>
+    ${p.outstanding.length ? `
+    <div class="table-wrap"><table>
+      <thead><tr><th>Learner</th><th>Class</th><th>Still to do</th></tr></thead>
+      <tbody>${list.map(o=>`<tr><td><a href="#" onclick="navigate('admin-learner','${o.learnerId}');return false;"><b>${esc(o.learnerName)}</b></a></td><td>${esc(o.className)}</td><td>${esc(o.missing.join(', '))}</td></tr>`).join('')}</tbody>
+    </table></div>
+    ${p.outstanding.length>15 ? `<button class="btn btn-ghost btn-sm" style="margin-top:10px;" onclick="window.__showAllOutstanding=${!showAll};render();">${showAll ? 'Show fewer' : `Show all ${p.outstanding.length}`}</button>` : ''}`
+    : '<p class="page-sub">Every learner has finished all three.</p>'}
+  </div>`;
+}
+
 // Compares the live overview numbers against the most recent saved
 // snapshot (SNAPSHOTS is sorted newest-first by loadDashboardSnapshots'
 // own query). Renders nothing until at least one snapshot exists --
@@ -618,6 +771,8 @@ function snapshotComparisonHTML(current){
       <div class="kv"><b>Assessment completion</b><span>${current.completionRate}%${delta(current.completionRate, po.completionRate)}</span></div>
       <div class="kv"><b>Learners requiring guidance</b><span>${current.guidanceRequired}${delta(current.guidanceRequired, po.guidanceRequired)}</span></div>
       <div class="kv"><b>Subject-career conflicts</b><span>${current.conflictCount}${delta(current.conflictCount, po.conflictCount)}</span></div>
+      <div class="kv"><b>Mathematics recommended</b><span>${current.mathsRecommended}${delta(current.mathsRecommended, po.mathsRecommended)}</span></div>
+      <div class="kv"><b>Maths Literacy recommended</b><span>${current.mathLitRecommended}${delta(current.mathLitRecommended, po.mathLitRecommended)}</span></div>
     </div>
   </div>`;
 }

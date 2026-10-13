@@ -759,6 +759,12 @@ const App = {
       ['Mathematical Literacy', d.subjectRecs.math.mathematicalLiteracy],
       ['Talk through both', d.subjectRecs.math.either],
     ]);
+    section('Recommended Subject Combinations', ['Combination','Learner Count','Percentage'],
+      d.combinations.map(c=>[c.name, c.count, c.pct+'%']));
+    section('Support Planning', ['Subject','Learning Area Below '+SUPPORT_BELOW+'%','Learner Count'],
+      d.supportNeeds.map(g=>[g.subject, g.area, g.count]));
+    section('Assessment Progress by Class', ['Class','Learners'].concat(PROGRESS_STEPS.map(s=>s.label)).concat(['All Done']),
+      d.progress.byClass.concat([{ name:'All classes', ...d.progress.total }]).map(r=>[r.name, r.learners].concat(PROGRESS_STEPS.map(s=>r[s.key])).concat([r.all])));
     section('Academic Readiness by Pathway', ['Pathway','Key Subject','Interested','>=70%','50-69%','<50%'],
       d.readinessByPathway.map(r=>[r.pathwayName, r.subject, r.interested, r.above70, r.mid, r.below50]));
     section('Learners Requiring Guidance', ['Learner','Career Pathway','Career Interest','Current Academic Concern','Recommended Subjects','Planned Subject','Potential Conflict','Recommended Action'],
@@ -785,7 +791,9 @@ const App = {
     const d = buildSchoolDashboardData();
     const label = (prompt('Label this snapshot (e.g. "Term 3 2026") -- optional:') || '').trim() || null;
     const payload = { overview: d.overview, pathwayDistribution: d.pathwayDistribution, subjectDemand: d.subjectDemand.list,
-      subjectRecommendations: { list: d.subjectRecs.list, math: d.subjectRecs.math, withRecCount: d.subjectRecs.withRecCount } };
+      subjectRecommendations: { list: d.subjectRecs.list, math: d.subjectRecs.math, withRecCount: d.subjectRecs.withRecCount },
+      combinations: d.combinations, progress: d.progress.total,
+      supportNeeds: d.supportNeeds.map(g=>({ subject: g.subject, area: g.area, count: g.count })) };
     const { error } = await sb.from('dashboard_snapshots').insert({ label, data: payload, created_by: ME.id });
     if(error){ toast('Could not save snapshot — check your connection.'); console.error(error); return; }
     await loadDashboardSnapshots();
