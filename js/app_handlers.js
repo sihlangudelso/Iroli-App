@@ -803,30 +803,8 @@ const App = {
   exportCohortCSV(filterClass, facFilter){
     const search = (window.__cohortSearch||'').toLowerCase();
     const rows = cohortRowsFiltered(facFilter||null, filterClass||'all', search);
-    const headers = ['Name','Grade','School','Class','Maths Track','Subjects','Personality (Holland code)','Assessment Completed','Top 3 Career Matches',
-      'Subject Choice Assessment','Maths Recommendation','Physical/Technical Sciences Recommendation','IT/CAT Recommendation','Recommended Combination','Recommended Subjects','Other Strong Subject Matches',
-      'Intended Maths','Intended Subjects','Intended vs Recommended',
-      'Favourites Count','APS Estimate','Licence Status','Last Updated'];
-    const lines = [headers.join(',')];
-    rows.forEach(l=>{
-      const cls = CLASSES.find(c=>c.id===l.classId);
-      const top3 = l.assessmentCompletedAt ? bestSuitedCareers(l,3).map(m=>m.career.name).join('; ') : '';
-      const rec = adminSubjectRecFor(l);
-      const ready = rec && rec.state==='ready';
-      const line = [
-        cohortLearnerName(l.id), l.grade||'', l.school||'', cls?cls.name:'', l.mathType||'',
-        (l.subjects||[]).join('; '), hollandCode(l.riasec), l.assessmentCompletedAt?'Yes':'No',
-        top3,
-        subjectChoiceAvailable(l) ? adminRecStatus(rec) : 'Not applicable',
-        ready ? rec.mathLabel : '', ready ? (rec.pairs.science||'') : '', ready ? (rec.pairs.computing||'') : '',
-        ready ? (rec.comboName||'') : '', ready ? rec.subjects.join('; ') : '', ready ? rec.alsoStrong.join('; ') : '',
-        l.intendedMathType==='Mathematics' ? 'Mathematics' : (l.intendedMathType==='MathLit' ? 'Mathematical Literacy' : ''),
-        (l.intendedSubjects||[]).join('; '),
-        ready ? (rec.differs.length ? rec.differs.join('; ') : ((l.intendedSubjects||[]).length || l.intendedMathType ? 'No differences' : 'No intended subjects yet')) : '',
-        (l.favourites||[]).length, l.apsLast?l.apsLast.aps:'', l.licenseStatus||'trial', l.updatedAt||''
-      ].map(csvEscape).join(',');
-      lines.push(line);
-    });
+    const lines = [COHORT_EXPORT_HEADERS.join(',')];
+    rows.forEach(l=>lines.push(cohortExportRow(l).map(csvEscape).join(',')));
     const csv = lines.join('\r\n');
     const blob = new Blob(['﻿'+csv], { type:'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -835,6 +813,21 @@ const App = {
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url);
     toast('Export downloaded.');
+  },
+  // The same rows as the CSV, as an Excel workbook (one "Learners" sheet).
+  exportCohortXLSX(filterClass, facFilter){
+    const search = (window.__cohortSearch||'').toLowerCase();
+    const rows = cohortRowsFiltered(facFilter||null, filterClass||'all', search);
+    xlsxDownload([{ name:'Learners', rows: [COHORT_EXPORT_HEADERS].concat(rows.map(cohortExportRow)) }],
+      'iroli-cohort-'+exportScopeSlug(filterClass)+'-'+todayISO().slice(0,10)+'.xlsx');
+    toast('Excel workbook downloaded.');
+  },
+  // The whole Grade 9 Dashboard as an Excel workbook, one sheet per section,
+  // plus the learner lists behind it (who needs support, who hasn't finished).
+  exportDashboardXLSX(filterClass){
+    const d = buildSchoolDashboardData(filterClass);
+    xlsxDownload(dashboardWorkbookSheets(d, filterClass), 'iroli-grade9-dashboard-'+exportScopeSlug(filterClass)+'-'+todayISO().slice(0,10)+'.xlsx');
+    toast('Excel workbook downloaded.');
   },
 
   // ---- mobile menu ----

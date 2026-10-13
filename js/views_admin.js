@@ -141,7 +141,10 @@ function viewAdminCohort(){
       <button class="chip-select ${filterClass==='all'&&!facFilter?'on':''}" onclick="navigate('admin-cohort','all')">All classes</button>
       ${myClasses().map(c=>`<button class="chip-select ${filterClass===c.id?'on':''}" onclick="navigate('admin-cohort','${c.id}')">${esc(c.name)}</button>`).join('')}
     </div>
-    <button class="btn btn-amber" onclick="App.exportCohortCSV('${filterClass}', ${facFilter?`'${facFilter}'`:'null'})">${icon('download')} Export CSV</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-amber" onclick="App.exportCohortXLSX('${filterClass}', ${facFilter?`'${facFilter}'`:'null'})">${icon('download')} Download Excel</button>
+      <button class="btn btn-ghost" onclick="App.exportCohortCSV('${filterClass}', ${facFilter?`'${facFilter}'`:'null'})">${icon('download')} CSV</button>
+    </div>
   </div>
   <div class="form-row" style="max-width:280px;"><input type="text" placeholder="Search learner name… (press Enter)" value="${esc(window.__cohortSearch||'')}" onchange="App.setCohortSearch(this.value)"/></div>
   <div class="table-wrap"><table>
@@ -316,6 +319,92 @@ function adminRecStatus(rec){
   if(!rec) return 'Not started';
   if(rec.state!=='ready') return 'Answers saved — personality assessment needed';
   return rec.complete ? 'Completed' : `Partly (${rec.answered} of ${rec.total} questions)`;
+}
+
+/* ---------------- exports (CSV and Excel) ---------------- */
+// One learner's export row, shared by the cohort CSV, the cohort workbook and
+// the dashboard workbook's Learners sheet, so the three can never disagree.
+// Numbers stay numbers (the workbook keeps them as numbers; the CSV writes them out).
+const COHORT_EXPORT_HEADERS = ['Name','Grade','School','Class','Maths Track','Subjects','Personality (Holland code)','Assessment Completed','Top 3 Career Matches',
+  'Subject Choice Assessment','Maths Recommendation','Physical/Technical Sciences Recommendation','IT/CAT Recommendation','Recommended Combination','Recommended Subjects','Other Strong Subject Matches',
+  'Intended Maths','Intended Subjects','Intended vs Recommended',
+  'Favourites Count','APS Estimate','Licence Status','Last Updated'];
+function cohortExportRow(l){
+  const cls = CLASSES.find(c=>c.id===l.classId);
+  const top3 = l.assessmentCompletedAt ? bestSuitedCareers(l,3).map(m=>m.career.name).join('; ') : '';
+  const rec = adminSubjectRecFor(l);
+  const ready = rec && rec.state==='ready';
+  return [
+    cohortLearnerName(l.id), l.grade||'', l.school||'', cls?cls.name:'', l.mathType||'',
+    (l.subjects||[]).join('; '), hollandCode(l.riasec), l.assessmentCompletedAt?'Yes':'No',
+    top3,
+    subjectChoiceAvailable(l) ? adminRecStatus(rec) : 'Not applicable',
+    ready ? rec.mathLabel : '', ready ? (rec.pairs.science||'') : '', ready ? (rec.pairs.computing||'') : '',
+    ready ? (rec.comboName||'') : '', ready ? rec.subjects.join('; ') : '', ready ? rec.alsoStrong.join('; ') : '',
+    l.intendedMathType==='Mathematics' ? 'Mathematics' : (l.intendedMathType==='MathLit' ? 'Mathematical Literacy' : ''),
+    (l.intendedSubjects||[]).join('; '),
+    ready ? (rec.differs.length ? rec.differs.join('; ') : ((l.intendedSubjects||[]).length || l.intendedMathType ? 'No differences' : 'No intended subjects yet')) : '',
+    (l.favourites||[]).length, l.apsLast?l.apsLast.aps:'', l.licenseStatus||'trial', l.updatedAt||''
+  ];
+}
+function exportScopeName(filterClass){
+  const c = filterClass && filterClass!=='all' ? CLASSES.find(x=>x.id===filterClass) : null;
+  return c ? c.name : 'All classes';
+}
+function exportScopeSlug(filterClass){
+  return exportScopeName(filterClass).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'class';
+}
+// Every dashboard section as its own sheet. Percentages are whole numbers in
+// a "%" column, so they sort and chart as numbers.
+function dashboardWorkbookSheets(d, filterClass){
+  const o = d.overview, m = d.subjectRecs.math;
+  const pct = (x,t)=>t ? Math.round(100*x/t) : 0;
+  return [
+    { name:'Summary', rows:[
+      ['Iroli Career Pathway — Grade 9 Dashboard', ''],
+      ['Classes', exportScopeName(filterClass)],
+      ['Downloaded', new Date().toLocaleDateString('en-ZA',{year:'numeric',month:'long',day:'numeric'})],
+      ['', ''],
+      ['Grade 9 learners', o.totalLearners],
+      ['Personality assessment completion (%)', o.completionRate],
+      ['Subject Choice reports', d.subjectRecs.withRecCount],
+      ['Mathematics recommended', m.mathematics],
+      ['  of which with extra support', m.support],
+      ['Maths Literacy recommended', m.mathematicalLiteracy],
+      ['Maths choice to talk through', m.either],
+      ['Learners requiring guidance', o.guidanceRequired],
+      ['Subject-career conflicts', o.conflictCount],
+      ['Intended subject differs from recommendation', d.subjectRecs.differsCount],
+      ['', ''],
+      ['This shows support opportunities based on current results and stated interests — it never makes final career or subject decisions for a learner.', ''],
+    ], widths:[52, 24], table:false },
+    { name:'Subjects', rows: [['Subject','Recommended (Subject Choice report)','Intended (learner says)']]
+      .concat(d.subjectRecs.list.map(s=>[s.subject, s.recommended, s.intended])) },
+    { name:'Combinations', rows: [['Recommended combination','Learners','% of reports']]
+      .concat(d.combinations.map(c=>[c.name, c.count, c.pct])) },
+    { name:'Support planning', rows: [['Subject','Learning area below '+SUPPORT_BELOW+'%','Learners']]
+      .concat(d.supportNeeds.map(g=>[g.subject, g.area, g.count])) },
+    { name:'Support learners', rows: [['Subject','Learning area','Learner','Class','Result (%)','Intends to take it']]
+      .concat([].concat(...d.supportNeeds.map(g=>g.learners.map(x=>{
+        const l = COHORT.find(c=>c.id===x.learnerId); const cls = l && CLASSES.find(c=>c.id===l.classId);
+        return [g.subject, g.area, x.learnerName, cls ? cls.name : 'No class', x.pct, x.intends ? 'Yes' : 'No (high interest)'];
+      })))) },
+    { name:'Progress by class', rows: [['Class','Learners'].concat(...PROGRESS_STEPS.map(s=>[s.label, s.label+' (%)'])).concat(['All done','All done (%)'])]
+      .concat(d.progress.byClass.concat(d.progress.byClass.length>1 ? [{ name:'All classes', ...d.progress.total }] : [])
+        .map(r=>[r.name, r.learners].concat(...PROGRESS_STEPS.map(s=>[r[s.key], pct(r[s.key], r.learners)])).concat([r.all, pct(r.all, r.learners)]))) },
+    { name:'Still to finish', rows: [['Learner','Class'].concat(PROGRESS_STEPS.map(s=>s.label))]
+      .concat(d.progress.outstanding.map(x=>{
+        const l = COHORT.find(c=>c.id===x.learnerId);
+        return [x.learnerName, x.className].concat(PROGRESS_STEPS.map(s=>s.done(l) ? 'Done' : 'Not yet'));
+      })) },
+    { name:'Guidance', rows: [['Learner','Career pathway','Career interest','Current academic concern','Recommended subjects','Planned subject','Potential conflict','Recommended action']]
+      .concat(d.guidanceRows.map(r=>[r.learnerName, r.pathway, r.interest, r.concern, r.recommended, r.planned, r.conflict, r.action])) },
+    { name:'Career pathways', rows: [['Pathway','Learners','% of assessed']]
+      .concat(d.pathwayDistribution.map(p=>[p.name, p.count, p.pct])) },
+    { name:'Readiness by pathway', rows: [['Pathway','Key subject','Interested','70% and above','50–69%','Below 50%']]
+      .concat(d.readinessByPathway.map(r=>[r.pathwayName, r.subject, r.interested, r.above70, r.mid, r.below50])) },
+    { name:'Learners', rows: [COHORT_EXPORT_HEADERS].concat(d.rows.map(cohortExportRow)) },
+  ];
 }
 
 /* ---------------- Grade 9 school dashboard ---------------- */
@@ -604,7 +693,8 @@ function viewAdminDashboard(){
   </div>` : ''}
   ${IS_SUPER_ADMIN? `
   <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;">
-    <button class="btn btn-amber" onclick="App.exportDashboardCSV('${filterClass}')">${icon('download')} Export CSV</button>
+    <button class="btn btn-amber" onclick="App.exportDashboardXLSX('${filterClass}')">${icon('download')} Download Excel</button>
+    <button class="btn btn-ghost" onclick="App.exportDashboardCSV('${filterClass}')">${icon('download')} CSV</button>
     <button class="btn btn-ghost" onclick="App.saveDashboardSnapshot()">${icon('check')} Save Snapshot</button>
   </div>` : ''}
   <div class="grid grid-4" style="margin-bottom:26px;">
