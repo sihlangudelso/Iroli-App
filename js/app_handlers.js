@@ -744,15 +744,25 @@ const App = {
       ['Assessment completion', d.overview.completionRate+'%'],
       ['Learners requiring guidance', d.overview.guidanceRequired],
       ['Subject-career conflicts', d.overview.conflictCount],
+      ['Subject Choice reports', d.subjectRecs.withRecCount],
+      ['Intended subject differs from recommendation', d.subjectRecs.differsCount],
     ]);
     section('Career Pathway Distribution', ['Pathway','Learner Count','Percentage'],
       d.pathwayDistribution.map(p=>[p.name, p.count, p.pct+'%']));
     section('Grade 10 Subject Demand', ['Subject','Learner Count','Percentage'],
       d.subjectDemand.list.map(s=>[s.subject, s.count, s.pct+'%']));
+    section('Grade 10 Subjects: Recommended vs Intended', ['Subject','Recommended (Subject Choice report)','Intended (learner says)'],
+      d.subjectRecs.list.map(s=>[s.subject, s.recommended, s.intended]));
+    section('Maths Recommendation', ['Recommendation','Learner Count'], [
+      ['Mathematics', d.subjectRecs.math.mathematics],
+      ['  of which with extra support', d.subjectRecs.math.support],
+      ['Mathematical Literacy', d.subjectRecs.math.mathematicalLiteracy],
+      ['Talk through both', d.subjectRecs.math.either],
+    ]);
     section('Academic Readiness by Pathway', ['Pathway','Key Subject','Interested','>=70%','50-69%','<50%'],
       d.readinessByPathway.map(r=>[r.pathwayName, r.subject, r.interested, r.above70, r.mid, r.below50]));
-    section('Learners Requiring Guidance', ['Learner','Career Pathway','Career Interest','Current Academic Concern','Planned Subject','Potential Conflict','Recommended Action'],
-      d.guidanceRows.map(r=>[r.learnerName, r.pathway, r.interest, r.concern, r.planned, r.conflict, r.action]));
+    section('Learners Requiring Guidance', ['Learner','Career Pathway','Career Interest','Current Academic Concern','Recommended Subjects','Planned Subject','Potential Conflict','Recommended Action'],
+      d.guidanceRows.map(r=>[r.learnerName, r.pathway, r.interest, r.concern, r.recommended, r.planned, r.conflict, r.action]));
 
     const csv = lines.join('\r\n');
     const blob = new Blob(['﻿'+csv], { type:'text/csv;charset=utf-8;' });
@@ -774,7 +784,8 @@ const App = {
   async saveDashboardSnapshot(){
     const d = buildSchoolDashboardData();
     const label = (prompt('Label this snapshot (e.g. "Term 3 2026") -- optional:') || '').trim() || null;
-    const payload = { overview: d.overview, pathwayDistribution: d.pathwayDistribution, subjectDemand: d.subjectDemand.list };
+    const payload = { overview: d.overview, pathwayDistribution: d.pathwayDistribution, subjectDemand: d.subjectDemand.list,
+      subjectRecommendations: { list: d.subjectRecs.list, math: d.subjectRecs.math, withRecCount: d.subjectRecs.withRecCount } };
     const { error } = await sb.from('dashboard_snapshots').insert({ label, data: payload, created_by: ME.id });
     if(error){ toast('Could not save snapshot — check your connection.'); console.error(error); return; }
     await loadDashboardSnapshots();
@@ -784,15 +795,27 @@ const App = {
   exportCohortCSV(filterClass, facFilter){
     const search = (window.__cohortSearch||'').toLowerCase();
     const rows = cohortRowsFiltered(facFilter||null, filterClass||'all', search);
-    const headers = ['Name','Grade','School','Class','Maths Track','Subjects','Personality (Holland code)','Assessment Completed','Top 3 Career Matches','Favourites Count','APS Estimate','Licence Status','Last Updated'];
+    const headers = ['Name','Grade','School','Class','Maths Track','Subjects','Personality (Holland code)','Assessment Completed','Top 3 Career Matches',
+      'Subject Choice Assessment','Maths Recommendation','Physical/Technical Sciences Recommendation','IT/CAT Recommendation','Recommended Combination','Recommended Subjects','Other Strong Subject Matches',
+      'Intended Maths','Intended Subjects','Intended vs Recommended',
+      'Favourites Count','APS Estimate','Licence Status','Last Updated'];
     const lines = [headers.join(',')];
     rows.forEach(l=>{
       const cls = CLASSES.find(c=>c.id===l.classId);
       const top3 = l.assessmentCompletedAt ? bestSuitedCareers(l,3).map(m=>m.career.name).join('; ') : '';
+      const rec = adminSubjectRecFor(l);
+      const ready = rec && rec.state==='ready';
       const line = [
         cohortLearnerName(l.id), l.grade||'', l.school||'', cls?cls.name:'', l.mathType||'',
         (l.subjects||[]).join('; '), hollandCode(l.riasec), l.assessmentCompletedAt?'Yes':'No',
-        top3, (l.favourites||[]).length, l.apsLast?l.apsLast.aps:'', l.licenseStatus||'trial', l.updatedAt||''
+        top3,
+        subjectChoiceAvailable(l) ? adminRecStatus(rec) : 'Not applicable',
+        ready ? rec.mathLabel : '', ready ? (rec.pairs.science||'') : '', ready ? (rec.pairs.computing||'') : '',
+        ready ? (rec.comboName||'') : '', ready ? rec.subjects.join('; ') : '', ready ? rec.alsoStrong.join('; ') : '',
+        l.intendedMathType==='Mathematics' ? 'Mathematics' : (l.intendedMathType==='MathLit' ? 'Mathematical Literacy' : ''),
+        (l.intendedSubjects||[]).join('; '),
+        ready ? (rec.differs.length ? rec.differs.join('; ') : ((l.intendedSubjects||[]).length || l.intendedMathType ? 'No differences' : 'No intended subjects yet')) : '',
+        (l.favourites||[]).length, l.apsLast?l.apsLast.aps:'', l.licenseStatus||'trial', l.updatedAt||''
       ].map(csvEscape).join(',');
       lines.push(line);
     });

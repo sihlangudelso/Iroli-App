@@ -146,12 +146,13 @@ function viewAdminCohort(){
   <div class="form-row" style="max-width:280px;"><input type="text" placeholder="Search learner name… (press Enter)" value="${esc(window.__cohortSearch||'')}" onchange="App.setCohortSearch(this.value)"/></div>
   <div class="table-wrap"><table>
     <thead><tr>
-      <th>Name</th><th>Grade</th><th>School</th><th>Class</th><th>Maths track</th><th>Personality</th><th>Top matches</th><th>Favourites</th><th>Licence</th><th></th>
+      <th>Name</th><th>Grade</th><th>School</th><th>Class</th><th>Maths track</th><th>Personality</th><th>Top matches</th><th>Recommended subjects</th><th>Favourites</th><th>Licence</th><th></th>
     </tr></thead>
     <tbody>
       ${rows.length? rows.map(l=>{
         const cls = CLASSES.find(c=>c.id===l.classId);
         const top = l.assessmentCompletedAt ? bestSuitedCareers(l,3).map(m=>m.career.name).join(', ') : '—';
+        const rec = adminSubjectRecFor(l);
         return `<tr>
           <td><a href="#" onclick="navigate('admin-learner','${l.id}');return false;"><b>${esc(cohortLearnerName(l.id))}</b></a></td>
           <td>${l.grade||'—'}</td>
@@ -160,11 +161,12 @@ function viewAdminCohort(){
           <td>${l.mathType==='Mathematics'?'Maths':(l.mathType==='MathLit'?'Maths Lit':'—')}</td>
           <td>${esc(hollandCode(l.riasec))}</td>
           <td style="max-width:220px;">${esc(top)}</td>
+          <td style="max-width:220px;">${rec ? esc(adminRecSubjectsLine(rec)) : '—'}${rec && rec.differs && rec.differs.length ? ` <span class="badge badge-explore" title="${esc(rec.differs.join('; '))}">Differs from intended</span>` : ''}</td>
           <td>${(l.favourites||[]).length}</td>
           <td><span class="badge ${l.licenseStatus==='active'?'badge-strong':'badge-good'}">${l.licenseStatus==='active'?'Active':'Trial'}</span></td>
           <td>${IS_SUPER_ADMIN? `<button class="btn btn-ghost btn-sm" onclick="App.toggleLicense('${l.id}')">${l.licenseStatus==='active'?'Deactivate':'Activate'}</button>` : ''}</td>
         </tr>`;
-      }).join('') : `<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:30px;">No learners match yet.</td></tr>`}
+      }).join('') : `<tr><td colspan="11" style="text-align:center;color:var(--muted);padding:30px;">No learners match yet.</td></tr>`}
     </tbody>
   </table></div>
   `;
@@ -197,11 +199,35 @@ function viewAdminLearnerDetail(id){
     <h3>Top career matches</h3>
     ${matches.length? matches.map(m=>careerRowHTML(m.career,m.score,l,m.category)).join('') : '<p class="page-sub">No assessment data yet.</p>'}
   </div>
+  ${subjectChoiceAvailable(l) ? adminSubjectRecCardHTML(l) : ''}
   <div class="card">
     <h3>Saved favourites</h3>
     <div class="pill-list">${(l.favourites||[]).map(id=>{const c=CAREERS.find(x=>x.id===id);return c?`<span class="tag">${esc(c.name)}</span>`:'';}).join('') || '<span class="page-sub">None yet.</span>'}</div>
   </div>
   `;
+}
+
+// The learner's Subject Choice recommendation beside what they say they
+// lean toward, so a teacher can see both before talking it through.
+function adminSubjectRecCardHTML(l){
+  const rec = adminSubjectRecFor(l);
+  const intended = [l.intendedMathType==='Mathematics' ? 'Mathematics' : (l.intendedMathType==='MathLit' ? 'Mathematical Literacy' : null)]
+    .concat(l.intendedSubjects||[]).filter(Boolean);
+  const pairTitle = k=>SC_COPY.pairs[k].title.replace('?','');
+  return `
+  <div class="card" style="margin-bottom:18px;">
+    <h3>Subject Choice recommendation</h3>
+    ${!rec ? '<p class="page-sub">Subject Choice Assessment not yet completed.</p>'
+      : rec.state!=='ready' ? '<p class="page-sub">Answers saved, but the personality assessment is needed before a recommendation can be made.</p>'
+      : `
+      ${!rec.complete ? `<p class="page-sub">Based on ${rec.answered} of ${rec.total} questions.</p>` : ''}
+      <div class="kv"><b>Mathematics or Mathematical Literacy</b><span>${esc(rec.mathLabel)}</span></div>
+      ${Object.keys(rec.pairs).map(k=>`<div class="kv"><b>${esc(pairTitle(k))}</b><span>${esc(rec.pairs[k])}</span></div>`).join('')}
+      <div class="kv"><b>${rec.comboName ? 'Recommended combination' : 'Strongest matches'}</b><span>${rec.comboName ? `${esc(rec.comboName)}: ` : ''}${esc([rec.mathSubject].concat(rec.subjects).join(', '))}</span></div>
+      ${rec.alsoStrong.length ? `<div class="kv"><b>Also strong matches</b><span>${esc(rec.alsoStrong.join(', '))}</span></div>` : ''}`}
+    <div class="kv"><b>Learner intends to take</b><span>${esc(intended.join(', '))||'Not yet specified'}</span></div>
+    ${rec && rec.differs && rec.differs.length ? `<div class="disclaimer" style="margin-top:10px;">${icon('info','ic')}<div>${rec.differs.map(esc).join('<br>')}<br>Worth talking through with the learner and their parent/guardian.</div></div>` : ''}
+  </div>`;
 }
 
 function viewAdminCareers(){
@@ -213,6 +239,81 @@ function viewAdminCareers(){
     ${list.map(c=>careerRowHTML(c,null,{favourites:[]})).join('') || '<p class="page-sub">No careers yet in this faculty — add some in the data model.</p>'}`;
   }).join('')}
   `;
+}
+
+/* ---------------- Subject Choice recommendations (admin) ---------------- */
+// What the Subject Choice report recommended to a learner. Only the answers
+// are stored, so this is worked out from the same answers, marks and
+// personality results the learner's own report uses (buildSubjectChoiceReport,
+// lrCombos) -- the admin side always says what the learner was told.
+// Cached per learner object and updatedAt: the cohort table, dashboard and
+// both exports ask for it on every render.
+const ADMIN_SC_CACHE = new WeakMap();
+function adminSubjectRecFor(l){
+  if(!l || l.exploringOnly || !scHasSavedAnswers(l)) return null;
+  const hit = ADMIN_SC_CACHE.get(l);
+  if(hit && hit.at===l.updatedAt) return hit.rec;
+  const rec = buildAdminSubjectRec(l);
+  ADMIN_SC_CACHE.set(l, { at:l.updatedAt, rec });
+  return rec;
+}
+function buildAdminSubjectRec(l){
+  const rep = buildSubjectChoiceReport(l);
+  if(!rep.ready.personality) return { state:'needsPersonality' };
+  const m = rep.mathChoice;
+  const isMaths = id=>id==='mathematics' || id==='mathematicalLiteracy';
+  const best = lrCombos(rep).best;
+  // The best combination is the recommendation (as on the learner's report);
+  // with no combination, their strongest individual matches stand in.
+  const subjectIds = best ? best.subjects.filter(id=>!isMaths(id))
+    : rep.top.filter(r=>!isMaths(r.id)).slice(0,3).map(r=>r.id);
+  const pairs = {};
+  Object.keys(rep.pairs).forEach(k=>{ if(rep.pairs[k].pick!=='either') pairs[k] = scPairLeanLabel(rep.pairs[k]); });
+  return {
+    state: 'ready',
+    complete: rep.ready.complete, answered: rep.answered, total: rep.total,
+    mathPick: m.pick, mathSupport: !!m.support, mathLabel: scMathLeanLabel(m),
+    // The Maths slot of a subject list, named as the learner's report names
+    // it (lrComboView): from the combination when it has a Maths slot.
+    mathSubject: (best && best.labels.filter(lrIsMaths)[0]) || lrMathsLean(rep).label,
+    pairs,
+    comboName: best ? best.name : null,
+    subjectIds,
+    subjects: subjectIds.map(id=>SC_SUBJECTS[id].label),
+    alsoStrong: rep.top.filter(r=>!isMaths(r.id) && subjectIds.indexOf(r.id)===-1).slice(0,3).map(r=>r.label),
+    differs: intendedVsRecommended(l, rep),
+  };
+}
+// Where what the learner says they lean toward goes against what their
+// results currently support: the other side of a Maths / Maths Lit (or
+// Physical / Technical Sciences, IT / CAT) decision, or a subject that needs
+// Mathematics beside a Maths Lit recommendation. Only real decisions count --
+// an intended subject that simply isn't in the best combination is not a
+// difference worth flagging.
+function intendedVsRecommended(l, rep){
+  const out = [];
+  const m = rep.mathChoice;
+  const mathId = l.intendedMathType==='Mathematics' ? 'mathematics' : (l.intendedMathType==='MathLit' ? 'mathematicalLiteracy' : null);
+  if(mathId && m.pick!=='either' && mathId!==m.pick) out.push(`Intends ${SC_SUBJECTS[mathId].label}; ${scMathLeanLabel(m)} recommended`);
+  (l.intendedSubjects||[]).forEach(name=>{
+    const id = SC_CAREER_SUBJECT_IDS[name];
+    if(!id) return;
+    const d = Object.keys(rep.pairs).map(k=>rep.pairs[k]).find(p=>p.demanding===id || p.easier===id);
+    if(m.pick==='mathematicalLiteracy' && SC_SUBJECTS[id].mathRequirement==='strong') out.push(`Intends ${name}, which needs Mathematics; ${scMathLeanLabel(m)} recommended`);
+    else if(d && d.pick!=='either' && d.pick!==id) out.push(`Intends ${name}; ${scPairLeanLabel(d)} recommended`);
+  });
+  return out;
+}
+// One short line for tables and the CSV: the Maths pick, then the rest.
+function adminRecSubjectsLine(rec){
+  if(!rec) return '';
+  if(rec.state!=='ready') return 'Personality assessment needed';
+  return [lrShort(rec.mathSubject)].concat(rec.subjects).join(', ');
+}
+function adminRecStatus(rec){
+  if(!rec) return 'Not started';
+  if(rec.state!=='ready') return 'Answers saved — personality assessment needed';
+  return rec.complete ? 'Completed' : `Partly (${rec.answered} of ${rec.total} questions)`;
 }
 
 /* ---------------- Grade 9 school dashboard ---------------- */
@@ -240,6 +341,7 @@ function buildSchoolDashboardData(classFilter){
 
   const pathwayDistribution = pathwayDistributionFrom(enriched, assessed.length);
   const subjectDemand = subjectDemandFrom(rows);
+  const subjectRecs = subjectRecVsIntendedFrom(rows);
   const guidanceRows = guidanceRowsFrom(enriched);
   const readinessByPathway = readinessCrossTabFrom(enriched);
 
@@ -247,13 +349,13 @@ function buildSchoolDashboardData(classFilter){
     totalLearners: rows.length,
     learnersAssessed: assessed.length,
     completionRate: rows.length ? Math.round(100*assessed.length/rows.length) : 0,
-    guidanceRequired: rows.filter(l=>isGuidanceRequired(l)).length,
+    guidanceRequired: rows.filter(l=>isGuidanceRequired(l) || recDiffers(l)).length,
     conflictCount: enriched.filter(e=>e.conflict && e.conflict.hasConflict).length,
   };
 
-  const insights = generateSchoolInsights({ overview, pathwayDistribution, subjectDemand, readinessByPathway, enriched });
+  const insights = generateSchoolInsights({ overview, pathwayDistribution, subjectDemand, subjectRecs, readinessByPathway, enriched });
 
-  return { rows, assessed, enriched, overview, pathwayDistribution, subjectDemand, guidanceRows, readinessByPathway, insights };
+  return { rows, assessed, enriched, overview, pathwayDistribution, subjectDemand, subjectRecs, guidanceRows, readinessByPathway, insights };
 }
 
 function pathwayDistributionFrom(enriched, assessedCount){
@@ -287,12 +389,54 @@ function subjectDemandFrom(rows){
   return { list, withIntendedCount: withIntended.length, notYetSpecifiedCount };
 }
 
+function recDiffers(l){
+  const rec = adminSubjectRecFor(l);
+  return !!(rec && rec.differs && rec.differs.length);
+}
+
+// How many learners the Subject Choice report recommended each Grade 10
+// subject to, beside how many say they intend to take it -- the gap is where
+// subject conversations (and timetabling) need attention. Maths is counted
+// from the Maths decision itself, so "talk through both" is its own number
+// rather than being forced into either subject. Languages and the broad
+// humanities slot are left out: every learner takes a language.
+function subjectRecVsIntendedFrom(rows){
+  const withRec = rows.map(l=>adminSubjectRecFor(l)).filter(r=>r && r.state==='ready');
+  const recommended = {}, intended = {};
+  const bump = (map, name)=>{ map[name] = (map[name]||0)+1; };
+  const math = { mathematics:0, support:0, mathematicalLiteracy:0, either:0 };
+  withRec.forEach(r=>{
+    if(r.mathPick==='mathematics'){ math.mathematics++; if(r.mathSupport) math.support++; bump(recommended, 'Mathematics'); }
+    else if(r.mathPick==='mathematicalLiteracy'){ math.mathematicalLiteracy++; bump(recommended, 'Mathematical Literacy'); }
+    else math.either++;
+    r.subjectIds.forEach(id=>{ const n = SC_SUBJECTS[id].fetNames; if(n.length===1) bump(recommended, n[0]); });
+  });
+  rows.forEach(l=>{
+    (l.intendedSubjects||[]).forEach(s=>bump(intended, s));
+    if(l.intendedMathType==='Mathematics') bump(intended, 'Mathematics');
+    else if(l.intendedMathType==='MathLit') bump(intended, 'Mathematical Literacy');
+  });
+  const list = [...new Set(Object.keys(recommended).concat(Object.keys(intended)))]
+    .map(subject=>({ subject, recommended: recommended[subject]||0, intended: intended[subject]||0 }))
+    .sort((a,b)=>(b.recommended-a.recommended) || (b.intended-a.intended) || a.subject.localeCompare(b.subject));
+  return {
+    list, math,
+    withRecCount: withRec.length,
+    startedCount: rows.filter(l=>adminSubjectRecFor(l)).length,
+    intendedCount: rows.filter(l=>(l.intendedSubjects && l.intendedSubjects.length) || l.intendedMathType).length,
+    differsCount: rows.filter(recDiffers).length,
+  };
+}
+
 function guidanceRowsFrom(enriched){
   return enriched.map(e=>{
     const concern = (e.readiness && e.readiness.pct!=null && e.readiness.pct<50)
       ? `${e.readiness.subject} currently ${markBandLabel(e.readiness.pct)} (${e.readiness.pct}%)` : null;
     const hasIntended = e.learner.intendedSubjects && e.learner.intendedSubjects.length;
+    const rec = adminSubjectRecFor(e.learner);
+    const differs = (rec && rec.differs) || [];
     const action = (e.conflict && e.conflict.hasConflict) ? 'Discuss subject choice vs. stated career interest'
+      : differs.length ? 'Discuss intended subjects vs. Subject Choice recommendation'
       : concern ? 'Consider additional academic support'
       : !hasIntended ? 'Confirm Grade 10 subject choices'
       : null;
@@ -304,7 +448,8 @@ function guidanceRowsFrom(enriched){
       interest: e.top.career.name,
       concern: concern || '—',
       planned: (e.conflict && e.conflict.hasConflict) ? e.conflict.plannedSubject : (hasIntended ? e.learner.intendedSubjects.join(', ') : 'Not yet specified'),
-      conflict: (e.conflict && e.conflict.hasConflict) ? e.conflict.reason : '—',
+      conflict: [(e.conflict && e.conflict.hasConflict) ? e.conflict.reason : null].concat(differs).filter(Boolean).join('; ') || '—',
+      recommended: rec ? adminRecSubjectsLine(rec) : 'Not yet completed',
       action,
     };
   }).filter(Boolean);
@@ -342,6 +487,9 @@ function generateSchoolInsights(d){
     d.enriched.forEach(e=>{ if(e.conflict && e.conflict.hasConflict) byFacultyName[e.faculty.name] = (byFacultyName[e.faculty.name]||0)+1; });
     const worst = Object.entries(byFacultyName).sort((a,b)=>b[1]-a[1])[0];
     out.push(`${d.overview.conflictCount} learner${d.overview.conflictCount===1?'':'s'} currently show a potential subject-career conflict${worst?` — most concentrated in ${esc(worst[0])} (${worst[1]} learner${worst[1]===1?'':'s'})`:''}.`);
+  }
+  if(d.subjectRecs.differsCount>0){
+    out.push(`${d.subjectRecs.differsCount} learner${d.subjectRecs.differsCount===1?' intends':'s intend'} to take a subject their Subject Choice results do not currently support — see the guidance table below.`);
   }
   if(d.subjectDemand.list.length){
     const top = d.subjectDemand.list[0];
@@ -397,13 +545,14 @@ function viewAdminDashboard(){
         </div>`).join('') : `<p class="page-sub">No assessed Grade 9 learners yet.</p>`}
     </div>
     <div class="card">
-      <h3>Grade 10 Subject Demand</h3>
-      <p class="page-sub">${d.subjectDemand.withIntendedCount} of ${d.overview.totalLearners} learners have specified intended subjects${d.subjectDemand.notYetSpecifiedCount?` — ${d.subjectDemand.notYetSpecifiedCount} not yet`:''}.</p>
-      ${d.subjectDemand.list.length ? d.subjectDemand.list.slice(0,10).map(s=>`
-        <div style="margin-bottom:10px;">
-          <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;"><span>${esc(s.subject)}</span><span>${s.count} (${s.pct}%)</span></div>
-          <div class="aps-bar"><div style="width:${s.pct}%"></div></div>
-        </div>`).join('') : `<p class="page-sub">No subject intentions recorded yet.</p>`}
+      <h3>Grade 10 Subjects: Recommended vs. Intended</h3>
+      <p class="page-sub">Recommended: from ${d.subjectRecs.withRecCount} of ${d.overview.totalLearners} learners’ Subject Choice reports. Intended: what ${d.subjectRecs.intendedCount} learners say they lean toward.</p>
+      ${d.subjectRecs.withRecCount ? `<div class="kv"><b>Maths recommendation</b><span>${d.subjectRecs.math.mathematics} Mathematics${d.subjectRecs.math.support?` (${d.subjectRecs.math.support} with extra support)`:''} · ${d.subjectRecs.math.mathematicalLiteracy} Maths Literacy${d.subjectRecs.math.either?` · ${d.subjectRecs.math.either} to talk through`:''}</span></div>` : ''}
+      ${d.subjectRecs.list.length ? `
+      <div class="table-wrap"><table>
+        <thead><tr><th>Subject</th><th>Recommended</th><th>Intended</th></tr></thead>
+        <tbody>${d.subjectRecs.list.map(s=>`<tr><td>${esc(s.subject)}</td><td>${s.recommended}</td><td>${s.intended}</td></tr>`).join('')}</tbody>
+      </table></div>` : `<p class="page-sub">No Subject Choice reports or subject intentions yet.</p>`}
     </div>
   </div>
 
@@ -421,7 +570,7 @@ function viewAdminDashboard(){
 
   <div class="section-title"><h2>Learners Requiring Guidance</h2></div>
   <div class="table-wrap"><table>
-    <thead><tr><th>Learner</th><th>Career Pathway</th><th>Career Interest</th><th>Current Academic Concern</th><th>Planned Subject</th><th>Potential Conflict</th><th>Recommended Action</th></tr></thead>
+    <thead><tr><th>Learner</th><th>Career Pathway</th><th>Career Interest</th><th>Current Academic Concern</th><th>Recommended Subjects</th><th>Planned Subject</th><th>Potential Conflict</th><th>Recommended Action</th></tr></thead>
     <tbody>
       ${d.guidanceRows.length ? d.guidanceRows.map(r=>`
         <tr style="cursor:pointer;" onclick="navigate('admin-learner','${r.learnerId}')">
@@ -429,10 +578,11 @@ function viewAdminDashboard(){
           <td>${esc(r.pathway)}</td>
           <td>${esc(r.interest)}</td>
           <td>${esc(r.concern)}</td>
+          <td>${esc(r.recommended)}</td>
           <td>${esc(r.planned)}</td>
           <td>${esc(r.conflict)}</td>
           <td>${esc(r.action)}</td>
-        </tr>`).join('') : `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:30px;">No learners currently flagged for guidance.</td></tr>`}
+        </tr>`).join('') : `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:30px;">No learners currently flagged for guidance.</td></tr>`}
     </tbody>
   </table></div>
   ${disclaimerHTML('This view surfaces support opportunities based on current results and stated interests — it never makes final career or subject decisions for a learner.')}
