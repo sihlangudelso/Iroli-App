@@ -216,7 +216,9 @@ function adminSubjectRecCardHTML(l){
   const rec = adminSubjectRecFor(l);
   const intended = [l.intendedMathType==='Mathematics' ? 'Mathematics' : (l.intendedMathType==='MathLit' ? 'Mathematical Literacy' : null)]
     .concat(l.intendedSubjects||[]).filter(Boolean);
-  const pairTitle = k=>SC_COPY.pairs[k].title.replace('?','');
+  // Short labels, and rows that wrap, so the card fits a phone.
+  const pairTitle = k=>({ science:'Physical or Technical Sciences', computing:'IT or CAT' })[k] || SC_COPY.pairs[k].title.replace('?','');
+  const kv = (label, value)=>`<div class="kv" style="flex-wrap:wrap;"><b>${esc(label)}</b><span style="min-width:0;flex:1 1 160px;">${value}</span></div>`;
   return `
   <div class="card" style="margin-bottom:18px;">
     <h3>Subject Choice recommendation</h3>
@@ -224,11 +226,11 @@ function adminSubjectRecCardHTML(l){
       : rec.state!=='ready' ? '<p class="page-sub">Answers saved, but the personality assessment is needed before a recommendation can be made.</p>'
       : `
       ${!rec.complete ? `<p class="page-sub">Based on ${rec.answered} of ${rec.total} questions.</p>` : ''}
-      <div class="kv"><b>Mathematics or Mathematical Literacy</b><span>${esc(rec.mathLabel)}</span></div>
-      ${Object.keys(rec.pairs).map(k=>`<div class="kv"><b>${esc(pairTitle(k))}</b><span>${esc(rec.pairs[k])}</span></div>`).join('')}
-      <div class="kv"><b>${rec.comboName ? 'Recommended combination' : 'Strongest matches'}</b><span>${rec.comboName ? `${esc(rec.comboName)}: ` : ''}${esc([rec.mathSubject].concat(rec.subjects).join(', '))}</span></div>
-      ${rec.alsoStrong.length ? `<div class="kv"><b>Also strong matches</b><span>${esc(rec.alsoStrong.join(', '))}</span></div>` : ''}`}
-    <div class="kv"><b>Learner intends to take</b><span>${esc(intended.join(', '))||'Not yet specified'}</span></div>
+      ${kv('Maths or Maths Literacy', esc(rec.mathLabel))}
+      ${Object.keys(rec.pairs).map(k=>kv(pairTitle(k), esc(rec.pairs[k]))).join('')}
+      ${kv(rec.comboName ? 'Recommended combination' : 'Strongest matches', (rec.comboName ? `${esc(rec.comboName)}: ` : '') + esc([rec.mathSubject].concat(rec.subjects).join(', ')))}
+      ${rec.alsoStrong.length ? kv('Also strong matches', esc(rec.alsoStrong.join(', '))) : ''}`}
+    ${kv('Learner intends to take', esc(intended.join(', '))||'Not yet specified')}
     ${rec && rec.differs && rec.differs.length ? `<div class="disclaimer" style="margin-top:10px;">${icon('info','ic')}<div>${rec.differs.map(esc).join('<br>')}<br>Worth talking through with the learner and their parent/guardian.</div></div>` : ''}
   </div>`;
 }
@@ -695,6 +697,7 @@ function viewAdminDashboard(){
   <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;">
     <button class="btn btn-amber" onclick="App.exportDashboardXLSX('${filterClass}')">${icon('download')} Download Excel</button>
     <button class="btn btn-ghost" onclick="App.exportDashboardCSV('${filterClass}')">${icon('download')} CSV</button>
+    <button class="btn btn-ghost" onclick="downloadClassSummaryPDF('${filterClass}', this)">${icon('download')} Class summary (PDF)</button>
     <button class="btn btn-ghost" onclick="App.saveDashboardSnapshot()">${icon('check')} Save Snapshot</button>
   </div>` : ''}
   <div class="grid grid-4" style="margin-bottom:26px;">
@@ -712,7 +715,7 @@ function viewAdminDashboard(){
   ` : ''}
 
   <div class="grid grid-2" style="margin-bottom:20px;">
-    <div class="card">
+    <div class="card" style="min-width:0;">
       <h3>Career Pathway Distribution</h3>
       <p class="page-sub">Click a pathway to see its learners.</p>
       ${d.pathwayDistribution.length ? d.pathwayDistribution.map(p=>`
@@ -721,7 +724,7 @@ function viewAdminDashboard(){
           <div class="aps-bar"><div style="width:${p.pct}%;background:${p.color};"></div></div>
         </div>`).join('') : `<p class="page-sub">No assessed Grade 9 learners yet.</p>`}
     </div>
-    <div class="card">
+    <div class="card" style="min-width:0;">
       <h3>Grade 10 Subjects: Recommended vs. Intended</h3>
       <p class="page-sub">Recommended: from ${d.subjectRecs.withRecCount} of ${d.overview.totalLearners} learners’ Subject Choice reports. Intended: what ${d.subjectRecs.intendedCount} learners say they lean toward.</p>
       ${d.subjectRecs.list.length ? `
@@ -790,16 +793,16 @@ function grade10PlanningHTML(d){
     <div class="stat-pill"><div class="dot" style="background:var(--teal)"></div><div><div class="n">${m.either} <span style="font-size:14px;color:var(--muted);">(${pct(m.either)}%)</span></div><div class="l">Maths choice to talk through</div></div></div>
   </div>
   <div class="grid grid-2" style="margin-bottom:20px;">
-    <div class="card">
+    <div class="card" style="min-width:0;">
       <h3>Recommended Subject Combinations</h3>
       <p class="page-sub">How many learners each combination was recommended to.</p>
       ${d.combinations.length ? d.combinations.map(c=>`
         <div style="margin-bottom:10px;">
-          <div style="display:flex;justify-content:space-between;gap:10px;font-size:13px;font-weight:600;"><span>${esc(c.name)}</span><span>${c.count} (${c.pct}%)</span></div>
+          <div style="display:flex;justify-content:space-between;gap:10px;font-size:13px;font-weight:600;"><span>${esc(c.name)}</span><span style="white-space:nowrap;">${c.count} (${c.pct}%)</span></div>
           <div class="aps-bar"><div style="width:${c.pct}%"></div></div>
         </div>`).join('') : `<p class="page-sub">No Subject Choice reports yet.</p>`}
     </div>
-    <div class="card">
+    <div class="card" style="min-width:0;">
       <h3>Support Planning</h3>
       <p class="page-sub">Learners interested in a subject (they intend to take it, or show high interest) whose Grade 9 result in a learning area it builds on is below ${SUPPORT_BELOW}%.</p>
       ${d.supportNeeds.length ? `
