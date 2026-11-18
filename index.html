@@ -26,6 +26,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<link rel="preload" as="image" href="assets/hero-iroli-pink.webp" imagesrcset="assets/hero-iroli-pink-840.webp 840w, assets/hero-iroli-pink.webp 1672w" imagesizes="100vw" fetchpriority="high">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -61,7 +62,8 @@
   .feature-card{border-top:4px solid var(--indigo);height:100%;}
   .feature-card .ico{width:40px;height:40px;border-radius:12px;background:var(--t-violet);display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
   .step-num{width:30px;height:30px;border-radius:50%;background:var(--brand-grad);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-family:var(--font-head);font-size:14px;flex-shrink:0;}
-  .cta-band{position:relative;isolation:isolate;overflow:hidden;background:var(--hero-pink);border-radius:var(--radius-lg);min-height:490px;display:flex;align-items:center;padding:36px;color:#202A44;}
+  .hero-section{width:100%;margin:0 0 40px;padding:0;}
+  .cta-band{position:relative;isolation:isolate;overflow:hidden;background:var(--hero-pink);border-radius:0;min-height:clamp(520px,56.28vw,960px);display:flex;align-items:center;padding:clamp(24px,4vw,64px);color:#202A44;}
   .hero-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2;}
   .cta-band::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#F6BDD3 0%,rgba(246,189,211,.96) 22%,rgba(246,189,211,0) 46%);}
   .hero-copy{width:29%;min-width:230px;}
@@ -89,9 +91,9 @@
   </div>
 </div>
 
-<section class="section">
+<section class="hero-section">
   <div class="cta-band">
-    <img class="hero-image" src="assets/hero-iroli-pink.png" alt="South African learners with healthcare, engineering and business professionals" width="1672" height="941" fetchpriority="high"/>
+    <img class="hero-image" src="assets/hero-iroli-pink.webp" srcset="assets/hero-iroli-pink-840.webp 840w, assets/hero-iroli-pink.webp 1672w" sizes="100vw" alt="South African learners with healthcare, engineering and business professionals" width="1672" height="941" fetchpriority="high" loading="eager"/>
     <div class="hero-copy">
     <h1>Ready to find your path?</h1>
     <p>Career guidance and Grade 10 subject choice for South African learners. Start with 4 quick questions — no account needed. Your school’s class code unlocks the full assessments and your report.</p>
