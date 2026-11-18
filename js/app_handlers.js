@@ -644,11 +644,12 @@ const App = {
     // convention -- inserting a literal 0 here would silently create a
     // class no one could ever join.
     const seats = Number((document.getElementById('newClassSeats')||{}).value) || null;
+    const plan = (document.getElementById('newClassPlan')||{}).value === 'pro' ? 'pro' : 'standard';
     if(!name.trim()){ toast('Give the class a name.'); return; }
     let code = genCode();
     while(CLASSES.some(c=>c.code===code)) code = genCode();
     const { data, error } = await sb.from('classes')
-      .insert({ name:name.trim(), code, seatLimit:seats, createdBy: ME.id||null })
+      .insert({ name:name.trim(), code, seatLimit:seats, plan, createdBy: ME.id||null })
       .select()
       .single();
     if(error){ toast('Could not create class — check you\u2019re an admin and schema.sql has been run.'); console.error(error); return; }
@@ -676,6 +677,16 @@ const App = {
     const cls = CLASSES.find(c=>c.id===id);
     if(cls) cls.seatLimit = seatLimit;
     toast('Seats updated.');
+    render();
+  },
+  // Which plan a class code gives to learners who join from now on.
+  async setClassPlan(id, plan){
+    plan = plan === 'pro' ? 'pro' : 'standard';
+    const { error } = await sb.from('classes').update({ plan }).eq('id', id);
+    if(error){ toast('Could not update the plan. The database may need supabase/add_pathway.sql.'); console.error(error); return; }
+    const cls = CLASSES.find(c=>c.id===id);
+    if(cls) cls.plan = plan;
+    toast('Plan updated. Learners who join with this code from now on get '+(plan==='pro'?'Pro':'Standard')+'.');
     render();
   },
   // Assigns an existing account as the class admin for one class, by email
@@ -723,6 +734,19 @@ const App = {
     if(error){ toast('Could not update licence — check your connection and try again.'); console.error(error); return; }
     l.licenseStatus = next;
     l.licenseSource = nextSource;
+    render();
+  },
+  // Super admin: a learner's plan, set individually (kept if they join or
+  // leave a class -- planSource 'admin', see protect_license_status).
+  async setLearnerPlan(id, plan){
+    const l = COHORT.find(c=>c.id===id);
+    if(!l) return;
+    plan = plan === 'pro' ? 'pro' : 'standard';
+    const planSource = plan === 'pro' ? 'admin' : null;
+    const { data, error } = await sb.from('learners').update({ plan, planSource, updatedAt: todayISO() }).eq('id', id).select('plan');
+    if(error || !data || !data.length || data[0].plan !== plan){ toast('Could not change the plan. Check your connection, and that supabase/add_pathway.sql has been run.'); console.error(error); return; }
+    l.plan = plan; l.planSource = planSource;
+    toast(cohortLearnerName(id)+' is now on '+(plan==='pro'?'Pro':'Standard')+'.');
     render();
   },
   // One combined CSV for the whole Grade 9 Dashboard (overview numbers,

@@ -63,6 +63,7 @@ function viewAdminClasses(){
     <div class="grid grid-3">
       <div class="form-row"><label>Class name</label><input type="text" id="newClassName" placeholder="e.g. Grade 10A 2026"/></div>
       <div class="form-row"><label>Licence seats</label><input type="number" id="newClassSeats" value="35" min="1"/></div>
+      <div class="form-row"><label for="newClassPlan">Plan</label><select id="newClassPlan"><option value="standard">Standard</option><option value="pro">Pro (Grade 11–12 Pathway)</option></select></div>
       <div class="form-row" style="display:flex;align-items:flex-end;"><button class="btn btn-primary" onclick="App.createClass()">${icon('plus')} Create class</button></div>
     </div>
   </div>` : ''}
@@ -75,7 +76,7 @@ function viewAdminClasses(){
       <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;">
         <div>
           <h3 style="margin-bottom:4px;">${esc(c.name)}</h3>
-          <div class="page-sub">Code <span class="class-code">${esc(c.code)}</span> · ${members.length} learner(s) · ${licensed}/${c.seatLimit||'∞'} licensed seats used</div>
+          <div class="page-sub">Code <span class="class-code">${esc(c.code)}</span> · ${c.plan==='pro'?'Pro':'Standard'} plan · ${members.length} learner(s) · ${licensed}/${c.seatLimit||'∞'} licensed seats used</div>
         </div>
         <div style="display:flex;gap:8px;align-self:flex-start;">
           <button class="btn btn-ghost btn-sm" onclick="navigate('admin-cohort','${c.id}')">View learners</button>
@@ -88,6 +89,13 @@ function viewAdminClasses(){
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <input type="number" id="seats-${c.id}" min="1" placeholder="Unlimited" value="${c.seatLimit||''}" style="width:120px;"/>
           <button class="btn btn-ghost btn-sm" onclick="App.updateClassSeats('${c.id}', (document.getElementById('seats-${c.id}')||{}).value)">Update seats</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line);">
+        <div class="page-sub" style="margin-bottom:6px;">Plan this class code gives (applies to learners who join from now on)</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select id="plan-${c.id}" style="width:auto;"><option value="standard" ${c.plan!=='pro'?'selected':''}>Standard</option><option value="pro" ${c.plan==='pro'?'selected':''}>Pro (Grade 11–12 Pathway)</option></select>
+          <button class="btn btn-ghost btn-sm" onclick="App.setClassPlan('${c.id}', (document.getElementById('plan-${c.id}')||{}).value)">Update plan</button>
         </div>
       </div>
       <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line);">
@@ -166,7 +174,7 @@ function viewAdminCohort(){
           <td style="max-width:220px;">${esc(top)}</td>
           <td style="max-width:220px;">${rec ? esc(adminRecSubjectsLine(rec)) : '—'}${rec && rec.differs && rec.differs.length ? ` <span class="badge badge-explore" title="${esc(rec.differs.join('; '))}">Differs from intended</span>` : ''}</td>
           <td>${(l.favourites||[]).length}</td>
-          <td><span class="badge ${l.licenseStatus==='active'?'badge-strong':'badge-good'}">${l.licenseStatus==='active'?'Active':'Trial'}</span></td>
+          <td><span class="badge ${l.licenseStatus==='active'?'badge-strong':'badge-good'}">${l.licenseStatus==='active'?'Active':'Trial'}</span>${l.plan==='pro'?' <span class="badge badge-good">Pro</span>':''}</td>
           <td>${IS_SUPER_ADMIN? `<button class="btn btn-ghost btn-sm" onclick="App.toggleLicense('${l.id}')">${l.licenseStatus==='active'?'Deactivate':'Activate'}</button>` : ''}</td>
         </tr>`;
       }).join('') : `<tr><td colspan="11" style="text-align:center;color:var(--muted);padding:30px;">No learners match yet.</td></tr>`}
@@ -191,7 +199,9 @@ function viewAdminLearnerDetail(id){
       <div class="kv"><b>Subjects</b><span>${esc((l.subjects||[]).join(', '))||'—'}</span></div>
       <div class="kv"><b>Personality (Holland code)</b><span>${esc(hollandCode(l.riasec))}</span></div>
       <div class="kv"><b>Licence</b><span>${l.licenseStatus==='active'?'Active':'Trial'}</span></div>
-      ${IS_SUPER_ADMIN? `<button class="btn btn-primary btn-sm" style="margin-top:8px;" onclick="App.toggleLicense('${l.id}')">${l.licenseStatus==='active'?'Deactivate licence':'Activate licence'}</button>` : ''}
+      <div class="kv"><b>Plan</b><span>${l.plan==='pro'?'Pro'+(l.planSource==='class'?' (from class)':''):'Standard'}</span></div>
+      ${IS_SUPER_ADMIN? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;"><button class="btn btn-primary btn-sm" onclick="App.toggleLicense('${l.id}')">${l.licenseStatus==='active'?'Deactivate licence':'Activate licence'}</button>
+        <button class="btn btn-ghost btn-sm" onclick="App.setLearnerPlan('${l.id}', '${l.plan==='pro'?'standard':'pro'}')">${l.plan==='pro'?'Set to Standard':'Set to Pro'}</button></div>` : ''}
     </div>
     <div class="card">
       <h3>Interest profile</h3>
@@ -203,11 +213,29 @@ function viewAdminLearnerDetail(id){
     ${matches.length? matches.map(m=>careerRowHTML(m.career,m.score,l,m.category)).join('') : '<p class="page-sub">No assessment data yet.</p>'}
   </div>
   ${subjectChoiceAvailable(l) ? adminSubjectRecCardHTML(l) : ''}
+  ${adminPathwayCardHTML(l)}
   <div class="card">
     <h3>Saved favourites</h3>
     <div class="pill-list">${(l.favourites||[]).map(id=>{const c=CAREERS.find(x=>x.id===id);return c?`<span class="tag">${esc(c.name)}</span>`:'';}).join('') || '<span class="page-sub">None yet.</span>'}</div>
   </div>
   `;
+}
+
+// A Grade 11-12 learner's Pathway for their teacher: goals and how the
+// latest marks compare, subjects needing support, the bursary goal with the
+// learner's own answers (learners are told their teacher can see these).
+function adminPathwayCardHTML(l){
+  if(!pathwayGrade(l) && !l.pathway && !l.termMarks) return '';
+  const goals = pwGoals(l), cur = pwCurrentMarks(l), support = pwSupportSubjects(l), b = pwBursaryStatus(l);
+  if(!goals.length && cur.source==='none' && !b) return `<div class="card" style="margin-bottom:18px;"><h3>Grade 11–12 Pathway</h3><p class="page-sub">${l.plan==='pro'?'Not started yet.':'This learner is on the Standard plan.'}</p></div>`;
+  return `<div class="card" style="margin-bottom:18px;">
+    <h3>Grade 11–12 Pathway</h3>
+    <p class="page-sub">${cur.source==='term' ? 'Latest marks: '+esc(pwEntryLabel(cur.entry))+'.' : (cur.source==='profile' ? 'Using the profile marks (no term marks yet).' : 'No marks yet.')}</p>
+    ${goals.length ? goals.map(g=>{ const ev = pwEvaluateGoal(l,g); return `<div class="kv"><b>${esc(pwGoalShortName(g))}</b><span>${esc(pwOverallText(ev))}${g.application&&g.application.status?' · Application: '+esc(pwAppLabel(g.application.status)):''}</span></div>`; }).join('') : '<p class="page-sub">No programme goals yet.</p>'}
+    <div class="kv"><b>Subjects needing support</b><span>${support.length ? esc(support.map(s=>pwSubjectLabel(l,s.key)+(s.gap>0?' ('+Math.round(s.gap*10)/10+'% below target)':'')+(s.asked?' — asked for support':'')).join('; ')) : 'None flagged'}</span></div>
+    ${b ? `<div class="kv"><b>Bursary goal</b><span>${esc(b.bursary.name)}${b.bursary.dream?' (Dream bursary)':''} · ${pwStatusChip(b.overall, b.overall==='met'?'All met so far':(b.overall==='unmet'?'Not yet':'Needs checking'))}</span></div>
+      ${b.academic.concat(b.other).map(x=>`<div class="kv"><b style="font-weight:500;">${esc(x.label)}</b><span>${x.eval||x.needed!=null ? pwStatusChip(x.status) : pwStatusChip(x.status, x.answer==='yes'?'Yes':(x.answer==='no'?'No':(x.answer==='notsure'?'Not sure':'Not answered')))}</span></div>`).join('')}` : '<div class="kv"><b>Bursary goal</b><span>None yet</span></div>'}
+  </div>`;
 }
 
 // The learner's Subject Choice recommendation beside what they say they
@@ -330,7 +358,7 @@ function adminRecStatus(rec){
 const COHORT_EXPORT_HEADERS = ['Name','Grade','School','Class','Maths Track','Subjects','Personality (Holland code)','Assessment Completed','Top 3 Career Matches',
   'Subject Choice Assessment','Maths Recommendation','Physical/Technical Sciences Recommendation','IT/CAT Recommendation','Recommended Combination','Recommended Subjects','Other Strong Subject Matches',
   'Intended Maths','Intended Subjects','Intended vs Recommended',
-  'Favourites Count','APS Estimate','Licence Status','Last Updated'];
+  'Favourites Count','APS Estimate','Licence Status','Plan','Pathway Programme Goals','Subjects Needing Support','Bursary Goal','Last Updated'];
 function cohortExportRow(l){
   const cls = CLASSES.find(c=>c.id===l.classId);
   const top3 = l.assessmentCompletedAt ? bestSuitedCareers(l,3).map(m=>m.career.name).join('; ') : '';
@@ -346,7 +374,11 @@ function cohortExportRow(l){
     l.intendedMathType==='Mathematics' ? 'Mathematics' : (l.intendedMathType==='MathLit' ? 'Mathematical Literacy' : ''),
     (l.intendedSubjects||[]).join('; '),
     ready ? (rec.differs.length ? rec.differs.join('; ') : ((l.intendedSubjects||[]).length || l.intendedMathType ? 'No differences' : 'No intended subjects yet')) : '',
-    (l.favourites||[]).length, l.apsLast?l.apsLast.aps:'', l.licenseStatus||'trial', l.updatedAt||''
+    (l.favourites||[]).length, l.apsLast?l.apsLast.aps:'', l.licenseStatus||'trial', l.plan==='pro'?'Pro':'Standard',
+    pwGoals(l).map(g=>pwGoalShortName(g)+': '+pwOverallText(pwEvaluateGoal(l,g))).join('; '),
+    pwSupportSubjects(l).map(s=>pwSubjectLabel(l,s.key)+(s.asked?' (asked)':'')).join('; '),
+    (l.pathway&&l.pathway.bursary) ? l.pathway.bursary.name+(l.pathway.bursary.dream?' (Dream bursary)':'') : '',
+    l.updatedAt||''
   ];
 }
 function exportScopeName(filterClass){

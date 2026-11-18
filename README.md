@@ -244,6 +244,9 @@ js/
                           (score weights, thresholds, subjects, questions, wording)
   subject_choice_engine.js  that assessment's scoring logic (no numbers to hunt for)
   views_subject_choice.js   that assessment's screens and report
+  pathway_engine.js       Grade 11-12 Pathway logic: marks vs programme requirements,
+                          APS, targets, gaps, bursary checks (no screens; Node-testable)
+  views_pathway.js        Grade 11-12 Pathway screens and their handlers (the Pro plan)
   views_admin.js          admin overview, classes, cohort table + export
   app_handlers.js         all click/submit handlers (the `App` object)
 ```
@@ -334,6 +337,26 @@ application deadlines, a final-marks reminder and application tracking switch on
    hidden from learners (`active = false`) until it has been checked on the
    bursary's official site; set `active` and `verifiedOn` for each checked row and
    run the file again.
+
+**Who sees it:** Grade 11 and 12 learners on the Pro plan, from `PRO_ENABLED_FROM`
+(1 January 2027, in `js/app.js`). Before that date only an admin previewing the
+learner view can open it. A Grade 11-12 learner on Standard sees what Pro adds and
+how to upgrade. Give Pro to a learner on their page in Cohort, or to a whole class
+by setting the class's plan (applies to learners who join with its code from then on).
+
+**School years:** each learner's grade belongs to a school year (`gradeYear`). On the
+first sign-in on or after 1 January the grade moves up (to at most 12) and the
+dashboard says so, with "Not my grade? Change it". A Grade 12 learner whose year is
+over sees "Your Iroli access has ended" (their data stays; changing their grade on
+the profile lets someone repeating Grade 12 carry on).
+
+**Programme data:** goals keep a copy of the requirements they were saved with
+(`learners.pathway.goals`), labelled with the data cycle (`PW_DATA_CYCLE` in
+`js/views_pathway.js`). After loading a new year's `courseRequirements`, update that
+label; a learner whose saved programme changed sees "Requirements changed" and can
+update it. Parallel keys in `subjectRequirements` are alternatives (language, maths,
+science); a row that lists more than three elective subjects is read as "subjects
+that count" and marked for the learner to check.
 
 ### The learner report
 

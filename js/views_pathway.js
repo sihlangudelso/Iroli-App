@@ -269,7 +269,7 @@ function pwBursarySummaryHTML(l, st){
   return `<div class="card">
     <div class="pw-goal-top">${pwStatusChip(st.overall, st.overall === 'met' ? 'All met so far' : (st.overall === 'unmet' ? 'Not yet' : 'Needs checking'))}${b.dream ? '<span class="pw-chip pw-notTaken">Added by you</span>' : ''}</div>
     <h3>${esc(b.name)}</h3>
-    <div class="pw-counts"><span>Academic: ${st.academic.filter(function(x){ return x.status === 'met'; }).length} of ${st.academic.length} met</span><span>Other requirements: ${st.other.filter(function(x){ return x.status === 'met'; }).length} of ${st.other.length}</span><span>Documents: ${st.docsHave} of ${st.docs.length} ready</span></div>
+    <div class="pw-counts">${st.academic.length ? `<span>Academic: ${st.academic.filter(function(x){ return x.status === 'met'; }).length} of ${st.academic.length} met</span>` : ''}<span>Other requirements: ${st.other.filter(function(x){ return x.status === 'met'; }).length} of ${st.other.length}</span><span>Documents: ${st.docsHave} of ${st.docs.length} ready</span></div>
     <button class="btn btn-ghost btn-sm" style="margin-top:10px;" onclick="navigate('pathway-bursary')">See details</button>
   </div>`;
 }
@@ -310,8 +310,8 @@ function pwNextSteps(l){
   goals.forEach(function(g, i){
     const a = pwEvaluateAPS(l, g, marksNow);
     if(a.kind === 'aps' && a.status === 'unmet'){
-      const sug = pwApsSuggestions(marksNow, a.gap);
-      steps.push({ html: 'Your APS estimate is ' + esc(a.current) + '; <b>' + esc(pwGoalShortName(g)) + '</b> asks for ' + esc(a.needed) + '.' + (sug.length ? ' Moving ' + esc(sug.map(function(s){ return pwSubjectLabel(l, s.key) + ' to ' + s.toPct + '%'; }).join(' and ')) + ' would add ' + esc(sug.length) + ' point' + (sug.length === 1 ? '' : 's') + '.' : ''), action: "navigate('pathway-goal', " + i + ")", label: 'See details' });
+      const sug = pwApsSuggestions(marksNow, a.gap).slice(0, 2);
+      steps.push({ html: 'Your APS estimate is ' + esc(a.current) + '; <b>' + esc(pwGoalShortName(g)) + '</b> asks for ' + esc(a.needed) + '.' + (sug.length ? ' A good start: ' + esc(sug.map(function(s){ return pwSubjectLabel(l, s.key) + ' to ' + s.toPct + '%'; }).join(' and ')) + '.' : ''), action: "navigate('pathway-goal', " + i + ")", label: 'See details' });
     }
   });
   const gaps = pwTargets(l).filter(function(t){ return t.gap > 0; }).sort(function(a, b){ return b.gap - a.gap; });
