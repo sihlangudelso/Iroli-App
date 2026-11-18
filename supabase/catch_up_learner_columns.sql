@@ -22,6 +22,7 @@ alter table public.learners add column if not exists "intendedMathType"  text;
 alter table public.learners add column if not exists "cellNumber"        text;
 alter table public.learners add column if not exists "exploringOnly"     boolean not null default false;
 alter table public.learners add column if not exists "licenseSource"     text check ("licenseSource" in ('admin','class'));
+-- Grade 11-12 Pathway: run supabase/add_pathway.sql (it also protects "plan").
 
 -- Make the API pick the new columns up straight away.
 notify pgrst, 'reload schema';

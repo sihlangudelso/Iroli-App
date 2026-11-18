@@ -21,6 +21,8 @@ create table if not exists public.classes (
   -- both pre-existing and newly-created classes). Set only by a super
   -- admin, via App.assignClassAdmin().
   "classAdminId" uuid references auth.users(id),
+  -- Which plan this class code gives (supabase/add_pathway.sql).
+  "plan" text not null default 'standard' check ("plan" in ('standard','pro')),
   "createdAt" timestamptz not null default now()
 );
 
@@ -92,6 +94,12 @@ create table if not exists public.learners (
   -- Lets someone use the app without claiming a grade/school. Also added by
   -- supabase/add_exploring_only_column.sql for databases created before it.
   "exploringOnly" boolean not null default false,
+  -- Grade 11-12 Pathway / Pro plan (supabase/add_pathway.sql).
+  "plan" text not null default 'standard' check ("plan" in ('standard','pro')),
+  "planSource" text check ("planSource" in ('admin','class')),
+  "gradeYear" smallint,
+  "termMarks" jsonb,
+  "pathway" jsonb,
   "displayName" text,
   email text,
   "createdAt" timestamptz not null default now(),
@@ -99,21 +107,24 @@ create table if not exists public.learners (
 );
 
 -- ---------- courseRequirements / careerCourseLinks ----------
--- Reference data for js/course-links.js's "real degree programmes &
--- entry requirements" card -- loaded separately from a national course-
--- requirements dataset (see supabase/add_humanities_course_links.sql),
--- not hand-authored here. Column shape is a best-effort reconstruction
--- (see supabase/add_course_links_rls.sql for the full reasoning); only
--- matters for a brand-new install, since IF NOT EXISTS makes this a
--- no-op against an already-populated project.
+-- Reference data (owner-supplied programme requirements, loaded with a
+-- separate SQL file generated from the owner's spreadsheet; 1,410 rows for
+-- the 2026 application cycle). Columns match the live table as of Nov 2026.
+-- Read by js/course-links.js and the Grade 11-12 Pathway.
 create table if not exists public."courseRequirements" (
-  id serial primary key,
-  institution text,
-  "courseName" text,
-  faculty text,
-  "apsScore" integer,
+  id integer primary key,
+  "institution" text not null,
+  "typeOfInstitution" text,
+  "location" text,
+  "faculty" text,
+  "schoolInFaculty" text,
+  "courseName" text not null,
+  "openingDate" text,
   "closingDate" text,
-  "subjectRequirements" jsonb
+  "apsScore" numeric,
+  "subjectRequirements" jsonb,   -- { "English HL": 5, "English FAL": 5, "Mathematics": 5, "Mathematics Literacy": 7 } (NSC levels; parallel keys are alternatives)
+  "institutionScores" jsonb,     -- a university's own score instead of APS, e.g. { "FPS (UCT)": 500 }
+  "sourceSheet" text
 );
 
 create table if not exists public."careerCourseLinks" (
@@ -123,6 +134,31 @@ create table if not exists public."careerCourseLinks" (
   "matchType" text,
   "matchedKeywords" text
 );
+
+-- ---------- bursaries (Grade 11-12 Pathway starter list; filled by seed_bursaries.sql) ----------
+create table if not exists public.bursaries (
+  id text primary key,                 -- short stable id, e.g. 'nsfas'
+  name text not null,
+  provider text,
+  fields text,                         -- plain-language fields of study
+  "academicRules" jsonb,               -- { "minAverage": 65, "subjects": { "Mathematics": 5, "Mathematics Literacy": 7 } }
+  "academicNote" text,                 -- the requirement in plain words, as published
+  "otherCriteria" jsonb,               -- [ { "id":"citizen", "label":"...", "kind":"citizenship|income|group|age|other" } ]
+  documents jsonb,                     -- [ "Certified copy of ID", ... ]
+  "usualClosing" text,                 -- e.g. '31 August'
+  obligations text,
+  "officialUrl" text,
+  cycle text,                          -- e.g. '2027 intake'
+  "verifiedOn" date,
+  active boolean not null default false,
+  "sortOrder" int not null default 100
+);
+alter table public.bursaries enable row level security;
+drop policy if exists "bursaries_select_authenticated" on public.bursaries;
+create policy "bursaries_select_authenticated"
+  on public.bursaries for select
+  to authenticated
+  using (true);
 
 -- ============================================================
 -- Row Level Security — this is what actually makes the app safe.
@@ -246,7 +282,7 @@ create policy "learners_select_own_or_admin"
 -- fields after that.
 create policy "learners_insert_own"
   on public.learners for insert
-  with check (auth.uid() = id and "licenseStatus" = 'trial');
+  with check (auth.uid() = id and "licenseStatus" = 'trial' and coalesce("plan",'standard') = 'standard');
 
 create policy "learners_update_own_or_admin"
   on public.learners for update
@@ -272,30 +308,30 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  via_join boolean := coalesce(current_setting('app.allow_license_activation', true), 'false') = 'true';
 begin
-  -- A class-granted licence tracks current class membership: if classId
-  -- is changing (leaving, switching classes, or a class deletion
-  -- cascading via ON DELETE SET NULL -- which fires this same trigger
-  -- too) and the licence came from occupying that seat, revert it.
-  -- Unconditional, including an admin-driven class change, since "no
-  -- longer in a paid seat" should always mean "no longer licensed
-  -- through that seat" regardless of who changed classId. Without this,
-  -- join-then-leave would permanently bank a seat's worth of access
-  -- while freeing the slot for someone else to repeat.
-  if old."licenseSource" = 'class' and new."classId" is distinct from old."classId" then
-    new."licenseStatus" := 'trial';
-    new."licenseSource" := null;
-    return new;
-  end if;
-  -- Otherwise, only an admin or the privileged class-join path (via its
-  -- own escape hatch, kept separate from protect_class_id's
-  -- app.allow_class_join so a future change to either privileged path
-  -- can't silently widen the other's blast radius) may change this.
-  if not public.is_admin()
-     and coalesce(current_setting('app.allow_license_activation', true), 'false') <> 'true'
-  then
+  -- Only an admin or the class-join path may change these four.
+  if not public.is_admin() and not via_join then
     new."licenseStatus" := old."licenseStatus";
     new."licenseSource" := old."licenseSource";
+    new."plan" := old."plan";
+    new."planSource" := old."planSource";
+  end if;
+  -- Leaving a class (or an admin moving the learner, or the class being
+  -- deleted): whatever came from that class seat goes. The class-join path
+  -- is skipped here because join_class_by_code sets what the NEW class gives
+  -- itself -- before, switching from one paid class to another by code
+  -- reverted the learner to trial.
+  if new."classId" is distinct from old."classId" and not via_join then
+    if old."licenseSource" = 'class' then
+      new."licenseStatus" := 'trial';
+      new."licenseSource" := null;
+    end if;
+    if old."planSource" = 'class' then
+      new."plan" := 'standard';
+      new."planSource" := null;
+    end if;
   end if;
   return new;
 end;
@@ -352,39 +388,38 @@ set search_path = public
 as $$
 declare
   found_class public.classes;
+  me public.learners;
   active_count int;
 begin
-  -- `for update` locks this class row for the rest of the transaction,
-  -- so a second learner racing for the same class's last seat blocks
-  -- here until the first caller commits, then re-reads a fresh seat
-  -- count that correctly includes that now-committed join -- this is
-  -- what actually prevents overselling seats under concurrent joins.
-  -- Different class codes lock different rows and never contend.
   select * into found_class from public.classes where upper(code) = upper(trim(p_code)) for update;
   if found_class.id is null then
     raise exception 'No class found with that code';
   end if;
-  -- Both NULL and 0 mean "unlimited" -- matching the admin UI's own
-  -- existing display convention (seatLimit||'∞'), which already treats a
-  -- falsy value this way. Without matching it here, any class whose seat
-  -- count was ever left blank would become a hard 0-seat class the
-  -- instant this ships, indistinguishable from a genuinely full one.
   if found_class."seatLimit" is not null and found_class."seatLimit" > 0 then
-    -- Excludes the caller's own row so a learner already active in this
-    -- exact class, re-submitting the same code, is never blocked by
-    -- their own existing seat.
     select count(*) into active_count from public.learners
       where "classId" = found_class.id and "licenseStatus" = 'active' and id <> auth.uid();
     if active_count >= found_class."seatLimit" then
       raise exception 'This class has reached its seat limit';
     end if;
   end if;
-  -- set_config(...,true) scopes both bypass flags to this one
-  -- transaction, never the session, so neither can leak into a later,
-  -- unrelated query on a pooled connection.
+  select * into me from public.learners where id = auth.uid();
   perform set_config('app.allow_class_join', 'true', true);
   perform set_config('app.allow_license_activation', 'true', true);
-  update public.learners set "classId" = found_class.id, "licenseStatus" = 'active', "licenseSource" = 'class', "updatedAt" = now()
+  update public.learners set
+    "classId" = found_class.id,
+    "licenseStatus" = 'active',
+    -- Keep an individually paid (admin-granted) licence as admin-granted.
+    "licenseSource" = case when me."licenseSource" = 'admin' and me."licenseStatus" = 'active' then 'admin' else 'class' end,
+    -- A Pro class gives Pro; never downgrade an admin-granted Pro plan.
+    "plan" = case
+               when me."planSource" = 'admin' and me."plan" = 'pro' then 'pro'
+               when found_class."plan" = 'pro' then 'pro'
+               else 'standard' end,
+    "planSource" = case
+               when me."planSource" = 'admin' and me."plan" = 'pro' then 'admin'
+               when found_class."plan" = 'pro' then 'class'
+               else null end,
+    "updatedAt" = now()
     where id = auth.uid();
   return query select found_class.id, found_class.name;
 end;

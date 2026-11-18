@@ -219,6 +219,9 @@ supabase/
   schema.sql              tables + Row Level Security policies — run once!
   add_*.sql               one-off migrations for databases created before a
                           feature existed (e.g. add_subject_choice_assessment.sql)
+  add_pathway.sql         Grade 11-12 Pathway / Pro plan columns, bursaries table and
+                          licence rules (see "Grade 11–12 Pathway" below)
+  seed_bursaries.sql      the starter bursary list (owner-maintained; safe to rerun)
   catch_up_learner_columns.sql
                           every learner column the app writes, as "add column if not
                           exists" -- run it once if saving says "the app's database
@@ -311,6 +314,26 @@ came from the original specification are kept as written (see the comment above
 `SC_COPY`). An automated review once flagged "does not mean you cannot succeed"
 as breaking a "never say cannot" rule — it is the owner's own reassurance. Check
 the spec before rewording any of it.
+
+### Grade 11–12 Pathway (the Pro plan)
+
+Grade 11 learners on the Pro plan save three university programme goals, add
+their marks for each of the four school terms, see target marks and gaps for
+those goals, and work towards a bursary (from Iroli's starter list or their own
+"Dream bursary"). The Pathway stays with them, still editable, in Grade 12, when
+application deadlines, a final-marks reminder and application tracking switch on.
+
+**Before deploying:** run, in this order, in the Supabase SQL editor:
+
+1. `supabase/add_pathway.sql`: the new learner columns (`plan`, `planSource`,
+   `gradeYear`, `termMarks`, `pathway`), `classes.plan`, the `bursaries` table, and
+   the updated licence rules (a learner cannot give themselves Pro; an admin-granted
+   licence now survives joining and leaving a class; switching classes by code no
+   longer drops a learner to trial).
+2. `supabase/seed_bursaries.sql`: the starter bursary list. Every bursary starts
+   hidden from learners (`active = false`) until it has been checked on the
+   bursary's official site; set `active` and `verifiedOn` for each checked row and
+   run the file again.
 
 ### The learner report
 
