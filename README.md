@@ -702,13 +702,25 @@ a quiet track.
 
 ### Navigation
 
-`LEARNER_NAV` in `js/render_shell.js` drives the sidebar, the phone's menu sheet and
-(its first five entries) the phone's bottom bar. **Grade 9 Report Results** sits above
-the two assessments for Grade 9 learners only (`grade9Only`): it is where the marks
-that the assessments use are entered. It is `menuOnly`, so the phone's bottom bar keeps
-the five places it always had (Dashboard, Report, Personality, Subjects, Career) and
-this one lives in the menu there, in the same spot; delete `menuOnly` to put it in the
-bar (it would push Career out).
+A learner has seven menu items, one per job, so nothing is offered in two places
+(`LEARNER_NAV` and `NAV_GROUPS` in `js/render_shell.js`):
+
+| Menu item | Screens under it |
+|---|---|
+| Home | what to do next, a snapshot, top 3 matches |
+| My Pathway | Grade 11-12 Pathway (Pro) |
+| My Report | the report and its "More detail" pages, including the learner profile |
+| Assessments | personality assessment and (Grade 9) Subject Choice; results go to My Report |
+| Careers | tabs: Best matches, All careers, Saved (with compare); career pages; clusters |
+| My Marks | Grade 9 report form, or term marks for Grade 10-12 with the APS from them and "Try different marks"; the APS calculator for someone exploring |
+| Account | details, school and subjects (edited on a copy until Save), class, licence and plan, email, password |
+
+Marks are entered only on My Marks. Grade 10-12 marks are kept per term
+(`termMarks`) for every learner; the latest term also fills `subjectMarks`, which
+matching and the report read. Older addresses (`my-profile`, `class`, `compare`,
+`pathway-marks`, `learner-profile`, `grade9-report` for other grades) open the page that
+now holds them. The phone's bottom bar shows the first five items that are not
+`menuOnly` (Account lives in the menu).
 
 ### Admin preview
 

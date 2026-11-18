@@ -1097,7 +1097,7 @@ function rpInfoHTML(R){
 function rpStartHTML(R, idp){
   const steps = [['Take the personality assessment', 'Shows your personality type, interests and best-suited careers.', "navigate('assessment')"]];
   if(R.grade9){
-    steps.push(['Enter your Grade 9 report results', 'So we can see how ready you are for each subject.', "navigate('grade9-report')"]);
+    steps.push(['Enter your Grade 9 report results', 'So we can see how ready you are for each subject.', "navigate('marks')"]);
     steps.push(['Take the Subject Choice Assessment', 'Shows which Grade 10 subjects fit you best.', "navigate('subject-choice')"]);
   }
   return rpSection({
@@ -1337,8 +1337,8 @@ function reportMoreDetailHTML(l, R){
     ['Career pathways', "navigate('report','pathways')"],
     ['Careers worth exploring', "navigate('report','careers')"],
     ['Academic strengths', "navigate('report','academic')"],
-    ['Subjects & your intended subjects', "navigate('report','subjects')"],
-    ['My profile', "navigate('report','profile')"],
+    [isGrade9Learner(l) ? 'Subjects & your intended subjects' : 'Subjects your pathways rely on', "navigate('report','subjects')"],
+    ['Your learner profile', "navigate('report','profile')"],
     ['Full list of next steps', "navigate('report','next-steps')"],
   ].filter(Boolean);
   return `

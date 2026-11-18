@@ -25,6 +25,9 @@ let APS_DRAFT = null;
 let GRADE9_DRAFT = null;
 // The Pathway marks form while it is being filled in (memory only, see views_pathway.js).
 let PATHWAY_DRAFT = null;
+// The school-profile form (grade, school, maths, subjects) while it is being
+// edited: a copy, so nothing changes until Save (see App.setGrade).
+let PROFILE_DRAFT = null;
 let SUBJECT_CHOICE_DRAFT = null;
 let MINI_DRAFT = null;
 let AUTH_READY = false;
@@ -125,7 +128,8 @@ function announce(msg){
   setTimeout(function(){ r.textContent = msg; }, 60);
 }
 
-function esc(s){ const d=document.createElement('div'); d.textContent = (s==null?'':String(s)); return d.innerHTML; }
+// Safe in text and in quoted attributes (" and ' too).
+function esc(s){ const d=document.createElement('div'); d.textContent = (s==null?'':String(s)); return d.innerHTML.replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function avg(arr){ if(!arr.length) return 50; return arr.reduce((a,b)=>a+b,0)/arr.length; }
 function clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
 function todayISO(){ return new Date().toISOString(); }
@@ -330,7 +334,7 @@ async function loadLearner(){
     .on('postgres_changes', { event:'*', schema:'public', table:'learners', filter:`id=eq.${ME.id}` }, (payload)=>{
       if(payload.eventType === 'DELETE') return;
       LEARNER = { ...payload.new, exists:true };
-      if(['home','matches','favourites','compare','class'].includes(ROUTE) || isPathwayRoute(ROUTE)) render();
+      if(['home','matches','favourites','account','marks','report'].includes(ROUTE) || isPathwayRoute(ROUTE)) render();
     })
     .subscribe();
 }
@@ -954,8 +958,8 @@ function isPathwayRoute(r){ return r === 'pathway' || String(r).indexOf('pathway
 function resultsEntryLinkHTML(l){
   if(!l || l.exploringOnly) return '';
   return isGrade9Learner(l)
-    ? `<a href="#" onclick="navigate('grade9-report');return false;">Grade 9 Report Results</a>`
-    : `<a href="#" onclick="navigate('profile');return false;">subject marks</a>`;
+    ? `<a href="#" onclick="navigate('marks');return false;">Grade 9 report results</a>`
+    : `<a href="#" onclick="navigate('marks');return false;">marks</a>`;
 }
 
 // A learner's best-suited careers, in the order the Career Matches page
@@ -1190,9 +1194,14 @@ function buildAcademicProfile(learner){
   const strongest = entries.slice(0,3);
   const toStrengthen = entries.filter(e=>e.pct<50).sort((a,b)=>a.pct-b.pct).slice(0,3);
   const areasOfStrength = [...new Set(strongest.map(e=>subjectDomain(e.subject)))];
-  const domains = computeStrengthDomains(learner);
+  // Once there are marks, the strength areas shown beside them must be backed
+  // by marks too -- an area the learner has no marks in (say Humanities, with
+  // no Geography or History) must not outrank the subjects they are actually
+  // strongest in on the strength of interests alone.
+  const all = computeStrengthDomains(learner);
+  const domains = fetEntries.length || g9Entries.length ? all.filter(d=>d.markFit!=null) : all;
   const showDomains = domains[0] && domains[0].hasEvidence;
-  return { entries, strongest, toStrengthen, areasOfStrength, primaryDomain: showDomains?domains[0]:null, secondaryDomain: showDomains?domains[1]:null };
+  return { entries, strongest, toStrengthen, areasOfStrength, primaryDomain: showDomains?domains[0]:null, secondaryDomain: showDomains?(domains[1]||null):null };
 }
 
 // A learner's current result in whatever single subject is most
@@ -1219,10 +1228,16 @@ function academicReadinessFor(learner, facultyId){
 // Never says "you cannot become X" -- only that a specific, named subject
 // may not currently be covered, and that it's worth a conversation.
 function subjectConflictForFaculty(learner, facultyId){
-  if((!learner.intendedSubjects || !learner.intendedSubjects.length) && !learner.intendedMathType) return null;
+  // Grade 9 learners are still choosing, so check the subjects they lean
+  // toward; a Grade 10-12 learner already takes theirs, so check those.
+  const choosing = isGrade9Learner(learner);
+  if(choosing && (!learner.intendedSubjects || !learner.intendedSubjects.length) && !learner.intendedMathType) return null;
+  if(!choosing && (learner.exploringOnly || (!(learner.subjects||[]).length && !learner.mathType))) return null;
   const subject = keySubjectFor(facultyId);
   if(!subject) return { hasConflict:false };
-  const hypothetical = { ...learner, subjects: learner.intendedSubjects||[], mathType: learner.intendedMathType||learner.mathType };
+  const hypothetical = choosing
+    ? { ...learner, subjects: learner.intendedSubjects||[], mathType: learner.intendedMathType||learner.mathType }
+    : { ...learner, subjects: learner.subjects||[], mathType: learner.mathType };
   if(subjectScore(hypothetical, subject) >= 50) return { hasConflict:false };
   const planned = (subject==='Mathematics' || subject==='Mathematical Literacy')
     ? (hypothetical.mathType==='MathLit' ? 'Mathematical Literacy' : hypothetical.mathType==='Mathematics' ? 'Mathematics' : 'not yet decided')
@@ -1291,8 +1306,10 @@ function buildNextSteps(learner){
     if(learner.subjectChoice && learner.subjectChoice.completedAt) steps.push('Read your Subject Choice report and talk it through with your Life Orientation teacher or subject counsellor.');
     else steps.push('Take the Subject Choice Assessment for a personalised look at which Grade 10 subjects fit you.');
   }
-  if(learner.intendedSubjects && learner.intendedSubjects.length) steps.push('Review your intended ' + nextSubjectsPhrase(learner) + ' against the pathways above.');
-  else steps.push('Note down which ' + nextSubjectsPhrase(learner) + ' you’re currently leaning toward — in your report under More detail, Subjects.');
+  if(isGrade9Learner(learner)){
+    if(learner.intendedSubjects && learner.intendedSubjects.length) steps.push('Review your intended Grade 10 subjects against the pathways above.');
+    else steps.push('Note down which Grade 10 subjects you’re currently leaning toward — in your report under More detail, Subjects.');
+  }
   const conflict = pathways[0] && subjectConflictForFaculty(learner, pathways[0].faculty.id);
   if(conflict && conflict.hasConflict) steps.push('Discuss your subject choice with a teacher, parent or career adviser before finalising it.');
   const profile = buildAcademicProfile(learner);
@@ -1322,8 +1339,9 @@ function progressState(l){
   if(!(l && l.exploringOnly)){
     steps.push({ key:'profile', label:'Profile complete', done: !!(l && l.grade && l.school) });
     steps.push(isGrade9Learner(l)
-      ? { key:'subjects', label:'Subject Choice done', done: !!(l.subjectChoice && l.subjectChoice.completedAt) }
-      : { key:'subjects', label:'Subjects added', done: !!(l && l.subjects && l.subjects.length) });
+      ? { key:'marks', label:'Grade 9 results added', done: !!l.grade9Report }
+      : { key:'marks', label:'Marks added', done: !!((l.termMarks && Object.keys(l.termMarks).length) || (l.subjectMarks && Object.keys(l.subjectMarks).length)) });
+    if(isGrade9Learner(l)) steps.push({ key:'subjects', label:'Subject Choice done', done: !!(l.subjectChoice && l.subjectChoice.completedAt) });
   }
   steps.push({ key:'assessment', label:'Personality assessment done', done: !!(l && l.assessmentCompletedAt) });
   steps.push({ key:'explore', label:'Explored matches', done: !!(l && l.viewedMatches) });

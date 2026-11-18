@@ -1,171 +1,164 @@
-function markRowHTML(subjectKey, label, saved){
-  const pct = saved && saved.pct;
-  return `<div class="mark-row"><span>${esc(label)}</span><input type="number" class="subject-mark" data-subject="${esc(subjectKey)}" min="0" max="100" placeholder="%" value="${pct!=null?pct:''}"/></div>`;
-}
 
+// The school-profile form, editing a copy (PROFILE_DRAFT) so that tapping a
+// grade or "just exploring" by mistake changes nothing until Save.
+function ensureProfileDraft(){
+  const l = ensureLearnerObj();
+  if(!PROFILE_DRAFT){
+    PROFILE_DRAFT = { grade: l.grade || null, school: l.school || '', mathType: l.mathType || null,
+      subjects: (l.subjects || []).slice(), exploringOnly: l.exploringOnly };
+  }
+  return PROFILE_DRAFT;
+}
 function viewOnboarding(isEdit){
   const l = ensureLearnerObj();
-  const grade = l.grade || '';
-  const mathType = l.mathType || '';
-  const subjects = l.subjects || [];
-  const marks = l.subjectMarks || {};
+  const d = ensureProfileDraft();
+  const grade = d.grade || '';
+  const mathType = d.mathType || '';
+  const subjects = d.subjects || [];
   // Also true for a pre-exploringOnly-column record that already has
   // grade+school set -- otherwise such a learner got an unwanted "are you
   // a school learner?" re-prompt specifically on the 'profile' edit route
   // (found in the pre-launch audit), since exploringOnly is undefined on
   // their record, not false.
-  const pathChosen = l.exploringOnly === true || l.exploringOnly === false || !!(l.grade && l.school);
+  const pathChosen = d.exploringOnly === true || d.exploringOnly === false || !!(l.grade && l.school);
   return `
   <div style="max-width:640px;margin:0 auto;">
+    ${isEdit ? `<button class="btn btn-ghost btn-sm" style="margin-bottom:12px;" onclick="navigate('account')">${icon('chevron')} Back to Account</button>` : ''}
     <div style="text-align:center;margin-bottom:26px;">
       <img class="brand-mark-img" src="assets/logo-mark.png" alt="Iroli"/>
-      <h1>${isEdit?'Update your profile':'Welcome to Iroli Career Pathway'}</h1>
-      <p class="page-sub" style="margin:0 auto;">Discover careers that match who you are, see what your results reveal about your strengths, and find the subjects and pathways to get there — whether or not you’re currently at school.</p>
+      <h1>${isEdit?'Your school details':'Welcome to Iroli Career Pathway'}</h1>
+      <p class="page-sub" style="margin:0 auto;">${isEdit ? 'Your grade, school and subjects. Nothing changes until you save.' : 'Discover careers that match who you are, see what your results reveal about your strengths, and find the subjects and pathways to get there, whether or not you\u2019re currently at school.'}</p>
     </div>
 
-    ${l.exploringOnly !== false ? `
+    ${!isEdit && d.exploringOnly !== false ? `
     <div class="grid grid-2" style="margin-bottom:22px;gap:12px;">
       <button class="tile" style="border-top-color:var(--indigo);padding:16px;" onclick="App.startExploring('assessment')">${icon('spark','tico')}<h3 style="font-size:14px;margin:8px 0 4px;">Personality Assessment</h3><p class="page-sub" style="margin:0;">${RIASEC_QUESTIONS.length + STRENGTH_KEYS.length} quick questions to find your interests and strengths.</p></button>
       <button class="tile" style="border-top-color:var(--teal);padding:16px;" onclick="App.startExploring('matches')">${icon('target','tico')}<h3 style="font-size:14px;margin:8px 0 4px;">Career Matching</h3><p class="page-sub" style="margin:0;">See which careers fit you best, ranked by fit.</p></button>
       <button class="tile" style="border-top-color:var(--sky);padding:16px;" onclick="App.startExploring('explore')">${icon('search','tico')}<h3 style="font-size:14px;margin:8px 0 4px;">Explore Careers</h3><p class="page-sub" style="margin:0;">Browse every career, with real degree requirements.</p></button>
-      <button class="tile" style="border-top-color:var(--coral);padding:16px;" onclick="App.startExploring('aps')">${icon('calc','tico')}<h3 style="font-size:14px;margin:8px 0 4px;">APS Calculator</h3><p class="page-sub" style="margin:0;">Estimate your university admission score from your marks.</p></button>
+      <button class="tile" style="border-top-color:var(--coral);padding:16px;" onclick="App.startExploring('marks')">${icon('calc','tico')}<h3 style="font-size:14px;margin:8px 0 4px;">APS Calculator</h3><p class="page-sub" style="margin:0;">Estimate your university admission score from your marks.</p></button>
     </div>
     ` : ''}
 
     ${!pathChosen ? `
     <div class="card">
-      <h3 style="margin-bottom:4px;">Are you currently a Grade 9–12 learner at school?</h3>
-      <p class="page-sub" style="margin-bottom:14px;">This just tailors your subject choice report and your school’s class view — everything above works either way.</p>
+      <h3 style="margin-bottom:4px;">Are you currently a Grade 9\u201312 learner at school?</h3>
+      <p class="page-sub" style="margin-bottom:14px;">This just tailors your subject choice report and your school\u2019s class view. Everything above works either way.</p>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn btn-primary" onclick="App.chooseOnboardingPath(false)">Yes, I’m a school learner</button>
-        <button class="btn btn-ghost" onclick="App.chooseOnboardingPath(true)">No — I’m just exploring</button>
+        <button class="btn btn-primary" onclick="App.chooseOnboardingPath(false)">Yes, I\u2019m a school learner</button>
+        <button class="btn btn-ghost" onclick="App.chooseOnboardingPath(true)">No, I\u2019m just exploring</button>
       </div>
     </div>
-    ` : l.exploringOnly ? `
+    ` : d.exploringOnly ? `
     <div class="card">
-      <h3>You’re all set</h3>
-      <p class="page-sub" style="margin-bottom:14px;">No school details needed — jump straight into the personality assessment or start exploring careers. You can add a school later from My Profile if that changes.</p>
+      <h3>${isEdit ? 'Using Iroli without a school' : 'You\u2019re all set'}</h3>
+      <p class="page-sub" style="margin-bottom:14px;">${isEdit ? 'Save to use Iroli without a grade or school. Your saved results stay.' : 'No school details needed. Jump straight into the personality assessment or start exploring careers. You can add a school later in Account.'}</p>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn btn-ghost btn-sm" onclick="App.chooseOnboardingPath(false)">Actually, I’m a school learner</button>
-        <button class="btn btn-primary" onclick="App.saveOnboarding()">${icon('check')} Continue</button>
+        <button class="btn btn-ghost btn-sm" onclick="App.chooseOnboardingPath(false)">Actually, I\u2019m a school learner</button>
+        <button class="btn btn-primary" onclick="App.saveOnboarding()">${icon('check')} ${isEdit ? 'Save' : 'Continue'}</button>
       </div>
     </div>
     ` : `
     <div class="card">
-      <div class="form-row">
+      ${isEdit ? '' : `<div class="form-row">
         <label>Your name</label>
         <input type="text" value="${esc(ME.name)||'Learner'}" disabled/>
-        <div class="hint">Pulled from your Claude account. Only your Institute admin can see the real names of learners in their classes.</div>
-      </div>
+        <div class="hint">From your Iroli account. Only your school\u2019s admins can see the real names of learners in their classes.</div>
+      </div>`}
       <div class="form-row">
         <label>Grade</label>
         <div class="filter-bar">
-          ${[9,10,11,12].map(g=>`<button class="chip-select ${grade===g?'on':''}" onclick="App.setGrade(${g})">Grade ${g}</button>`).join('')}
+          ${[9,10,11,12].map(g=>`<button class="chip-select ${Number(grade)===g?'on':''}" aria-pressed="${Number(grade)===g}" onclick="App.setGrade(${g})">Grade ${g}</button>`).join('')}
         </div>
+        ${isEdit && l.grade && Number(grade)!==Number(l.grade) ? `<div class="hint">Changing from Grade ${esc(l.grade)} to Grade ${esc(grade)}. ${Number(grade)===9 ? 'Grade 9 learners choose subjects later, so your saved subjects will be cleared when you save.' : ''}</div>` : ''}
       </div>
       <div class="form-row">
-        <label>School name</label>
-        <input type="text" id="ob_school" placeholder="e.g. Iroli High School" value="${esc(l.school||'')}"/>
+        <label for="ob_school">School name</label>
+        <input type="text" id="ob_school" placeholder="e.g. Iroli High School" value="${esc(d.school||'')}"/>
       </div>
-      ${grade>9 ? `
+      ${Number(grade)>9 ? `
       <div class="form-row">
         <label>Mathematics or Mathematical Literacy?</label>
         <div class="filter-bar">
-          <button class="chip-select ${mathType==='Mathematics'?'on':''}" onclick="App.setMathType('Mathematics')">Mathematics</button>
-          <button class="chip-select ${mathType==='MathLit'?'on':''}" onclick="App.setMathType('MathLit')">Mathematical Literacy</button>
+          <button class="chip-select ${mathType==='Mathematics'?'on':''}" aria-pressed="${mathType==='Mathematics'}" onclick="App.setMathType('Mathematics')">Mathematics</button>
+          <button class="chip-select ${mathType==='MathLit'?'on':''}" aria-pressed="${mathType==='MathLit'}" onclick="App.setMathType('MathLit')">Mathematical Literacy</button>
         </div>
       </div>
       <div class="form-row">
-        <label>Your other NSC subjects (besides Home Language, First Additional Language, Life Orientation & Maths)</label>
+        <label>Your other subjects (besides your two languages, Life Orientation and Maths)</label>
         ${SUBJECT_GROUPS.map(g=>`
           <div style="margin:12px 0 6px;font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;">${g.group}</div>
           <div class="check-grid">
-            ${g.subjects.map(s=>{
-              const checked = subjects.includes(s);
-              const pct = marks[s] && marks[s].pct;
-              return `<label class="check-item">
-                <input type="checkbox" class="subject-check" value="${esc(s)}" ${checked?'checked':''} onchange="this.closest('.check-item').querySelector('.subject-mark').disabled=!this.checked"/>
+            ${g.subjects.map(s=>`<label class="check-item">
+                <input type="checkbox" class="subject-check" value="${esc(s)}" ${subjects.includes(s)?'checked':''}/>
                 <span style="flex:1;">${esc(s)}</span>
-                <input type="number" class="subject-mark" data-subject="${esc(s)}" min="0" max="100" placeholder="%" style="width:56px;margin-left:auto;" ${checked?'':'disabled'} value="${pct!=null?pct:''}"/>
-              </label>`;
-            }).join('')}
+              </label>`).join('')}
           </div>
         `).join('')}
       </div>
-      <div class="form-row">
-        <label>Your latest report marks (optional)</label>
-        <div class="hint" style="margin-bottom:8px;">This helps us match you more accurately — skip anything you don’t have to hand yet.</div>
-        ${markRowHTML(mathType==='MathLit'?'Mathematical Literacy':'Mathematics', mathType==='MathLit'?'Mathematical Literacy':'Mathematics', marks[mathType==='MathLit'?'Mathematical Literacy':'Mathematics'])}
-        ${markRowHTML('Home Language','Home Language', marks['Home Language'])}
-        ${markRowHTML('First Additional Language','First Additional Language', marks['First Additional Language'])}
-        ${markRowHTML('Life Orientation','Life Orientation', marks['Life Orientation'])}
-      </div>` : `
-      <div class="disclaimer">${icon('info','ic')}<div>Grade 9 learners choose subjects for Grade 10 soon. After saving your profile, use your dashboard to enter your <b>Grade 9 Report Results</b> and take the <b>Subject Choice Assessment</b> — no need to pick subjects here yet.</div></div>
-      `}
+      <div class="disclaimer">${icon('info','ic')}<div>Add your marks for each term on <b>My Marks</b> after saving.</div></div>` : (grade ? `
+      <div class="disclaimer">${icon('info','ic')}<div>Grade 9 learners choose subjects for Grade 10 soon. After saving, add your <b>Grade 9 report results</b> on My Marks and take the <b>Subject Choice Assessment</b>. No need to pick subjects here yet.</div></div>
+      ` : '')}
       <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn btn-ghost btn-sm" onclick="App.chooseOnboardingPath(true)">Actually, I’m just exploring</button>
-        <button class="btn btn-primary" onclick="App.saveOnboarding()">${icon('check')} Save & continue</button>
+        <button class="btn btn-ghost btn-sm" onclick="App.chooseOnboardingPath(true)">Actually, I\u2019m just exploring</button>
+        <button class="btn btn-primary" onclick="App.saveOnboarding()">${icon('check')} ${isEdit ? 'Save' : 'Save & continue'}</button>
       </div>
     </div>
     `}
   </div>`;
 }
 
+// Home: what to do next, a short snapshot, and the top three matches. Every
+// other job has its own menu item, so nothing here repeats the menu.
+function homeNextSteps(l){
+  const steps = [];
+  const school = !l.exploringOnly;
+  const g9 = isGrade9Learner(l);
+  const thisYear = Number(l.gradeYear) || currentSchoolYear();
+  const yearTerms = (l.termMarks && l.termMarks[thisYear] && l.termMarks[thisYear].terms) || {};
+  const hasTermMarks = Object.keys(yearTerms).some(function(t){ return Object.keys(yearTerms[t]||{}).length; });
+  const hasMarks = g9 ? !!l.grade9Report : (hasTermMarks || Object.keys(l.subjectMarks||{}).length > 0);
+  if(school && !hasMarks) steps.push({ text: g9 ? 'Add your Grade 9 report results.' : 'Add your marks for this term.', route:'marks', label: 'Add marks' });
+  if(!l.assessmentCompletedAt) steps.push({ text:'Take the personality assessment to find careers that suit you.', route:'assessment', label:'Start' });
+  if(subjectChoiceAvailable(l) && !(l.subjectChoice && l.subjectChoice.completedAt)) steps.push({ text:'Take the Subject Choice Assessment to see which Grade 10 subjects fit you.', route:'subject-choice', label:'Start' });
+  if(pathwayOpen(l) && isProLearner(l)){
+    const pw = pwNextSteps(l)[0];
+    if(pw) steps.push({ html: pw.html, action: pw.action, label: pw.label || 'Open My Pathway' });
+  }
+  if(l.assessmentCompletedAt && !l.viewedMatches) steps.push({ text:'Look through your best career matches.', route:'matches', label:'See matches' });
+  if(l.assessmentCompletedAt && !(l.favourites||[]).length) steps.push({ text:'Save the careers you like, so you can compare them.', route:'matches', label:'Browse' });
+  if(school && hasMarks && !g9 && !hasTermMarks) steps.push({ text:'Add this term\u2019s marks so your results stay current.', route:'marks', label:'Update marks' });
+  if(l.assessmentCompletedAt) steps.push({ text:'Read your report and talk it through with a teacher or parent.', route:'report', label:'My Report' });
+  return steps.slice(0, 3);
+}
 function viewHome(){
   const l = ensureLearnerObj();
-  const { steps, pct } = progressState(l);
   const matches = bestSuitedCareers(l, 3);
-  const r = 42, circ = 2*Math.PI*r;
-  const cls = CLASSES.find(c=>c.id===l.classId);
+  const steps = homeNextSteps(l);
+  const { steps: done, pct } = progressState(l);
+  const doneCount = done.filter(s=>s.done).length;
   return `
-  ${pageHeadHTML('Your dashboard', `Welcome back, ${esc(ME.name)||'there'}. Here\u2019s where your career pathway stands.`)}
+  ${pageHeadHTML('Welcome back, ' + ((ME.name||'there').split(' ')[0]), 'Here\u2019s where things stand and what to do next.')}
   ${pwRolloverBannerHTML()}
   ${PREVIEW_MODE?`<div class="disclaimer" style="margin-bottom:18px;display:block;">
     <div style="display:flex;gap:10px;align-items:flex-start;">${icon('info','ic')}<div>You are previewing the learner experience as an admin. Nothing here is saved to shared learner data, and joining or leaving a class is switched off.</div></div>
     <div class="filter-bar" style="margin:12px 0 0;align-items:center;"><span class="page-sub" style="margin:0 4px 0 0;">Preview as:</span>${[['9','Grade 9'],['10','Grade 10'],['11','Grade 11'],['12','Grade 12'],['explore','Just exploring']].map(o=>`<button class="chip-select ${(l.exploringOnly?'explore':String(l.grade))===o[0]?'on':''}" onclick="App.previewAs('${o[0]}')">${o[1]}</button>`).join('')}</div>
   </div>`:''}
-  <div class="card" style="margin-bottom:20px;">
-    <div class="progress-ring-wrap">
-      <svg width="100" height="100" viewBox="0 0 100 100">
-        <circle class="progress-track" cx="50" cy="50" r="${r}" fill="none" stroke-width="10"/>
-        <circle class="progress-fill" cx="50" cy="50" r="${r}" fill="none" stroke-width="10"
-          stroke-dasharray="${circ}" stroke-dashoffset="${circ*(1-pct/100)}" transform="rotate(-90 50 50)"/>
-        <text x="50" y="55" text-anchor="middle" font-family="Sora" font-weight="700" font-size="20" fill="var(--ink)">${pct}%</text>
-      </svg>
-      <div style="flex:1;">
-        <h3 style="margin-bottom:10px;">Pathway progress</h3>
-        <div class="grid grid-2" style="gap:8px;">
-          ${steps.map(s=>labelStep(s.label, s.done)).join('')}
-        </div>
-      </div>
+  <div class="card pw-next" style="margin-bottom:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;">
+      <h3 style="margin:0;">What to do next</h3>
+      <span class="page-sub" style="margin:0;">${doneCount} of ${done.length} getting-started steps done</span>
     </div>
+    <div class="aps-bar" style="margin:10px 0 4px;"><div style="width:${pct}%"></div></div>
+    ${steps.length ? `<ol class="pw-steps">${steps.map(s=>`<li><span>${s.html || esc(s.text)}</span><button class="btn btn-ghost btn-sm" onclick="${s.action || `navigate('${s.route}')`}">${esc(s.label)}</button></li>`).join('')}</ol>`
+      : `<p class="page-sub" style="margin:8px 0 0;">You\u2019re up to date. Keep your marks current each term.</p>`}
   </div>
-  <div class="grid grid-4" style="margin-bottom:26px;">
-    <div class="stat-pill"><div class="dot" style="background:var(--indigo)"></div><div><div class="n">${l.exploringOnly?'Exploring':'Grade '+(l.grade||'—')}</div><div class="l">${l.exploringOnly?'Not currently in school':esc(l.school||'No school set')}</div></div></div>
-    <div class="stat-pill"><div class="dot" style="background:var(--teal)"></div><div><div class="n">${l.mathType==='Mathematics'?'Maths':(l.mathType==='MathLit'?'Maths Lit':'—')}</div><div class="l">Mathematics track</div></div></div>
+  <div class="grid grid-3" style="margin-bottom:26px;">
+    <div class="stat-pill"><div class="dot" style="background:var(--indigo)"></div><div><div class="n">${l.exploringOnly?'Exploring':'Grade '+(l.grade||'\u2014')}</div><div class="l">${l.exploringOnly?'Not currently in school':esc(l.school||'No school set')}</div></div></div>
     <div class="stat-pill"><div class="dot" style="background:var(--amber)"></div><div><div class="n">${(l.favourites||[]).length}</div><div class="l">Saved careers</div></div></div>
-    <div class="stat-pill"><div class="dot" style="background:${l.licenseStatus==='active'?'var(--grass)':'var(--coral)'}"></div><div><div class="n">${l.licenseStatus==='active'?'Active':'Trial'}</div><div class="l">Licence status</div></div></div>
+    <div class="stat-pill"><div class="dot" style="background:${l.licenseStatus==='active'?'var(--grass)':'var(--coral)'}"></div><div><div class="n">${l.licenseStatus==='active'?'Active':'Trial'}${l.plan==='pro'?' \u00b7 Pro':''}</div><div class="l">Licence</div></div></div>
   </div>
-
-  ${academicProfileHTML(l)}
-
-  <div class="section-title"><h2>Quick actions</h2></div>
-  <div class="grid grid-3">
-    ${pwHomeTileHTML(l)}
-    ${!l.exploringOnly && l.grade===9 ? `<button class="tile" style="border-top-color:var(--grass)" onclick="navigate('grade9-report')">${icon('chart','tico')}<h3>${l.grade9Report?'Update your Grade 9 report':'Enter your Grade 9 report results'}</h3><p>Add your latest marks and a few work-style questions to sharpen your profile.</p></button>` : ''}
-    ${!l.exploringOnly && Number(l.grade) > 9 ? `<button class="tile" style="border-top-color:var(--grass)" onclick="navigate('profile')">${icon('chart','tico')}<h3>Update your subjects & marks</h3><p>Keep your subjects and latest marks up to date so your matches and report stay accurate.</p></button>` : ''}
-    ${subjectChoiceAvailable(l) ? `<button class="tile" style="border-top-color:var(--grass)" onclick="navigate('subject-choice')">${icon('book','tico')}<h3>${l.subjectChoice&&l.subjectChoice.completedAt?'Your subject choice report':'Subject Choice Assessment'}</h3><p>A personalised look at which Grade 10 subjects fit what you enjoy, how you work and how you are doing.</p></button>` : ''}
-    <button class="tile" style="border-top-color:var(--indigo)" onclick="navigate('assessment')">${icon('spark','tico')}<h3>${l.assessmentCompletedAt?'Retake personality assessment':'Take your personality assessment'}</h3><p>Discover your interests, personality style and strengths.</p></button>
-    <button class="tile" style="border-top-color:var(--teal)" onclick="navigate('matches')">${icon('target','tico')}<h3>Career Matches</h3><p>See careers ranked by fit with your profile.</p></button>
-    <button class="tile" style="border-top-color:var(--sky)" onclick="navigate('explore')">${icon('search','tico')}<h3>Explore Careers</h3><p>Browse all seeded careers across every faculty.</p></button>
-    <button class="tile" style="border-top-color:var(--coral)" onclick="navigate('aps')">${icon('calc','tico')}<h3>APS Calculator</h3><p>Estimate your Admission Point Score from your marks.</p></button>
-    <button class="tile" style="border-top-color:var(--olive)" onclick="navigate('favourites')">${icon('heart','tico')}<h3>Favourites & Compare</h3><p>Review saved careers and compare them side by side.</p></button>
-  </div>
-
-  <div class="section-title"><h2>Your top career matches</h2><button class="btn btn-ghost btn-sm" onclick="navigate('matches')">See all</button></div>
+  <div class="section-title"><h2>Your top career matches</h2>${matches.length ? `<button class="btn btn-ghost btn-sm" onclick="navigate('matches')">See all</button>` : ''}</div>
   ${matches.length ? matches.map(m=>careerRowHTML(m.career, m.score, l, m.category, {route:'home'})).join('') : `<div class="empty-state">${icon('target')}<p>Take the <a href="#" onclick="navigate('assessment');return false;">personality assessment</a> to see your best-suited careers.</p></div>`}
-
-  ${cls ? `<div class="section-title"><h2>Your class</h2></div><div class="card"><b>${esc(cls.name)}</b><div class="page-sub">Class code: <span class="class-code">${esc(cls.code)}</span></div></div>` : ''}
   `;
 }
 function academicProfileHTML(l){
@@ -182,7 +175,7 @@ function academicProfileHTML(l){
         <div style="font-family:var(--font-head);font-weight:700;font-size:16px;">${esc(p.primaryDomain.domain.name)}</div>
         ${p.secondaryDomain ? `<div class="page-sub" style="margin:2px 0 0;">Secondary: ${esc(p.secondaryDomain.domain.name)}</div>` : ''}
       </div>
-      <button class="btn btn-ghost btn-sm" onclick="navigate('learner-profile')">${icon('chevron')} See full profile</button>
+      <button class="btn btn-ghost btn-sm" onclick="navigate('report','profile')">${icon('chevron')} See full profile</button>
     </div>` : ''}
     <div class="grid grid-2" style="margin-top:10px;">
       <div>
@@ -198,9 +191,6 @@ function academicProfileHTML(l){
       </div>
     </div>
   </div>`;
-}
-function labelStep(label, done){
-  return `<div style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:${done?'var(--ok-ink)':'var(--muted)'};font-weight:600;">${icon('check','ic')} ${label}</div>`;
 }
 
 /* ---------------- Your Learner Profile ---------------- */
@@ -273,7 +263,7 @@ function learnerProfileBodyHTML(l){
 
   ${topMatches.length ? `
   <div class="section-title" style="margin-top:0;"><h2>Top career matches right now</h2></div>
-  ${topMatches.map(m=>careerRowHTML(m.career,m.score,l,m.category,{route:'learner-profile'})).join('')}
+  ${topMatches.map(m=>careerRowHTML(m.career,m.score,l,m.category,{route:'report', param:'profile'})).join('')}
   ` : ''}
 
   ${(function(){
@@ -459,8 +449,9 @@ function ensureAssessDraft(){
 function viewAssessment(){
   const l = ensureLearnerObj();
   const d = ensureAssessDraft();
+  // Already done: the Assessments page shows the result and the retake button.
   if(l.assessmentCompletedAt && d.step===0 && !d.retaking){
-    return assessmentResultsHTML(l);
+    return viewAssessments();
   }
   const TOTAL_R = RIASEC_QUESTIONS.length, TOTAL_S = STRENGTH_KEYS.length, TOTAL = TOTAL_R + TOTAL_S;
   const step = d.step;
@@ -522,55 +513,6 @@ function viewAssessment(){
     </div>
   </div>`;
 }
-function assessmentResultsHTML(l){
-  const dims = RIASEC.map(d=>({...d, val: l.riasec? l.riasec[d.id]:0}));
-  const pti = personalityTypeInfo(l);
-  const top2 = pti ? pti.code : hollandCode(l.riasec);
-  const topDims = pti ? pti.top : [];
-  const topMatches = bestSuitedCareers(l, 3);
-  return `
-  <div class="page-head" style="align-items:center;">
-    <div>
-      <div style="font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:2px;">Your personality type</div>
-      <h1 style="font-size:44px;margin:0 0 6px;color:var(--link);">${esc(top2)}</h1>
-      <div class="page-sub">Here’s what that means, and a first look at where it points you.</div>
-    </div>
-    ${avatarChipHTML()}
-  </div>
-  <div class="card" style="margin-bottom:18px;">
-    <h3>What does ${esc(top2)} mean?</h3>
-    <p>${pti ? esc(pti.summary) : ''}</p>
-    ${topDims.map(d=>`<p style="margin-bottom:10px;"><b>${esc(d.name)}</b> — ${esc(d.desc)}</p>`).join('')}
-    <p class="page-sub" style="margin-bottom:0;">This comes from your two strongest RIASEC dimensions below — a starting point for exploring careers, not a fixed label.</p>
-  </div>
-  <div class="section-title" style="margin-top:0;"><h2>Your top career matches</h2></div>
-  ${topMatches.length ? topMatches.map(m=>careerRowHTML(m.career,m.score,l,m.category,{route:'assessment'})).join('') : `<div class="empty-state">${icon('target')}<p>Complete your profile for personalised matches.</p></div>`}
-  <div class="card" style="margin:18px 0;">
-    <h3>Interest profile</h3>
-    ${dims.map(d=>`
-      <div style="margin-bottom:12px;">
-        <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:4px;"><span>${d.name}</span><span>${Math.round(d.val)}%</span></div>
-        <div class="aps-bar"><div style="width:${Math.round(d.val)}%"></div></div>
-      </div>`).join('')}
-  </div>
-  <div class="card" style="margin-bottom:18px;">
-    <h3>Strengths</h3>
-    <div class="grid grid-2">
-    ${STRENGTH_KEYS.map(s=>`<div><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:4px;"><span>${s.label}</span><span>${Math.round((l.strengths||{})[s.id]||0)}%</span></div><div class="aps-bar"><div style="width:${Math.round((l.strengths||{})[s.id]||0)}%;background:var(--amber);"></div></div></div>`).join('')}
-    </div>
-  </div>
-  <div style="display:flex;gap:10px;">
-    <button class="btn btn-ghost" onclick="App.assessRetake()">Retake assessment</button>
-    <button class="btn btn-primary" onclick="navigate('matches')">See all career matches</button>
-  </div>`;
-}
-
-/* ---------------- Career list / matches / explore ---------------- */
-// Serializes a navigate()-style param (string, object, or nested object)
-// as a literal JS expression for embedding in an onclick="..." attribute
-// -- single-quoted strings, matching this codebase's existing hand-written
-// object-param calls (e.g. navigate('admin-cohort',{fac:'ict'})), so it
-// composes safely inside a double-quoted HTML attribute.
 function paramLiteral(v){
   if(v==null) return 'null';
   if(typeof v==='object') return '{'+Object.entries(v).map(([k,val])=>`${k}:${paramLiteral(val)}`).join(',')+'}';
@@ -618,13 +560,9 @@ function viewMatches(){
   if(fac!=='all') matches = matches.filter(m=>m.career.faculty===fac);
   const grouped = l.assessmentCompletedAt;
   return `
-  ${pageHeadHTML('Career matches', l.assessmentCompletedAt? 'Grouped by how your interests, strengths, subjects and marks line up.':'Complete the personality assessment for personalised ranking — showing subject-based fit for now.')}
-  <div class="detail-hero" style="background:linear-gradient(135deg, var(--indigo), #14172A);">
-    <p style="font-size:15px;">${l.assessmentCompletedAt
-      ? `Every one of the ${CAREERS.length} seeded careers, ranked by fit with your interest profile, strengths, subjects and marks.`
-      : `Every one of the ${CAREERS.length} seeded careers, ordered by subject fit for now — complete the personality assessment for a ranking based on your interests and strengths too.`
-    } Filter by faculty below, or open any career to see real degree programmes and entry requirements.</p>
-  </div>
+  ${careersHeadHTML('matches', l.assessmentCompletedAt
+      ? 'All ' + CAREERS.length + ' careers, grouped by how your interests, strengths, subjects and marks line up.'
+      : 'Ordered by your subjects for now. <a href="#" onclick="navigate(\'assessment\');return false;">Take the personality assessment</a> to rank them by your interests and strengths too.')}
   <div class="disclaimer" style="margin-bottom:16px;">${icon('info','ic')}<div>A match score reflects <b>fit</b> with your interests, strengths, subjects and marks — it is not a guarantee of admission. Meeting a programme’s minimum requirements doesn’t guarantee acceptance, especially for competitive programmes — always confirm on the institution’s own site.</div></div>
   <div class="filter-bar">
     <button class="chip-select ${fac==='all'?'on':''}" onclick="navigate('matches','all')">All faculties</button>
@@ -634,19 +572,16 @@ function viewMatches(){
     ? MATCH_GROUP_ORDER.map(([key,title,sub])=>{
         const list = matches.filter(m=>m.category===key);
         if(!list.length) return '';
-        return `<div class="section-title"><h2>${title}</h2></div><p class="page-sub" style="margin-top:-10px;margin-bottom:12px;">${sub}</p>${list.map(m=>careerRowHTML(m.career,m.score,l,m.category,{route:'matches'})).join('')}`;
+        return `<div class="section-title"><h2>${title}</h2></div><p class="page-sub" style="margin-top:-10px;margin-bottom:12px;">${sub}</p>${list.map(m=>careerRowHTML(m.career,m.score,l,m.category,{route:'matches', param:fac})).join('')}`;
       }).join('')
-    : matches.map(m=>careerRowHTML(m.career,m.score,l,null,{route:'matches'})).join('')}
+    : matches.map(m=>careerRowHTML(m.career,m.score,l,null,{route:'matches', param:fac})).join('')}
   `;
 }
 function viewExplore(){
   const l = ensureLearnerObj();
   const fac = ROUTE_PARAM && typeof ROUTE_PARAM==='object' ? ROUTE_PARAM.fac : (ROUTE_PARAM||'all');
   return `
-  ${pageHeadHTML('Explore careers', 'Browse every seeded career — no assessment needed.')}
-  <div class="detail-hero" style="background:linear-gradient(135deg, var(--indigo), #14172A);">
-    <p style="font-size:15px;">Browse all ${CAREERS.length} careers across ${FACULTIES.length} faculties, search by name, or filter to one faculty — no assessment required. Many careers also show real degree programmes and entry requirements pulled from actual South African institutions.</p>
-  </div>
+  ${careersHeadHTML('explore', 'Browse all ' + CAREERS.length + ' careers across ' + FACULTIES.length + ' faculties. Open any career to see its degree programmes and entry requirements.')}
   <button class="btn btn-ghost btn-sm" style="margin-bottom:14px;" onclick="navigate('clusters')">${icon('layers')} Not sure where to start? Browse by career cluster instead</button>
   <div class="filter-bar">
     <button class="chip-select ${fac==='all'?'on':''}" onclick="navigate('explore','all')">All faculties</button>
@@ -723,7 +658,7 @@ function exploreResultsHTML(fac, l){
   const q = EXPLORE_SEARCH.trim().toLowerCase();
   if(q) list = list.filter(c=>c.name.toLowerCase().includes(q) || c.blurb.toLowerCase().includes(q) || c.applicationNotes.toLowerCase().includes(q));
   if(!list.length) return `<div class="empty-state">${icon('search')}<p>No careers match ${q?`“${esc(EXPLORE_SEARCH)}”`:'these filters'}.</p><button class="btn btn-ghost btn-sm" onclick="App.clearExploreFilters()">Clear filters</button></div>`;
-  return list.map(c=>careerRowHTML(c,null,l)).join('');
+  return list.map(c=>careerRowHTML(c,null,l,null,{route:'explore', param:fac})).join('');
 }
 
 function viewCareerDetail(param){
@@ -822,7 +757,7 @@ function viewCareerDetail(param){
   ${(()=>{ const related = relatedCareersFor(career); return related.length ? `
   <div class="card" style="margin-bottom:18px;">
     <h3>Related careers</h3>
-    <div class="pill-list">${related.map(c=>`<span class="tag" style="cursor:pointer;" onclick="navigate('career','${c.id}')">${esc(c.name)}</span>`).join('')}</div>
+    <div class="pill-list">${related.map(c=>`<button class="tag" style="cursor:pointer;border:0;font:inherit;" onclick="navigate('career',${paramLiteral({ id:c.id, from:from })})">${esc(c.name)}</button>`).join('')}</div>
   </div>` : ''; })()}
 
   <div style="display:flex;gap:10px;">
@@ -836,16 +771,16 @@ function viewCareerDetail(param){
 function ensureApsDraft(){
   const l = ensureLearnerObj();
   if(!APS_DRAFT){
-    const subs = ['Life Orientation', l.mathType || 'Mathematics', 'English Home Language', ...(l.subjects||[])];
-    const uniq = [...new Set(subs)].slice(0,7);
+    const maths = l.mathType==='MathLit' ? 'Mathematical Literacy' : 'Mathematics';
     const marks = {};
-    // Plain &&-guards, not ?./?? -- this was the only optional-chaining/
-    // nullish-coalescing usage anywhere in the app (found in the
-    // pre-launch audit); with no build/transpile step, a syntax error
-    // here would fail this whole file to parse on any pre-2020 browser,
-    // breaking every learner route, not just the APS calculator.
-    const priorMarks = l.apsLast && l.apsLast.marksMap;
-    const subjectsList = priorMarks ? Object.keys(priorMarks) : uniq;
+    // A school learner starts from the marks saved on My Marks (so nothing is
+    // typed twice); otherwise from their last calculation, or a blank list.
+    // Plain &&-guards, not ?./?? -- no build step, so modern syntax would
+    // stop this file parsing on older browsers.
+    const saved = (!l.exploringOnly && Number(l.grade) > 9) ? pwCurrentMarks(l) : null;
+    const priorMarks = (saved && saved.source !== 'none') ? saved.marks : (l.apsLast && l.apsLast.marksMap);
+    const subjectsList = priorMarks ? Object.keys(priorMarks)
+      : [...new Set(['Life Orientation', maths, 'Home Language', 'First Additional Language', ...(l.subjects||[])])].slice(0,7);
     subjectsList.forEach(s=> marks[s] = (priorMarks && priorMarks[s]!=null) ? priorMarks[s] : '');
     APS_DRAFT = { subjects: subjectsList, marks, extra:'' };
     APS_DRAFT.__base = JSON.stringify(APS_DRAFT); // see draftTouched()
@@ -857,10 +792,9 @@ function viewAPS(){
   const l = ensureLearnerObj();
   const result = l.apsLast && l.apsLast.aps!=null ? l.apsLast : null;
   return `
-  ${pageHeadHTML('APS Calculator', 'Estimate your Admission Point Score from the National Senior Certificate 7-point scale.')}
-  <div class="detail-hero" style="background:linear-gradient(135deg, var(--indigo), #14172A);">
-    <p style="font-size:15px;">Enter your subject marks below to estimate your APS out of 42, using the common "best 6 subjects, excluding Life Orientation" method most South African universities start from. Every university has its own exact rules, so always confirm on their official calculator too.</p>
-  </div>
+  ${!l.exploringOnly && Number(l.grade) > 9 ? `<button class="btn btn-ghost btn-sm" style="margin-bottom:12px;" onclick="navigate('marks')">${icon('chevron')} Back to My Marks</button>` : ''}
+  ${pageHeadHTML(!l.exploringOnly && Number(l.grade) > 9 ? 'Try different marks' : 'APS Calculator', !l.exploringOnly && Number(l.grade) > 9 ? 'See how your APS changes if your marks change. Your saved marks stay as they are.' : 'Estimate your Admission Point Score from the National Senior Certificate 7-point scale.')}
+  <p class="page-sub">Your APS out of 42, using the common "best 6 subjects, excluding Life Orientation" method most South African universities start from. Every university has its own exact rules, so always confirm on their official calculator too.</p>
   <div class="card" style="margin-bottom:18px;">
     <h3>Enter your subject marks (%)</h3>
     ${d.subjects.map((s,i)=>`
@@ -894,108 +828,169 @@ function viewAPS(){
   `;
 }
 
-/* ---------------- Favourites / Compare ---------------- */
-function viewFavourites(){
+/* ---------------- Careers: tabs, saved careers and compare ---------------- */
+const CAREER_TABS = [['matches','Best matches'], ['explore','All careers'], ['favourites','Saved']];
+function careersHeadHTML(active, sub){
+  const l = ensureLearnerObj();
+  const n = (l.favourites||[]).length;
+  return `${pageHeadHTML('Careers', sub)}
+  <div class="filter-bar tabs-bar" role="tablist" aria-label="Careers">
+    ${CAREER_TABS.map(t=>`<button class="chip-select ${active===t[0]?'on':''}" role="tab" aria-selected="${active===t[0]}" onclick="navigate('${t[0]}')">${t[1]}${t[0]==='favourites' && n ? ' (' + n + ')' : ''}</button>`).join('')}
+  </div>`;
+}
+// Saved careers, with up to three of them side by side.
+function viewSaved(){
   const l = ensureLearnerObj();
   const favs = (l.favourites||[]).map(id=>CAREERS.find(c=>c.id===id)).filter(Boolean);
+  const cmp = (l.compare||[]).map(id=>CAREERS.find(c=>c.id===id)).filter(Boolean);
   return `
-  ${pageHeadHTML('Favourites', 'Careers you\u2019ve saved for later.')}
-  ${favs.length? favs.map(c=>{const ev=evaluateCareer(l,c); return careerRowHTML(c, ev.score, l, ev.category, {route:'favourites'});}).join('') : `<div class="empty-state">${icon('heart')}<p>No saved careers yet. Explore careers and tap the heart icon to save them here.</p></div>`}
-  ${favs.length? `<button class="btn btn-primary" style="margin-top:10px;" onclick="App.compareFromFavs()">${icon('layers')} Compare all saved</button>`:''}
+  ${careersHeadHTML('favourites', 'Careers you\u2019ve saved. Tick up to three to compare them side by side.')}
+  ${favs.length ? favs.map(c=>{
+      const ev = evaluateCareer(l,c), on = (l.compare||[]).includes(c.id);
+      return `<div class="saved-row">${careerRowHTML(c, ev.score, l, ev.category, {route:'favourites'})}
+        <label class="saved-compare"><input type="checkbox" ${on?'checked':''} onchange="App.toggleCompare('${c.id}')"/> Compare</label></div>`;
+    }).join('')
+    : `<div class="empty-state">${icon('heart')}<p>No saved careers yet. Tap the heart on any career to save it here.</p><button class="btn btn-primary" style="margin-top:12px;" onclick="navigate('matches')">See your best matches</button></div>`}
+  ${cmp.length ? compareTableHTML(l, cmp) : (favs.length > 1 ? '<p class="page-sub" style="margin-top:12px;">Tick two or three careers above to compare them.</p>' : '')}
   `;
 }
-function viewCompare(){
-  const l = ensureLearnerObj();
-  const items = (l.compare||[]).map(id=>CAREERS.find(c=>c.id===id)).filter(Boolean);
-  if(!items.length) return `${pageHeadHTML('Compare careers')}<div class="empty-state">${icon('layers')}<p>Add up to 3 careers to compare from Explore, Matches or Favourites.</p><button class="btn btn-primary" style="margin-top:12px;" onclick="navigate('explore')">Explore careers</button></div>`;
+function compareTableHTML(l, items){
   const rows = [
     ['Faculty', c=>facultyById(c.faculty).name],
-    ['Required subjects', c=>[...c.requiredSubjects.map(s=>s+' (required)'), ...c.recommendedSubjects.map(s=>s+' (rec.)')].join(', ') || '—'],
+    ['Required subjects', c=>[...c.requiredSubjects.map(s=>s+' (required)'), ...c.recommendedSubjects.map(s=>s+' (recommended)')].join(', ') || '\u2014'],
     ['Typical APS', c=>c.apsGuidance.typical],
-    ['Main qualification', c=>c.pathways[0].qualification+' — '+c.pathways[0].duration],
+    ['Main qualification', c=>c.pathways[0].qualification+' \u2014 '+c.pathways[0].duration],
     ['TVET route?', c=>c.institutions.tvet?'Yes':'Mainly university'],
     ['Your match score', c=>scoreCareer(l,c)+'%'],
   ];
   return `
-  ${pageHeadHTML('Compare careers', 'Side-by-side view of your selected careers.')}
+  <div class="section-title"><h2>Side by side</h2></div>
   <div class="table-wrap"><table>
-    <thead><tr><th></th>${items.map(c=>`<th>${esc(c.name)} <button class="btn btn-ghost btn-sm" onclick="App.toggleCompare('${c.id}')">${icon('close')}</button></th>`).join('')}</tr></thead>
+    <thead><tr><th></th>${items.map(c=>`<th>${esc(c.name)} <button class="btn btn-ghost btn-sm" aria-label="Remove ${esc(c.name)} from compare" onclick="App.toggleCompare('${c.id}')">${icon('close')}</button></th>`).join('')}</tr></thead>
     <tbody>${rows.map(([label,fn])=>`<tr><td><b>${label}</b></td>${items.map(c=>`<td>${esc(fn(c))}</td>`).join('')}</tr>`).join('')}</tbody>
-  </table></div>
-  `;
+  </table></div>`;
 }
 
-/* ---------------- My Profile ---------------- */
-// Three separate cards/actions, not one combined "Save" button -- each
-// has a genuinely different underlying behaviour a learner should
-// understand distinctly: details are instant, email requires
-// confirmation and doesn't apply yet, password requires their current
-// one first. Doesn't touch the separate 'profile' route (grade/school/
-// subjects, viewOnboarding(true)).
-function viewMyProfile(){
+/* ---------------- Assessments ---------------- */
+// Where every assessment is started, continued or retaken. Results live in
+// My Report, so this page only says where each one stands.
+function viewAssessments(){
   const l = ensureLearnerObj();
+  const info = personalityTypeInfo(l);
+  const inProgress = !l.assessmentCompletedAt && ASSESSMENT_DRAFT && (ASSESSMENT_DRAFT.step > 0);
+  const scOn = subjectChoiceAvailable(l);
+  const scDone = !!(l.subjectChoice && l.subjectChoice.completedAt);
+  const scStarted = !scDone && SUBJECT_CHOICE_DRAFT && SUBJECT_CHOICE_DRAFT.step > 0;
   return `
-  ${pageHeadHTML('My Profile')}
+  ${pageHeadHTML('Assessments', 'Short question sets about you. Your results appear in My Report.')}
+  <div class="grid grid-2">
+    <div class="card">
+      <span class="badge ${l.assessmentCompletedAt ? 'badge-strong' : 'badge-good'}">${l.assessmentCompletedAt ? 'Done' : (inProgress ? 'In progress' : 'Not started')}</span>
+      <h3 style="margin-top:10px;">Personality Assessment</h3>
+      <p class="page-sub">${RIASEC_QUESTIONS.length + STRENGTH_KEYS.length} questions about what you enjoy and what you\u2019re good at. It shapes your career matches and your report.</p>
+      ${info ? `<p style="margin:0 0 12px;">Your personality type: <b>${esc(info.code)}</b> \u2014 ${esc(info.top.map(d=>d.name).join(' and '))}.</p>` : ''}
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        ${l.assessmentCompletedAt
+          ? `<button class="btn btn-primary" onclick="navigate('report')">See my results</button><button class="btn btn-ghost" onclick="App.assessRetake();navigate('assessment')">Retake</button>`
+          : `<button class="btn btn-primary" onclick="navigate('assessment')">${inProgress ? 'Continue' : 'Start'}</button>`}
+      </div>
+    </div>
+    ${scOn ? `<div class="card">
+      <span class="badge ${scDone ? 'badge-strong' : 'badge-good'}">${scDone ? 'Done' : (scStarted ? 'In progress' : 'Not started')}</span>
+      <h3 style="margin-top:10px;">Subject Choice Assessment</h3>
+      <p class="page-sub">For choosing your Grade 10 subjects: what you enjoy, how you work and how you\u2019re doing in each subject.</p>
+      ${isGrade9Learner(l) && !l.grade9Report && !scDone ? `<p class="page-sub">Add your <a href="#" onclick="navigate('marks');return false;">Grade 9 report results</a> first, so it can use your marks.</p>` : ''}
+      <button class="btn ${scDone ? 'btn-primary' : 'btn-primary'}" onclick="navigate('subject-choice')">${scDone ? 'See my subject report' : (scStarted ? 'Continue' : 'Start')}</button>
+    </div>` : ''}
+  </div>`;
+}
+
+/* ---------------- My Marks ---------------- */
+// The one place a learner enters marks: the Grade 9 report form for Grade 9,
+// term marks (with the APS from them) for Grade 10-12, and the APS
+// calculator for someone exploring without a school.
+function viewMarks(){
+  const l = ensureLearnerObj();
+  if(l.exploringOnly) return viewAPS();
+  if(isGrade9Learner(l)) return viewGrade9Report();
+  return viewTermMarks();
+}
+
+/* ---------------- Account ---------------- */
+// Everything about the learner's account in one place: details, school and
+// subjects, class, licence and plan, email, password. Each card keeps its
+// own button because each saves differently (details at once, email only
+// after confirmation, password needs the current one).
+function viewAccount(){
+  const l = ensureLearnerObj();
+  const cls = CLASSES.find(c=>c.id===l.classId);
+  const maths = l.mathType==='Mathematics' ? 'Mathematics' : (l.mathType==='MathLit' ? 'Mathematical Literacy' : null);
+  const pro = l.plan === 'pro';
+  return `
+  ${pageHeadHTML('Account', 'Your details, school, class and plan.')}
   <div class="grid grid-2" style="margin-bottom:18px;">
     <div class="card">
       <h3>Your details</h3>
-      <div class="form-row"><label>Name</label><input type="text" id="myName" value="${esc(ME.name||'')}"/></div>
-      <div class="form-row"><label>Cell number</label><input type="tel" id="myCell" placeholder="e.g. 082 123 4567" value="${esc(l.cellNumber||'')}"/></div>
+      <div class="form-row"><label for="myName">Name</label><input type="text" id="myName" value="${esc(ME.name||'')}"/></div>
+      <div class="form-row"><label for="myCell">Cell number (optional)</label><input type="tel" id="myCell" placeholder="e.g. 082 123 4567" value="${esc(l.cellNumber||'')}"/></div>
       <button class="btn btn-primary" onclick="App.saveMyDetails()">Save details</button>
     </div>
     <div class="card">
-      <h3>Email address</h3>
-      <p class="page-sub">Current: <b>${esc(ME.email||'')}</b></p>
-      <div class="form-row"><label>New email</label><input type="email" id="myEmail" placeholder="new@example.com"/></div>
-      <button class="btn btn-primary" onclick="App.changeEmail()">Update email</button>
-      <p class="page-sub" style="margin-top:10px;margin-bottom:0;">We'll send a confirmation link to your new address — this doesn't take effect until you click it (and depending on your account's security settings, you may need to confirm from your current email too).</p>
+      <h3>School</h3>
+      ${l.exploringOnly
+        ? `<p class="page-sub">You\u2019re using Iroli to explore, without a school.</p>
+           <button class="btn btn-ghost" onclick="navigate('profile')">Add my school</button>`
+        : `<div class="kv"><b>Grade</b><span>${esc(l.grade || '\u2014')}${l.gradeYear ? ' (' + esc(l.gradeYear) + ')' : ''}</span></div>
+           <div class="kv"><b>School</b><span>${esc(l.school || '\u2014')}</span></div>
+           ${Number(l.grade) > 9 ? `<div class="kv"><b>Maths</b><span>${esc(maths || 'Not chosen')}</span></div>
+           <div class="kv"><b>Other subjects</b><span>${esc((l.subjects||[]).join(', ') || 'None chosen')}</span></div>` : ''}
+           <button class="btn btn-ghost" style="margin-top:8px;" onclick="navigate('profile')">${icon('edit')} Edit school details</button>`}
     </div>
   </div>
-  <div class="card" style="max-width:480px;margin-bottom:18px;">
-    <h3>School profile</h3>
-    ${l.exploringOnly
-      ? `<p class="page-sub">You’re using Iroli to explore, without a school profile.</p>
-         <button class="btn btn-ghost" onclick="navigate('profile')">Set up a school-learner profile</button>`
-      : `<p class="page-sub">${esc('Grade ' + (l.grade || '—'))} · ${esc(l.school || 'No school set')}</p>
-         <button class="btn btn-ghost" onclick="navigate('profile')">Update profile</button>`}
-  </div>
-  <div class="card" style="max-width:480px;">
-    <h3>Change password</h3>
-    <div class="form-row"><label>Current password</label><input type="password" id="curPass" placeholder="Your current password"/></div>
-    <div class="form-row"><label>New password</label><input type="password" id="newPass1" placeholder="At least 6 characters"/></div>
-    <div class="form-row"><label>Confirm new password</label><input type="password" id="newPass2" placeholder="Re-enter your new password"/></div>
-    <button class="btn btn-primary" onclick="App.changePassword()">Update password</button>
-  </div>
-  `;
-}
-
-/* ---------------- Class / Licence ---------------- */
-function viewClass(){
-  const l = ensureLearnerObj();
-  const cls = CLASSES.find(c=>c.id===l.classId);
-  return `
-  ${pageHeadHTML('My class & licence')}
-  <div class="grid grid-2">
+  <div class="grid grid-2" style="margin-bottom:18px;">
     <div class="card">
       <h3>Class</h3>
       ${cls ? `
-        <p><b>${esc(cls.name)}</b></p>
+        <p style="margin-bottom:4px;"><b>${esc(cls.name)}</b></p>
         <div class="page-sub" style="margin-bottom:14px;">Class code: <span class="class-code">${esc(cls.code)}</span></div>
         ${PREVIEW_MODE ? '' : `<button class="btn btn-ghost btn-sm" onclick="App.leaveClass()">Leave class</button>`}
       ` : (PREVIEW_MODE ? `
         <p class="page-sub">Joining a class is switched off while you preview, so no real class seat is used.</p>
       ` : `
         <p class="page-sub">Ask your teacher or Iroli admin for your class code.</p>
-        <div class="form-row"><input type="text" id="joinCode" placeholder="e.g. 7F3KQ" style="text-transform:uppercase;"/></div>
+        <div class="form-row"><label for="joinCode" class="sr-only">Class code</label><input type="text" id="joinCode" placeholder="e.g. 7F3KQ" style="text-transform:uppercase;"/></div>
         <button class="btn btn-primary" onclick="App.joinClass()">Join class</button>
       `)}
     </div>
     <div class="card">
-      <h3>Licence status</h3>
-      <span class="badge ${l.licenseStatus==='active'?'badge-strong':'badge-good'}">${l.licenseStatus==='active'?'Active licence':'Trial access'}</span>
-      <p class="page-sub" style="margin-top:12px;">Full Iroli Career Pathway access comes from either your school's class code or an individually activated account. If your access shows as trial, join a class above, or see <a href="pricing.html" target="_blank" rel="noopener">pricing</a> to activate individually.</p>
+      <h3>Licence and plan</h3>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <span class="badge ${l.licenseStatus==='active'?'badge-strong':'badge-good'}">${l.licenseStatus==='active'?'Active licence':'Trial access'}</span>
+        <span class="badge badge-good">${pro ? 'Pro plan' : 'Standard plan'}</span>
+      </div>
+      <p class="page-sub" style="margin-top:12px;">${l.licenseStatus==='active'
+        ? 'Your access lasts until the end of Grade 12.' + (!pro && pathwayGrade(l) ? ' Pro adds My Pathway: programme goals, target marks and a bursary goal.' : '')
+        : 'Access comes from your school\u2019s class code or an individually activated account.'}
+        See <a href="pricing.html" target="_blank" rel="noopener">pricing</a>.</p>
     </div>
-  </div>`;
+  </div>
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Email address</h3>
+      <p class="page-sub">Current: <b>${esc(ME.email||'')}</b></p>
+      <div class="form-row"><label for="myEmail">New email</label><input type="email" id="myEmail" placeholder="new@example.com"/></div>
+      <button class="btn btn-primary" onclick="App.changeEmail()">Update email</button>
+      <p class="page-sub" style="margin-top:10px;margin-bottom:0;">We\u2019ll send a confirmation link to your new address. The change only happens once you click it.</p>
+    </div>
+    <div class="card">
+      <h3>Change password</h3>
+      <div class="form-row"><label for="curPass">Current password</label><input type="password" id="curPass" placeholder="Your current password"/></div>
+      <div class="form-row"><label for="newPass1">New password</label><input type="password" id="newPass1" placeholder="At least 6 characters"/></div>
+      <div class="form-row"><label for="newPass2">Confirm new password</label><input type="password" id="newPass2" placeholder="Re-enter your new password"/></div>
+      <button class="btn btn-primary" onclick="App.changePassword()">Update password</button>
+    </div>
+  </div>
+  `;
 }
 
 // Forced landing screen for any learner past onboarding whose

@@ -1,26 +1,31 @@
+// One menu item per job. Each item owns the screens beneath it (see
+// navGroup), so a learner always sees where they are:
+//   Home         what to do next, top matches
+//   My Pathway   Grade 11-12 goals (Pro)
+//   My Report    personality results and the full report
+//   Assessments  take or retake the assessments
+//   Careers      best matches, all careers, saved careers and compare
+//   My Marks     the one place marks are entered (Grade 9 report, or term
+//                marks for Grade 10-12), with the APS from those marks
+//   Account      details, school, subjects, class, licence and plan
 const LEARNER_NAV = [
-  { r:'home', label:'Dashboard', ic:'home' },
-  // Grade 11-12 learners once Pro has launched (see pathwayOpen). Second, so the
-  // phone's bottom bar keeps it in view for them.
+  { r:'home', label:'Home', ic:'home' },
   { r:'pathway', label:'My Pathway', short:'Pathway', ic:'flag', pathwayOnly:true },
-  { r:'report', label:'Your Report', short:'Report', ic:'chart' },
-  // Grade 9 learners only (see currentNav): the marks from their school report,
-  // which the assessments below use to see how ready they are for each subject.
-  // menuOnly: the phone's bottom bar keeps the five places it always had; this one
-  // is in the menu there, in the same spot -- above the assessments.
-  { r:'grade9-report', label:'Grade 9 Report Results', short:'Grade 9', ic:'clipboard', grade9Only:true, menuOnly:true },
-  { r:'assessment', label:'Personality Assessment', short:'Personality', ic:'spark' },
-  // Right after the personality assessment it builds on -- and inside the
-  // first five entries, the ones the mobile bottom bar shows.
-  { r:'subject-choice', label:'Subject Choice Assessment', short:'Subjects', ic:'book' },
-  { r:'matches', label:'Career Matches', ic:'target' },
-  { r:'explore', label:'Explore Careers', ic:'search' },
-  { r:'aps', label:'APS Calculator', ic:'calc' },
-  { r:'favourites', label:'Favourites', ic:'heart' },
-  { r:'compare', label:'Compare', ic:'layers' },
-  { r:'my-profile', label:'My Profile', ic:'person' },
-  { r:'class', label:'My Class & Licence', ic:'users' },
+  { r:'report', label:'My Report', short:'Report', ic:'chart' },
+  { r:'assessments', label:'Assessments', short:'Assess', ic:'spark' },
+  { r:'matches', label:'Careers', ic:'target' },
+  { r:'marks', label:'My Marks', short:'Marks', ic:'clipboard' },
+  { r:'account', label:'Account', ic:'person', menuOnly:true },
 ];
+// Which menu item a screen belongs to.
+const NAV_GROUPS = {
+  report:'report', 'learner-profile':'report',
+  assessments:'assessments', assessment:'assessments', 'subject-choice':'assessments',
+  matches:'matches', explore:'matches', favourites:'matches', compare:'matches', career:'matches', clusters:'matches', cluster:'matches',
+  marks:'marks', 'grade9-report':'marks', aps:'marks', 'pathway-marks':'marks',
+  account:'account', 'my-profile':'account', class:'account', profile:'account',
+};
+function navGroup(route){ return NAV_GROUPS[route] || (isPathwayRoute(route) ? 'pathway' : route); }
 const ADMIN_NAV = [
   { r:'admin-home', label:'Overview', ic:'home' },
   { r:'admin-dashboard', label:'Grade 9 Dashboard', short:'Dashboard', ic:'target' },
@@ -49,11 +54,9 @@ function currentNav(){
   if(IS_ADMIN && !PREVIEW_MODE) return ADMIN_NAV;
   const gate = learnerGate(LEARNER);
   if(gate) return GATED_NAV[gate];
-  // Entering Grade 9 report results is for Grade 9 learners only.
-  const nav = LEARNER_NAV.filter(n=>(!n.grade9Only || (LEARNER && isGrade9Learner(LEARNER))) && (!n.pathwayOnly || pathwayOpen(LEARNER)));
-  // The Subject Choice Assessment is for Grade 9 learners (and anyone who
-  // already has a saved report) -- nobody else is offered it.
-  if(LEARNER && !subjectChoiceAvailable(LEARNER)) return nav.filter(n=>n.r!=='subject-choice');
+  const nav = LEARNER_NAV.filter(n=>!n.pathwayOnly || pathwayOpen(LEARNER));
+  // Someone exploring has no school marks: their "marks" page is the APS calculator.
+  if(LEARNER && LEARNER.exploringOnly) return nav.map(n=>n.r==='marks' ? Object.assign({}, n, { label:'APS Calculator', short:'APS', ic:'calc' }) : n);
   return nav;
 }
 
@@ -120,7 +123,7 @@ function sidebarHTML(){
     </div>
     <div class="nav-group">
       ${nav.map(n=>`
-        <button class="nav-item ${ROUTE===n.r?'active':''}" onclick="navigate('${n.r}')">
+        <button class="nav-item ${navGroup(ROUTE)===n.r?'active':''}" ${navGroup(ROUTE)===n.r?'aria-current="page"':''} onclick="navigate('${n.r}')">
           ${icon(n.ic)}<span>${n.label}</span>
         </button>`).join('')}
     </div>
@@ -143,7 +146,7 @@ function topbarHTML(){
 function bottomNavHTML(){
   const nav = currentNav().filter(n=>!n.menuOnly).slice(0,5);
   return nav.map(n=>`
-    <button class="${ROUTE===n.r?'active':''}" onclick="navigate('${n.r}')">
+    <button class="${navGroup(ROUTE)===n.r?'active':''}" ${navGroup(ROUTE)===n.r?'aria-current="page"':''} onclick="navigate('${n.r}')">
       ${icon(n.ic)}<span>${n.short || n.label.split(' ')[0]}</span>
     </button>`).join('');
 }
@@ -202,6 +205,17 @@ function render(){
 
   // learner (or preview) flow
   const l = ensureLearnerObj();
+  // Older addresses (bookmarks, Back) open the page that now holds them.
+  if(ROUTE==='my-profile' || ROUTE==='class') ROUTE = 'account';
+  if(ROUTE==='pathway-marks') ROUTE = 'marks';
+  if(ROUTE==='compare') ROUTE = 'favourites';
+  if(ROUTE==='learner-profile'){ ROUTE = 'report'; ROUTE_PARAM = 'profile'; }
+  // The Grade 9 report form is for Grade 9 learners; everyone else's marks live on My Marks.
+  if(ROUTE==='grade9-report' && !isGrade9Learner(l)) ROUTE = 'marks';
+  // The Subject Choice Assessment is for Grade 9 learners (and anyone with saved answers).
+  if(ROUTE==='subject-choice' && !subjectChoiceAvailable(l)) ROUTE = 'assessments';
+  // The profile form edits a copy; leaving it drops the unsaved copy.
+  if(ROUTE!=='profile' && ROUTE!=='onboarding') PROFILE_DRAFT = null;
   const gate = learnerGate(l);
   if(gate==='onboarding' && ROUTE!=='onboarding'){ ROUTE='onboarding'; }
   // Applies uniformly to every learner, including "just exploring" --
@@ -217,7 +231,7 @@ function render(){
   if(gate==='finished' && ROUTE!=='finished' && ROUTE!=='profile'){ ROUTE='finished'; }
   // Pathway screens: Grade 11-12 only, and Pro only. The menu hides them from
   // everyone else, but a link or the Back button can still ask for one.
-  if(!gate && isPathwayRoute(ROUTE) && !pathwayOpen(l)){ ROUTE='home'; ROUTE_PARAM=null; }
+  if(!gate && isPathwayRoute(ROUTE) && !pathwayOpen(l)){ ROUTE='home'; ROUTE_PARAM=null; refreshNav(); }
   // The nav above was built before the gate moved ROUTE, so redraw it to
   // highlight the screen they are really on.
   if(gate) refreshNav();
@@ -228,21 +242,21 @@ function render(){
   else if(ROUTE==='finished') app.innerHTML = viewSchoolFinished();
   else if(isPathwayRoute(ROUTE)) app.innerHTML = isProLearner(l) ? viewPathwayRoute(ROUTE, ROUTE_PARAM) : viewPathwayUpgrade();
   else if(ROUTE==='home') app.innerHTML = viewHome();
+  else if(ROUTE==='assessments') app.innerHTML = viewAssessments();
+  else if(ROUTE==='marks') app.innerHTML = viewMarks();
+  else if(ROUTE==='account') app.innerHTML = viewAccount();
   else if(ROUTE==='report') app.innerHTML = viewReport();
   else if(ROUTE==='subject-choice') app.innerHTML = viewSubjectChoice();
   else if(ROUTE==='grade9-report') app.innerHTML = viewGrade9Report();
   else if(ROUTE==='learner-profile') app.innerHTML = viewLearnerProfile();
   else if(ROUTE==='assessment') app.innerHTML = viewAssessment();
-  else if(ROUTE==='matches') { l.viewedMatches = true; app.innerHTML = viewMatches(); }
+  else if(ROUTE==='matches') { if(!l.viewedMatches) saveLearner({ viewedMatches:true }, { quiet:true }); app.innerHTML = viewMatches(); }
   else if(ROUTE==='explore') app.innerHTML = viewExplore();
   else if(ROUTE==='career') app.innerHTML = viewCareerDetail(ROUTE_PARAM);
   else if(ROUTE==='clusters') app.innerHTML = viewClusters();
   else if(ROUTE==='cluster') app.innerHTML = viewClusterDetail(ROUTE_PARAM);
   else if(ROUTE==='aps') app.innerHTML = viewAPS();
-  else if(ROUTE==='favourites') app.innerHTML = viewFavourites();
-  else if(ROUTE==='compare') app.innerHTML = viewCompare();
-  else if(ROUTE==='my-profile') app.innerHTML = viewMyProfile();
-  else if(ROUTE==='class') app.innerHTML = viewClass();
+  else if(ROUTE==='favourites') app.innerHTML = viewSaved();
   else if(ROUTE==='profile') app.innerHTML = viewOnboarding(true);
   else app.innerHTML = viewHome();
   } catch(err){

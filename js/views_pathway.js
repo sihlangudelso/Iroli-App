@@ -134,7 +134,6 @@ function pwSnapshot(p, l, old){
 
 function viewPathwayRoute(route, param){
   pwLoadProgrammes();
-  if(route === 'pathway-marks') return viewPathwayMarks();
   if(route === 'pathway-programmes') return viewPathwayProgrammes(param);
   if(route === 'pathway-programme') return viewPathwayProgramme(param);
   if(route === 'pathway-goal') return viewPathwayGoal(param);
@@ -162,7 +161,7 @@ function viewPathwayUpgrade(){
       <a class="btn btn-primary" href="mailto:info@iroli.co.za?subject=Iroli%20Pro%20plan&body=My%20account%20email%3A%20${encodeURIComponent(ME.email||'')}">Ask about Pro</a>
       <a class="btn btn-ghost" href="pricing.html" target="_blank" rel="noopener">See pricing</a>
     </div>
-    <p class="page-sub" style="margin-top:12px;">If your school gives Pro, join with your class code on <a href="#" onclick="navigate('class');return false;">My Class &amp; Licence</a>.</p>
+    <p class="page-sub" style="margin-top:12px;">If your school gives Pro, join with your class code in <a href="#" onclick="navigate('account');return false;">Account</a>.</p>
   </div>`;
 }
 
@@ -185,11 +184,6 @@ function pwRolloverBannerHTML(){
   return `<div class="disclaimer" style="margin-bottom:18px;align-items:center;">${icon('info','ic')}
     <div style="flex:1;">We've moved you to <b>Grade ${esc(ROLLOVER_NOTICE.toGrade)}</b> for ${esc(ROLLOVER_NOTICE.year)}. <a href="#" onclick="App.pwNotMyGrade();return false;">Not my grade? Change it</a></div>
     <button class="btn btn-ghost btn-sm" onclick="App.pwDismissRollover()">OK</button></div>`;
-}
-// The dashboard tile for Grade 11-12 learners.
-function pwHomeTileHTML(l){
-  if(!pathwayOpen(l)) return '';
-  return `<button class="tile" style="border-top-color:var(--indigo)" onclick="navigate('pathway')">${icon('flag','tico')}<h3>My Pathway</h3><p>Your programme goals, the marks to aim for and your bursary goal.</p></button>`;
 }
 
 /* ---- the dashboard ---- */
@@ -214,7 +208,7 @@ function viewPathwayHome(){
     ${[0,1,2].map(function(i){ return goals[i] ? pwGoalCardHTML(l, goals[i], i, cur.marks) : pwEmptyGoalHTML(i); }).join('')}
   </div>
 
-  <div class="section-title"><h2>Your subjects</h2><button class="btn btn-ghost btn-sm" onclick="navigate('pathway-marks')">${icon('edit')} Add or update marks</button></div>
+  <div class="section-title"><h2>Your subjects</h2><button class="btn btn-ghost btn-sm" onclick="navigate('marks')">${icon('edit')} Add or update marks</button></div>
   ${pwSubjectsTableHTML(l, targets, cur)}
 
   <div class="section-title"><h2>Your bursary goal</h2></div>
@@ -246,7 +240,7 @@ function pwGoalCardHTML(l, goal, i, marks){
 function pwAppLabel(s){ const r = PW_APP_STATUSES.find(function(x){ return x[0] === s; }); return r ? r[1] : 'Not started'; }
 
 function pwSubjectsTableHTML(l, targets, cur){
-  if(cur.source === 'none') return `<div class="empty-state">${icon('chart')}<p>No marks yet. Add your latest term marks to see your targets.</p><button class="btn btn-primary" style="margin-top:10px;" onclick="navigate('pathway-marks')">Add marks</button></div>`;
+  if(cur.source === 'none') return `<div class="empty-state">${icon('chart')}<p>No marks yet. Add your latest term marks to see your targets.</p><button class="btn btn-primary" style="margin-top:10px;" onclick="navigate('marks')">Add marks</button></div>`;
   const asked = pwData(l).supportSubjects || [];
   return `<div class="table-wrap"><table class="pw-table">
     <thead><tr><th>Subject</th><th>Now</th><th>Aim for</th><th>Gap</th><th>Since last term</th><th>For</th></tr></thead>
@@ -294,12 +288,12 @@ function pwNextSteps(l){
   const langs = pw.languages || {};
   const thisYear = (l.termMarks && l.termMarks[year] && l.termMarks[year].terms) || {};
   const termsDone = PW_TERMS.filter(function(t){ return thisYear[t] && Object.keys(thisYear[t]).length; });
-  if(!langs.home || !langs.fal) steps.push({ html: 'Tell us which languages you take, so we can check language requirements.', action: "navigate('pathway-marks')", label: 'Add languages' });
+  if(!langs.home || !langs.fal) steps.push({ html: 'Tell us which languages you take, so we can check language requirements.', action: "navigate('marks')", label: 'Add languages' });
   if(pwIsGrade12(l)){
     const prev = l.termMarks && l.termMarks[year - 1] && l.termMarks[year - 1].terms;
     if(!(prev && prev['4'] && Object.keys(prev['4']).length)) steps.push({ html: 'Add your <b>final Grade 11 results</b>. Universities and bursaries often use them for early offers.', action: "App.pwOpenMarks(" + (year - 1) + ",'4')", label: 'Add final results' });
   }
-  if(!termsDone.length) steps.push({ html: 'Add your marks for this term.', action: "navigate('pathway-marks')", label: 'Add marks' });
+  if(!termsDone.length) steps.push({ html: 'Add your marks for this term.', action: "navigate('marks')", label: 'Add marks' });
   if(goals.length < PW_MAX_GOALS) steps.push({ html: 'Choose your programme goals (' + goals.length + ' of ' + PW_MAX_GOALS + ' chosen).', action: "navigate('pathway-programmes', " + goals.length + ")", label: 'Choose a programme' });
   goals.forEach(function(g, i){
     const own = pwOwnScoreName(g);
@@ -323,41 +317,70 @@ function pwNextSteps(l){
   return steps.slice(0, 3);
 }
 
-/* ---- marks for each term ---- */
+/* ---- marks for each term (My Marks, Grade 10-12; not Pro-only) ---- */
+// The marks a term starts with: what is saved for it, or -- for a learner who
+// has never entered term marks -- the marks already on their profile, so
+// nobody types the same marks twice.
+function pwSavedTermMarks(l, year, term, allowProfile){
+  const y = l.termMarks && l.termMarks[year];
+  const saved = y && y.terms && y.terms[term];
+  if(saved && Object.keys(saved).length) return Object.assign({}, saved);
+  // Only the term the form opens on, so other terms never get copies.
+  if(allowProfile && !pwTermEntries(l).length){
+    const m = pwCurrentMarks(l);
+    if(m.source === 'profile') return Object.assign({}, m.marks);
+  }
+  return {};
+}
 function pwMarksDraft(l, year, term){
   const y = String(year || l.gradeYear || currentSchoolYear());
   const terms = (l.termMarks && l.termMarks[y] && l.termMarks[y].terms) || {};
-  let t = term;
-  if(!t){
-    // The first term this year without marks, or term 4.
-    t = PW_TERMS.find(function(x){ return !(terms[x] && Object.keys(terms[x]).length); }) || '4';
-  }
+  // The first term this year without marks, or term 4.
+  const t = term || PW_TERMS.find(function(x){ return !(terms[x] && Object.keys(terms[x]).length); }) || '4';
   const pw = pwData(l);
-  return { year: y, term: t, marks: Object.assign({}, terms[t] || {}), languages: Object.assign({}, pw.languages || {}), support: (pw.supportSubjects || []).slice() };
+  const marks = pwSavedTermMarks(l, y, t, true);
+  return { kind:'marks', year: y, term: t, marks: marks, base: JSON.stringify(marks), edits: {},
+    languages: Object.assign({}, pw.languages || {}), support: (pw.supportSubjects || []).slice() };
 }
-function viewPathwayMarks(){
+// Move the marks form to another term, keeping what was typed for this one
+// (it is saved together with the others).
+function pwSwitchTerm(year, term){
   const l = ensureLearnerObj();
-  if(!PATHWAY_DRAFT || PATHWAY_DRAFT.kind !== 'marks') PATHWAY_DRAFT = Object.assign({ kind:'marks' }, pwMarksDraft(l));
+  const d = PATHWAY_DRAFT;
+  pwCaptureMarks(l);
+  // Keep this term only if something in it was changed.
+  if(JSON.stringify(d.marks) !== d.base || d.edits[d.year + '|' + d.term]) d.edits[d.year + '|' + d.term] = d.marks;
+  const y = String(year), key = y + '|' + term;
+  d.year = y; d.term = term;
+  d.marks = d.edits[key] ? d.edits[key] : pwSavedTermMarks(l, y, term);
+  d.base = JSON.stringify(pwSavedTermMarks(l, y, term));
+}
+function pwCaptureMarks(l){
+  pwLearnerSubjects(l).forEach(function(k, i){ const el = document.getElementById('pwMark' + i); if(el) PATHWAY_HANDLERS.pwSetMark(i, el.value); });
+  const h = document.getElementById('pwLangHome'), f = document.getElementById('pwLangFal');
+  if(h) PATHWAY_DRAFT.languages.home = h.value || undefined;
+  if(f) PATHWAY_DRAFT.languages.fal = f.value || undefined;
+}
+function viewTermMarks(){
+  const l = ensureLearnerObj();
+  if(!PATHWAY_DRAFT || PATHWAY_DRAFT.kind !== 'marks') PATHWAY_DRAFT = pwMarksDraft(l);
   const d = PATHWAY_DRAFT;
   const year = Number(d.year), thisYear = Number(l.gradeYear) || currentSchoolYear();
   const gradeForYear = Number(l.grade) - (thisYear - year);
   const keys = pwLearnerSubjects(l);
+  const unsaved = Object.keys(d.edits).filter(function(k){ return k !== d.year + '|' + d.term; }).length;
   return `
-  ${pwHead('Your marks', 'Add your report marks for each term. Your targets and goals update straight away.')}
+  ${pageHeadHTML('My Marks', 'Add your report marks for each term. Your report, career matches' + (pathwayOpen(l) ? ', My Pathway' : '') + ' and APS use them.')}
   <div class="card" style="margin-bottom:16px;">
-    <h3>Your languages</h3>
-    <p class="page-sub">Programmes ask for specific languages, such as English Home Language or First Additional Language.</p>
-    <div class="grid grid-2" style="gap:12px;">
-      <div class="form-row"><label for="pwLangHome">Home Language</label><select id="pwLangHome" onchange="App.pwSetLanguage('home', this.value)"><option value="">Choose…</option>${PW_LANGUAGES.map(function(x){ return `<option ${d.languages.home === x ? 'selected' : ''}>${esc(x)}</option>`; }).join('')}</select></div>
-      <div class="form-row"><label for="pwLangFal">First Additional Language</label><select id="pwLangFal" onchange="App.pwSetLanguage('fal', this.value)"><option value="">Choose…</option>${PW_LANGUAGES.map(function(x){ return `<option ${d.languages.fal === x ? 'selected' : ''}>${esc(x)}</option>`; }).join('')}</select></div>
-    </div>
-  </div>
-  <div class="card">
     <h3>Grade ${esc(gradeForYear)} marks, ${esc(year)}</h3>
     <div class="filter-bar" style="margin:8px 0 14px;" role="group" aria-label="Term">
       ${PW_TERMS.map(function(t){ return `<button class="chip-select ${d.term === t ? 'on' : ''}" aria-pressed="${d.term === t}" onclick="App.pwSetTerm('${t}')">Term ${t}</button>`; }).join('')}
       ${Number(l.grade) === 12 && year === thisYear ? `<button class="chip-select" onclick="App.pwOpenMarks(${thisYear - 1},'4')">Final Grade 11 results</button>` : ''}
       ${year !== thisYear ? `<button class="chip-select" onclick="App.pwOpenMarks(${thisYear},'')">Back to ${thisYear}</button>` : ''}
+    </div>
+    <div class="grid grid-2" style="gap:12px;">
+      <div class="form-row"><label for="pwLangHome">Your Home Language</label><select id="pwLangHome" onchange="App.pwSetLanguage('home', this.value)"><option value="">Choose\u2026</option>${PW_LANGUAGES.map(function(x){ return `<option ${d.languages.home === x ? 'selected' : ''}>${esc(x)}</option>`; }).join('')}</select></div>
+      <div class="form-row"><label for="pwLangFal">Your First Additional Language</label><select id="pwLangFal" onchange="App.pwSetLanguage('fal', this.value)"><option value="">Choose\u2026</option>${PW_LANGUAGES.map(function(x){ return `<option ${d.languages.fal === x ? 'selected' : ''}>${esc(x)}</option>`; }).join('')}</select></div>
     </div>
     <div class="pw-marks">
       ${keys.map(function(k, i){ const v = d.marks[k]; return `<div class="pw-mark-row">
@@ -366,11 +389,23 @@ function viewPathwayMarks(){
         <label class="pw-support"><input type="checkbox" ${d.support.indexOf(k) >= 0 ? 'checked' : ''} onchange="App.pwToggleSupport(${i}, this.checked)"/> I'd like support</label>
       </div>`; }).join('')}
     </div>
-    <p class="page-sub">Leave a subject empty if you don't have its mark yet. Wrong subjects? <a href="#" onclick="navigate('profile');return false;">Update your subjects</a>.</p>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;">
-      <button class="btn btn-primary" id="pwSaveMarks" onclick="App.pwSaveMarks()">Save Term ${esc(d.term)} marks</button>
-      <button class="btn btn-ghost" onclick="navigate('pathway')">Back to My Pathway</button>
-    </div>
+    <p class="page-sub">Leave a subject empty if you don't have its mark yet. Wrong subjects? <a href="#" onclick="navigate('profile');return false;">Change them in Account</a>.</p>
+    ${unsaved ? `<p class="page-sub"><b>You have unsaved marks for another term.</b> Save keeps all of them.</p>` : ''}
+    <button class="btn btn-primary" id="pwSaveMarks" onclick="App.pwSaveMarks()">Save marks</button>
+  </div>
+  ${pwApsCardHTML(l)}
+  ${academicProfileHTML(l)}`;
+}
+// The APS worked out from the learner's saved marks, with a way to try others.
+function pwApsCardHTML(l){
+  const cur = pwCurrentMarks(l);
+  if(cur.source === 'none') return '';
+  const a = computeAPSFromMarks(cur.marks);
+  return `<div class="card" style="margin-bottom:20px;">
+    <h3>Your APS estimate: <span style="color:var(--link);">${esc(a.aps)} / 42</span></h3>
+    <div class="aps-bar" style="margin:10px 0 12px;"><div style="width:${Math.round(a.aps/42*100)}%"></div></div>
+    <p class="page-sub">From your ${cur.source === 'term' ? esc(pwEntryLabel(cur.entry)) + ' marks' : 'saved marks'}: your best ${esc(a.count)} subjects, excluding Life Orientation${a.count < 6 ? ' (add all your marks for a full estimate)' : ''}. Universities each work APS out their own way.</p>
+    <button class="btn btn-ghost btn-sm" onclick="App.pwTryMarks()">${icon('calc')} Try different marks</button>
   </div>`;
 }
 
@@ -508,7 +543,7 @@ function viewPathwayProgramme(param){
   const already = goals.findIndex(function(g){ return String(g.programmeId) === String(p.id); });
   const slotNo = Math.min(slot, PW_MAX_GOALS - 1);
   return `
-  ${pwHead(esc(p.courseName), esc(p.institution) + (p.location ? ' · ' + esc(p.location) : ''))}
+  ${pwHead(p.courseName, esc(p.institution) + (p.location ? ' · ' + esc(p.location) : ''))}
   <div class="card" style="margin-bottom:16px;">
     <div class="pw-goal-top">${pwOverallChip(ev)}</div>
     <p class="pw-overall">${esc(pwOverallText(ev))}</p>
@@ -534,7 +569,7 @@ function viewPathwayGoal(i){
   const own = pwOwnScoreName(goal);
   const app = goal.application || {};
   return `
-  ${pwHead(esc(goal.courseName), esc(goal.institution))}
+  ${pwHead(goal.courseName, esc(goal.institution))}
   ${changed ? `<div class="disclaimer warn" style="margin-bottom:16px;">${icon('info','ic')}<div>${changed === 'gone' ? 'This programme is no longer in our list. It may have been renamed or closed; check the university’s website.' : 'The requirements for this programme have changed since you saved it.'}
     ${changed === 'changed' ? `<div style="margin-top:8px;"><button class="btn btn-ghost btn-sm" onclick="App.pwRefreshGoal(${idx})">Use the latest requirements</button></div>` : ''}</div></div>` : ''}
   <div class="card" style="margin-bottom:16px;">
@@ -610,7 +645,7 @@ function pwBursaryDetailHTML(l){
   const docAns = b.docs || {};
   const app = b.application || {};
   return `
-  ${pwHead(esc(b.name), b.dream ? 'Added by you, not checked by Iroli.' : esc(b.provider || ''))}
+  ${pwHead(b.name, b.dream ? 'Added by you, not checked by Iroli.' : esc(b.provider || ''))}
   <div class="card" style="margin-bottom:16px;">
     <h3>Academic requirements</h3>
     ${b.academicNote ? `<p class="page-sub">${esc(b.academicNote)}</p>` : ''}
@@ -646,12 +681,14 @@ function pwBursaryDetailHTML(l){
 
 /* ---------- handlers (merged into App by app_handlers.js) ---------- */
 
-async function pwSavePathway(partial, what, btnSel){
-  if(SAVING.pathway) return false;
-  SAVING.pathway = true;
+// Pathway saves run one after another: a second tap while one is saving
+// waits its turn instead of being dropped (each builds on the saved state).
+let PW_SAVE_CHAIN = Promise.resolve(true);
+function pwSavePathway(partial, what, btnSel){
   const done = btnSel ? busyButton(btnSel, 'Saving…') : function(){};
-  try{ return await saveLearnerOrRevert(partial, { what: what || 'your pathway' }); }
-  finally{ SAVING.pathway = false; done(); }
+  const run = PW_SAVE_CHAIN.then(function(){ return saveLearnerOrRevert(partial, { what: what || 'your pathway' }); });
+  PW_SAVE_CHAIN = run.catch(function(){ return false; });
+  return run.then(function(ok){ done(); return ok; }, function(){ done(); return false; });
 }
 function pwWithPathway(fn){
   const l = ensureLearnerObj();
@@ -670,12 +707,22 @@ const PATHWAY_HANDLERS = {
   pwRetryProgrammes(){ PW_PROGRAMMES = undefined; render(); },
 
   // marks
-  pwOpenMarks(year, term){ const l = ensureLearnerObj(); PATHWAY_DRAFT = Object.assign({ kind:'marks' }, pwMarksDraft(l, year, term || null)); navigate('pathway-marks'); },
-  pwSetTerm(t){ const l = ensureLearnerObj(); const d = PATHWAY_DRAFT; const keep = { languages: d.languages, support: d.support }; PATHWAY_DRAFT = Object.assign({ kind:'marks' }, pwMarksDraft(l, d.year, t), keep); render(); },
+  pwOpenMarks(year, term){
+    const l = ensureLearnerObj();
+    if(PATHWAY_DRAFT && PATHWAY_DRAFT.kind === 'marks' && ROUTE === 'marks'){
+      const terms = (l.termMarks && l.termMarks[year] && l.termMarks[year].terms) || {};
+      pwSwitchTerm(year, term || PW_TERMS.find(function(x){ return !(terms[x] && Object.keys(terms[x]).length); }) || '4');
+      render(); return;
+    }
+    PATHWAY_DRAFT = pwMarksDraft(l, year, term || null);
+    navigate('marks');
+  },
+  pwSetTerm(t){ if(!PATHWAY_DRAFT) return; pwSwitchTerm(PATHWAY_DRAFT.year, t); render(); },
+  pwTryMarks(){ APS_DRAFT = null; navigate('aps'); },
   pwSetLanguage(which, v){ if(PATHWAY_DRAFT) PATHWAY_DRAFT.languages[which] = v || undefined; },
   pwSetMark(i, v){
     const l = ensureLearnerObj(); const k = pwLearnerSubjects(l)[i]; if(!k || !PATHWAY_DRAFT) return;
-    if(v === '' || v == null) delete PATHWAY_DRAFT.marks[k];
+    if(v === '' || v == null || isNaN(Number(v))) delete PATHWAY_DRAFT.marks[k];
     else PATHWAY_DRAFT.marks[k] = clamp(Math.round(Number(v) * 10) / 10, 0, 100);
   },
   pwToggleSupport(i, on){
@@ -684,27 +731,35 @@ const PATHWAY_HANDLERS = {
   },
   async pwSaveMarks(){
     const l = ensureLearnerObj(); const d = PATHWAY_DRAFT; if(!d) return;
-    // Pick up a value typed but not yet committed (no change event yet).
-    pwLearnerSubjects(l).forEach(function(k, i){ const el = document.getElementById('pwMark' + i); if(el) App.pwSetMark(i, el.value); });
+    pwCaptureMarks(l);
+    d.edits[d.year + '|' + d.term] = d.marks;
     const termMarks = JSON.parse(JSON.stringify(l.termMarks || {}));
     const thisYear = Number(l.gradeYear) || currentSchoolYear();
-    const y = termMarks[d.year] || (termMarks[d.year] = { grade: Number(l.grade) - (thisYear - Number(d.year)), terms: {} });
-    y.terms = y.terms || {};
-    y.terms[d.term] = Object.assign({}, d.marks);
+    Object.keys(d.edits).forEach(function(key){
+      const parts = key.split('|'), yr = parts[0], term = parts[1];
+      const y = termMarks[yr] || (termMarks[yr] = { grade: Number(l.grade) - (thisYear - Number(yr)), terms: {} });
+      y.terms = y.terms || {};
+      y.terms[term] = Object.assign({}, d.edits[key]);
+    });
     const pathway = pwWithPathway(function(pw){
       pw.languages = { home: d.languages.home || null, fal: d.languages.fal || null };
       pw.supportSubjects = d.support.slice();
     });
-    // Keep the profile's latest marks (used by matching, the APS calculator
-    // and the report) in step with the latest term.
+    // The profile's latest marks (matching, the report, the academic profile)
+    // follow the latest term; subjects that term has no mark for keep theirs.
     const latest = pwLatestEntry(Object.assign({}, l, { termMarks: termMarks }));
     const partial = { termMarks: termMarks, pathway: pathway };
-    if(latest){ const sm = {}; Object.keys(latest.marks).forEach(function(k){ sm[k] = { pct: latest.marks[k], term: todayISO() }; }); partial.subjectMarks = sm; }
+    if(latest){
+      const sm = JSON.parse(JSON.stringify(l.subjectMarks || {}));
+      Object.keys(latest.marks).forEach(function(k){ sm[k] = { pct: latest.marks[k], term: todayISO() }; });
+      partial.subjectMarks = sm;
+    }
     const ok = await pwSavePathway(partial, 'your marks', '#pwSaveMarks');
     if(!ok) return;
+    const n = Object.keys(d.edits).length;
     PATHWAY_DRAFT = null;
-    toast('Term ' + d.term + ' marks saved.');
-    navigate('pathway');
+    toast(n > 1 ? 'Marks saved for ' + n + ' terms.' : 'Term ' + d.term + ' marks saved.');
+    render();
   },
 
   // programmes

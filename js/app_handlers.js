@@ -207,30 +207,27 @@ const App = {
     await sb.auth.signOut();
   },
 
-  // ---- onboarding ----
+  // ---- onboarding / school details (edits PROFILE_DRAFT; nothing saved until Save) ----
   setGrade(g){
-    const l = ensureLearnerObj();
-    captureOnboardingForm(l.grade);
-    LEARNER.grade = g;
-    if(g===9){ LEARNER.mathType=null; LEARNER.subjects=[]; }
+    captureOnboardingForm();
+    ensureProfileDraft().grade = g;
     render();
   },
   setMathType(t){
-    const l = ensureLearnerObj();
-    captureOnboardingForm(l.grade);
-    LEARNER.mathType = t;
+    captureOnboardingForm();
+    ensureProfileDraft().mathType = t;
     render();
   },
   chooseOnboardingPath(isExploring){
-    ensureLearnerObj();
-    LEARNER.exploringOnly = isExploring;
-    if(isExploring){ LEARNER.grade = null; LEARNER.school = null; LEARNER.mathType = null; LEARNER.subjects = []; }
+    captureOnboardingForm();
+    ensureProfileDraft().exploringOnly = isExploring;
     render();
   },
   startExploring(route){
     ensureLearnerObj();
     if(LEARNER.exploringOnly !== false){
       LEARNER.exploringOnly = true;
+      PROFILE_DRAFT = null;
       // Fire-and-forget: the in-memory state above is already enough for
       // this session's own gating/nav checks, so a second rapid click on a
       // different tile doesn't race this save to decide which route "wins".
@@ -241,34 +238,36 @@ const App = {
   async saveOnboarding(){
     if(SAVING.onboarding) return;
     SAVING.onboarding = true;
-    const done = busyButton('button[onclick="App.saveOnboarding()"]', 'Saving…');
+    const done = busyButton('button[onclick="App.saveOnboarding()"]', 'Saving\u2026');
     try { await App.saveOnboardingNow(); }
     finally { SAVING.onboarding = false; done(); }
   },
   async saveOnboardingNow(){
     const l = ensureLearnerObj();
-    if(l.exploringOnly){
+    captureOnboardingForm();
+    const d = ensureProfileDraft();
+    const wasEdit = ROUTE === 'profile';
+    if(d.exploringOnly){
       const savedExploring = await saveLearnerOrRevert({ exploringOnly:true, grade:null, school:null, mathType:null, subjects:[], licenseStatus: l.licenseStatus||'trial' }, { what:'your profile', keeps:true });
       if(!savedExploring) return;
+      PROFILE_DRAFT = null;
       toast('Profile saved.');
       // A mini-assessment-driven signup lands straight in the real
       // assessment instead of the dashboard -- the invitation they just
       // accepted should be an immediate continuation, not a link to find.
-      navigate(l.miniAssessment ? 'assessment' : 'home');
+      navigate(wasEdit ? 'account' : (l.miniAssessment ? 'assessment' : 'home'));
       return;
     }
-    if(!l.grade){ toast('Please select your grade.'); return; }
-    const { school, subjects, subjectMarks } = readOnboardingForm(l.grade);
-    if(!school || !school.trim()){ toast('Please add your school name.'); return; }
-    const profile = { exploringOnly:false, grade:l.grade, gradeYear: currentSchoolYear(), school:school.trim(), mathType: l.grade>9? l.mathType:null, subjects: subjects||[], licenseStatus: l.licenseStatus||'trial' };
-    // Subject marks start in Grade 10: send them (or clear old ones) only when there is something to say,
-    // so a Grade 9 learner's profile never depends on that column.
-    if(l.grade>9) profile.subjectMarks = subjectMarks||{};
-    else if(l.subjectMarks != null) profile.subjectMarks = null;
+    const grade = Number(d.grade);
+    if(!grade){ toast('Please select your grade.'); return; }
+    if(!d.school || !d.school.trim()){ toast('Please add your school name.'); return; }
+    const profile = { exploringOnly:false, grade: grade, gradeYear: currentSchoolYear(), school: d.school.trim(),
+      mathType: grade>9 ? (d.mathType||null) : null, subjects: grade>9 ? (d.subjects||[]) : [], licenseStatus: l.licenseStatus||'trial' };
     const savedProfile = await saveLearnerOrRevert(profile, { what:'your profile', keeps:true });
     if(!savedProfile) return;
+    PROFILE_DRAFT = null;
     toast('Profile saved.');
-    navigate(l.miniAssessment ? 'assessment' : 'home');
+    navigate(wasEdit ? 'account' : (l.miniAssessment ? 'assessment' : 'home'));
   },
 
   // ---- Grade 9 Subject Choice Assessment ----
@@ -490,8 +489,8 @@ const App = {
       navigate('report');
       return;
     }
-    render();
-    toast('Personality assessment complete!');
+    toast('Personality assessment complete. Here are your results.');
+    navigate('report');
   },
   // A retake starts clean: every question unanswered, from the first. (ensureAssessDraft
   // would pre-fill the draft from the saved answers, so a retake looked half done and
@@ -541,11 +540,7 @@ const App = {
     await saveLearner({ compare: cmp });
     render();
   },
-  async compareFromFavs(){
-    const l = ensureLearnerObj();
-    await saveLearner({ compare: (l.favourites||[]).slice(0,3) });
-    navigate('compare');
-  },
+
 
   // ---- APS ----
   apsSetMark(subject, val){ ensureApsDraft().marks[subject] = val; },
@@ -595,12 +590,16 @@ const App = {
     }
     const row = Array.isArray(data) ? data[0] : data;
     if(!row){ toast('No class found with that code.'); return; }
-    // Mirrors what join_class_by_code() just did server-side, so the UI
-    // reflects activation immediately instead of waiting for a reload.
+    // Read back what join_class_by_code() decided (licence source and plan
+    // depend on the class and on any licence the learner already had), so
+    // the screen matches the server instead of guessing.
     LEARNER.classId = row.class_id;
     LEARNER.licenseStatus = 'active';
-    LEARNER.licenseSource = 'class';
-    toast('Joined '+row.class_name+' — your account is now active!');
+    try{
+      const { data: fresh, error: readErr } = await sb.from('learners').select('licenseStatus, licenseSource, plan, planSource, classId').eq('id', ME.id).maybeSingle();
+      if(!readErr && fresh) Object.assign(LEARNER, fresh);
+    }catch(e){ console.error('Could not reload the learner after joining', e); }
+    toast('Joined '+row.class_name+'. Your account is now active.');
     navigate('home');
   },
   async leaveClass(){
@@ -615,6 +614,7 @@ const App = {
     // class-granted licence always reverts when classId changes) -- this
     // is immediate-UI-feedback polish, not the real enforcement point.
     if(LEARNER && LEARNER.licenseSource==='class'){ LEARNER.licenseStatus='trial'; LEARNER.licenseSource=null; }
+    if(LEARNER && LEARNER.planSource==='class'){ LEARNER.plan='standard'; LEARNER.planSource=null; }
     await saveLearner({ classId: null });
     render();
   },
@@ -874,37 +874,15 @@ const App = {
   closeMobileMenu(){ const el = document.getElementById('mobileMenuSheet'); if(el) el.remove(); },
 };
 
-// Reads the onboarding form's live DOM values (school name, and for
-// Grade 10+ the checked subjects/marks) given the grade whose form shape
-// is currently on screen -- shared by saveOnboarding's final submit and
-// captureOnboardingForm below, so there's exactly one place that knows
-// how to read this form.
-function readOnboardingForm(gradeOnScreen){
+// Copies what is typed or ticked on the school-details form into
+// PROFILE_DRAFT before a chip tap re-draws it (school name, ticked subjects),
+// so nothing typed is lost and nothing reaches LEARNER until Save.
+function captureOnboardingForm(){
+  if(!PROFILE_DRAFT) return;
   const schoolEl = document.getElementById('ob_school');
-  const school = schoolEl ? schoolEl.value : undefined;
-  let subjects, subjectMarks;
-  if(gradeOnScreen>9){
-    subjects = Array.from(document.querySelectorAll('.subject-check:checked')).map(el=>el.value);
-    subjectMarks = {};
-    document.querySelectorAll('.subject-mark:not(:disabled)').forEach(el=>{
-      // clamp(...,0,100): found accepting out-of-range input (150, -20) in
-      // the pre-launch audit -- this feeds academic-fit scoring directly.
-      if(el.value!=='') subjectMarks[el.dataset.subject] = { pct: clamp(Number(el.value),0,100), term: todayISO() };
-    });
-  }
-  return { school, subjects, subjectMarks };
-}
-// Commits the onboarding form's live DOM values into LEARNER before a
-// Grade/Maths chip click re-renders viewOnboarding() from LEARNER's
-// fields -- otherwise a school name already typed, or subjects/marks
-// already checked in, was silently wiped on every such click (found in
-// the pre-launch audit). Takes the grade whose form is CURRENTLY on
-// screen (i.e. the old grade, read before it's changed).
-function captureOnboardingForm(gradeOnScreen){
-  if(!LEARNER || LEARNER.exploringOnly) return;
-  const { school, subjects, subjectMarks } = readOnboardingForm(gradeOnScreen);
-  if(school!==undefined) LEARNER.school = school;
-  if(gradeOnScreen>9){ LEARNER.subjects = subjects; LEARNER.subjectMarks = subjectMarks; }
+  if(schoolEl) PROFILE_DRAFT.school = schoolEl.value;
+  const boxes = document.querySelectorAll('.subject-check');
+  if(boxes.length) PROFILE_DRAFT.subjects = Array.from(boxes).filter(function(el){ return el.checked; }).map(function(el){ return el.value; });
 }
 
 function csvEscape(v){

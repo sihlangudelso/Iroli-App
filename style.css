@@ -920,6 +920,11 @@ td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
 
 /* (The report's @page rule -- A4, margin 0 -- travels with the report's own markup, see reportA4HTML in
    js/report_pdf.js, so that every other page prints with the browser's usual margins.) */
+/* ---------- Careers tabs and saved careers ---------- */
+.tabs-bar{margin-bottom:18px;}
+.saved-row{position:relative;}
+.saved-row .career-row{margin-bottom:4px;}
+.saved-compare{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--muted);margin:0 0 12px 4px;cursor:pointer;}
 /* ---------- Grade 11-12 Pathway (js/views_pathway.js) ---------- */
 .pw-crumb{margin-bottom:6px;font-size:13px;font-weight:600;}
 .pw-crumb a{display:inline-flex;align-items:center;gap:6px;color:var(--link);text-decoration:none;}

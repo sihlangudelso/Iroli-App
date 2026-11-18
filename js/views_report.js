@@ -6,11 +6,11 @@
 // navigate('report', <id>) still opens each. The printed copy is only the
 // short report.
 const REPORT_DETAILS = [
-  { id:'profile', label:'My Profile', sub:'Your results, interests and work style in one picture.' },
+  { id:'profile', label:'Your learner profile', sub:'Your results, interests and work style in one picture.' },
   { id:'pathways', label:'Career Pathways', sub:'Broad fields that fit you, before specific careers.' },
   { id:'careers', label:'Careers Worth Exploring', sub:'Several careers worth a look — not a single best answer.' },
   { id:'academic', label:'Academic Strengths', sub:'Your entered results and what they mean for your pathways.' },
-  { id:'subjects', label:'Subjects', sub:'What your top pathways rely on, and the subjects you are leaning toward.' },
+  { id:'subjects', label:'Subjects', sub:'The subjects your top pathways rely on.' },
   { id:'next-steps', label:'Next Steps', sub:'A personalised list of what to do next.' },
 ];
 // Display metadata for buildSubjectRelevanceTiers' 4 tiers -- never
@@ -267,7 +267,7 @@ function reportSubjectsHTML(l){
     </div>`;
   }).join('')}
 
-  <div class="card" style="margin-bottom:18px;">
+  ${isGrade9Learner(l) ? `<div class="card" style="margin-bottom:18px;">
     <h3>Which are you currently leaning toward?</h3>
     <p class="page-sub" style="margin-bottom:12px;">Optional, and not final — this just helps us check whether your intended subjects support the pathways above.</p>
     <div class="form-row">
@@ -285,7 +285,7 @@ function reportSubjectsHTML(l){
       </label>`).join('')}
     </div>
   </div>
-  ${disclaimerHTML('This does not lock in your subjects — final choice depends on your school’s offering and timetable. Talk it through with your Life Orientation teacher or subject counsellor.')}
+  ${disclaimerHTML('This does not lock in your subjects — final choice depends on your school’s offering and timetable. Talk it through with your Life Orientation teacher or subject counsellor.')}` : ''}
   `;
 }
 
