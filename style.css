@@ -1,12 +1,13 @@
 :root{
   color-scheme:light;
-  --bg:#F6F5FC; --surface:#FFFFFF; --ink:#1A1733; --muted:#5E5A78; --line:#E6E3F3;
-  --indigo:#5A4BE0; --indigo-ink:#3A2DAE; --amber:#DD64CC; --teal:#5570FF; --coral:#EE5A9E;
-  --grass:#1FA25A; --sky:#5570FF; --olive:#9B6FE3; --plum:#B8349C;
-  --brand-blue:#5570FF; --brand-violet:#9B6FE3; --brand-pink:#DD64CC; --brand-pink-bright:#F266C4;
-  --brand-grad:linear-gradient(90deg,#5570FF,#9B6FE3 50%,#F266C4);
-  --tint-violet:#F1ECFF; --tint-blue:#E9EDFF; --tint-pink:#FCEAF7; --tint-line:#DAD0FF; --tint-amber:#FFF4E0;
-  --sidebar-bg:#5A4BE0; --sidebar-border:rgba(255,255,255,.18); --sidebar-muted:#F1ECFF;
+  --bg:#FFF7FA; --surface:#FFFFFF; --ink:#202A44; --muted:#665767; --line:#EEDCE4;
+  --indigo:#AA285D; --indigo-ink:#842047; --amber:#FFD43B; --teal:#087F8C; --coral:#E98050;
+  --grass:#1FA25A; --sky:#087F8C; --olive:#E98050; --plum:#842047;
+  --brand-blue:#087F8C; --brand-violet:#E98050; --brand-pink:#FFD43B; --brand-pink-bright:#F6BDD3;
+  --hero-pink:#F6BDD3; --hero-yellow:#FFD43B; --hero-orange:#E98050;
+  --brand-grad:linear-gradient(100deg,#F6BDD3,#FFD43B 60%,#E98050);
+  --tint-violet:#FCE7EF; --tint-blue:#E1F3F4; --tint-pink:#FCE7EF; --tint-line:#EBC5D4; --tint-amber:#FFF6CE;
+  --sidebar-bg:#F6BDD3; --sidebar-border:#E8A6BF; --sidebar-muted:#602D43;
   --radius-sm:10px; --radius-md:16px; --radius-lg:26px;
   --shadow-soft:0 1px 2px rgba(23,26,35,.04), 0 8px 24px -12px rgba(23,26,35,.10);
   --shadow-violet:0 6px 18px -10px rgba(90,75,224,.35);
@@ -24,44 +25,44 @@
        --info-line / --warn-line   the borders of the two notice boxes
      (The dark values are repeated for the two ways dark mode is switched on, the operating system and
      data-theme="dark": keep them identical.) */
-  --link:#5A4BE0; --chip-bg:#F1F2F6; --bar-track:#E6E3F3; --ctl-line:#E6E3F3; --star-off:#8F89B6; --ok-ink:#167A44;
-  --t-violet:#F1ECFF; --t-blue:#E9EDFF; --t-pink:#FCEAF7; --t-amber:#FFF4E0; --t-line:#DAD0FF;
-  --on-violet:#4A2DB8; --on-blue:#2A3FB8; --on-pink:#9C2682; --on-amber:#7A4E00; --on-info:#40308F;
-  --info-line:#DAD0FF; --warn-line:#F0CE8A;
+  --link:#AA285D; --chip-bg:#F1F2F6; --bar-track:#EEDCE4; --ctl-line:#EEDCE4; --star-off:#8F89B6; --ok-ink:#167A44;
+  --t-violet:#FCE7EF; --t-blue:#E1F3F4; --t-pink:#FCE7EF; --t-amber:#FFF6CE; --t-line:#EBC5D4;
+  --on-violet:#842047; --on-blue:#08616B; --on-pink:#842047; --on-amber:#7A4E00; --on-info:#842047;
+  --info-line:#EBC5D4; --warn-line:#F0CE8A;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     color-scheme:dark;
-    --bg:#131126; --surface:#1D1A36; --ink:#F2F0FA; --muted:#A5A0C2; --line:#2F2B4D;
-    --nav-bg:#2C2656; --nav-border:#3E3670; --nav-active-bg:#1D1A36; --nav-ink:#D9D2FF;
-    --sidebar-bg:#2C2656; --sidebar-border:#3E3670; --sidebar-muted:#A5A0C2;
+    --bg:#191622; --surface:#25212E; --ink:#FFF4F8; --muted:#C6B5C0; --line:#493542;
+    --nav-bg:#38212F; --nav-border:#624052; --nav-active-bg:#25212E; --nav-ink:#FFD4E4;
+    --sidebar-bg:#38212F; --sidebar-border:#624052; --sidebar-muted:#E8C7D7;
     --shadow-soft:0 1px 2px rgba(0,0,0,.30), 0 8px 24px -12px rgba(0,0,0,.55);
-    --link:#A99FFF; --chip-bg:#2A2648; --bar-track:#3B3566; --ctl-line:#463F78; --star-off:#6E68A8; --ok-ink:#5BDB8E;
-    --t-violet:#2A2358; --t-blue:#1F2A5C; --t-pink:#3D2050; --t-amber:#3B3011; --t-line:#453D80;
-    --on-violet:#D3CBFF; --on-blue:#C2CEFF; --on-pink:#FFBDEE; --on-amber:#FFD98A; --on-info:#DCD6FF;
-    --info-line:#453D80; --warn-line:#6B5520;
+    --link:#FFACCD; --chip-bg:#2A2648; --bar-track:#3B3566; --ctl-line:#463F78; --star-off:#6E68A8; --ok-ink:#5BDB8E;
+    --t-violet:#402536; --t-blue:#17383D; --t-pink:#402536; --t-amber:#3B3011; --t-line:#624052;
+    --on-violet:#FFD4E4; --on-blue:#AFE5EA; --on-pink:#FFD4E4; --on-amber:#FFD98A; --on-info:#FFD4E4;
+    --info-line:#624052; --warn-line:#6B5520;
   }
 }
 :root[data-theme="dark"]{
   color-scheme:dark;
-  --bg:#131126; --surface:#1D1A36; --ink:#F2F0FA; --muted:#A5A0C2; --line:#2F2B4D;
-  --nav-bg:#2C2656; --nav-border:#3E3670; --nav-active-bg:#1D1A36; --nav-ink:#D9D2FF;
-  --sidebar-bg:#2C2656; --sidebar-border:#3E3670; --sidebar-muted:#A5A0C2;
+  --bg:#191622; --surface:#25212E; --ink:#FFF4F8; --muted:#C6B5C0; --line:#493542;
+  --nav-bg:#38212F; --nav-border:#624052; --nav-active-bg:#25212E; --nav-ink:#FFD4E4;
+  --sidebar-bg:#38212F; --sidebar-border:#624052; --sidebar-muted:#E8C7D7;
   --shadow-soft:0 1px 2px rgba(0,0,0,.30), 0 8px 24px -12px rgba(0,0,0,.55);
-  --link:#A99FFF; --chip-bg:#2A2648; --bar-track:#3B3566; --ctl-line:#463F78; --star-off:#6E68A8; --ok-ink:#5BDB8E;
-  --t-violet:#2A2358; --t-blue:#1F2A5C; --t-pink:#3D2050; --t-amber:#3B3011; --t-line:#453D80;
-  --on-violet:#D3CBFF; --on-blue:#C2CEFF; --on-pink:#FFBDEE; --on-amber:#FFD98A; --on-info:#DCD6FF;
-  --info-line:#453D80; --warn-line:#6B5520;
+  --link:#FFACCD; --chip-bg:#2A2648; --bar-track:#3B3566; --ctl-line:#463F78; --star-off:#6E68A8; --ok-ink:#5BDB8E;
+  --t-violet:#402536; --t-blue:#17383D; --t-pink:#402536; --t-amber:#3B3011; --t-line:#624052;
+  --on-violet:#FFD4E4; --on-blue:#AFE5EA; --on-pink:#FFD4E4; --on-amber:#FFD98A; --on-info:#FFD4E4;
+  --info-line:#624052; --warn-line:#6B5520;
 }
 /* The learner report, its PDF pages and the download host are light sheets in every theme: every token that
    changes with the theme is pinned to its light value there (their own colours come from the same --tint-* /
    --indigo* tokens, which never change). */
 .rp,.a4-doc,.rd-host{
   color-scheme:light;
-  --link:#5A4BE0; --chip-bg:#F1F2F6; --bar-track:#E6E3F3; --ctl-line:#E6E3F3; --star-off:#8F89B6; --ok-ink:#167A44;
-  --t-violet:#F1ECFF; --t-blue:#E9EDFF; --t-pink:#FCEAF7; --t-amber:#FFF4E0; --t-line:#DAD0FF;
-  --on-violet:#4A2DB8; --on-blue:#2A3FB8; --on-pink:#9C2682; --on-amber:#7A4E00; --on-info:#40308F;
-  --info-line:#DAD0FF; --warn-line:#F0CE8A;
+  --link:#AA285D; --chip-bg:#F1F2F6; --bar-track:#EEDCE4; --ctl-line:#EEDCE4; --star-off:#8F89B6; --ok-ink:#167A44;
+  --t-violet:#FCE7EF; --t-blue:#E1F3F4; --t-pink:#FCE7EF; --t-amber:#FFF6CE; --t-line:#EBC5D4;
+  --on-violet:#842047; --on-blue:#08616B; --on-pink:#842047; --on-amber:#7A4E00; --on-info:#842047;
+  --info-line:#EBC5D4; --warn-line:#F0CE8A;
 }
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;}
@@ -268,7 +269,7 @@ button[data-v].picked{animation:ansPop .4s cubic-bezier(.2,.9,.3,1.25),ansRing .
 .snap:focus-visible{box-shadow:0 0 0 3px var(--t-line);}
 .snap.locked{pointer-events:none;}
 .snap-track{position:relative;height:10px;border-radius:999px;background:var(--bar-track);}
-.snap-fill{position:absolute;left:0;top:0;bottom:0;width:calc(var(--p) * 1%);border-radius:999px;background:linear-gradient(90deg,var(--indigo),#8A7BF2);transition:width .32s cubic-bezier(.2,.9,.3,1.12);}
+.snap-fill{position:absolute;left:0;top:0;bottom:0;width:calc(var(--p) * 1%);border-radius:999px;background:linear-gradient(90deg,var(--indigo),#E98050);transition:width .32s cubic-bezier(.2,.9,.3,1.12);}
 .snap.unanswered .snap-fill,.snap.bipolar .snap-fill{width:0;}
 .snap-stop{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:var(--surface);border:2.5px solid var(--bar-track);transition:background-color .2s,border-color .2s;}
 .snap-stop.reached{background:var(--indigo);border-color:var(--indigo);}
@@ -397,7 +398,7 @@ td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
    little). The printed copy is a separate A4 document (see "the A4 PDF" at the end). */
 .rp-toolbar{max-width:980px;margin:0 auto 10px;display:flex;justify-content:flex-end;}
 .rp{
-  --ink:#1A1733; --muted:#5E5A78; --line:#E6E3F3; --surface:#FFFFFF; --bg:#F6F5FC;
+  --ink:#202A44; --muted:#665767; --line:#EEDCE4; --surface:#FFFFFF; --bg:#FFF7FA;
   /* the brand gradient in five steps (blue -> violet -> pink) and a tint for each */
   --rp-c1:var(--brand-blue); --rp-c2:#7870F1; --rp-c3:var(--brand-violet); --rp-c4:#BC6AD7; --rp-c5:var(--brand-pink);
   --rp-k1:var(--tint-blue);  --rp-k2:#EDECFF;  --rp-k3:var(--tint-violet);  --rp-k4:#F7EBFB;  --rp-k5:var(--tint-pink);
@@ -417,7 +418,7 @@ td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
 
 /* header band + the white sheet that rises over it */
 .rp-head{position:relative;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px 28px;
-  padding:28px 30px 46px;color:#fff;background:linear-gradient(100deg,#3F31C2 0%,var(--indigo) 45%,#9A4FD6 100%);}
+  padding:28px 30px 46px;color:#fff;background:linear-gradient(100deg,#842047 0%,var(--indigo) 45%,#C44B79 100%);}
 .rp-head::before{content:"";position:absolute;left:0;right:0;top:0;height:5px;background:var(--brand-grad);}
 .rp-brand{display:flex;align-items:center;gap:16px;}
 .rp-logo{display:inline-flex;background:#fff;border-radius:14px;padding:7px 14px;box-shadow:0 4px 14px -6px rgba(15,12,40,.5);}
@@ -504,12 +505,12 @@ td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
 .rp-overall,.rp-recwrap{text-align:center !important;}
 .rp-table td.rp-recwrap{padding-left:3px;padding-right:3px;}
 .rp-ov{font-size:16px;font-weight:800;}
-.rp-ov-s,.rp-ov-vs{color:var(--indigo-ink);} .rp-ov-m,.rp-ov-na{color:var(--ink);} .rp-ov-l{color:#9C2682;}
+.rp-ov-s,.rp-ov-vs{color:var(--indigo-ink);} .rp-ov-m,.rp-ov-na{color:var(--ink);} .rp-ov-l{color:#842047;}
 .rp-chip{display:inline-block;padding:5px 12px;border-radius:999px;font-size:12.5px;font-weight:700;line-height:1.25;text-align:center;}
 .rp-chip-strong,.rp-fit-s{background:linear-gradient(90deg,var(--indigo-ink),var(--indigo));color:#fff;}
-.rp-chip-rec{background:#E6DDFF;color:#3A2DAE;}
-.rp-chip-consider,.rp-fit-m{background:var(--tint-blue);color:#2A3FB8;}
-.rp-chip-effort,.rp-fit-l{background:var(--tint-pink);color:#9C2682;}
+.rp-chip-rec{background:#E6DDFF;color:#842047;}
+.rp-chip-consider,.rp-fit-m{background:var(--tint-blue);color:#08616B;}
+.rp-chip-effort,.rp-fit-l{background:var(--tint-pink);color:#842047;}
 .rp-fit-na{background:#F1F2F6;color:var(--muted);}
 .rp-chip-fit{padding:6px 16px;font-size:14.5px;}
 .rp-pills{display:flex;flex-wrap:wrap;gap:8px;}
@@ -527,7 +528,7 @@ td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
 .rp-combo-h{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--rp-k3);}
 .rp-combo.alt .rp-combo-h{background:var(--rp-k1);}
 .rp-combo-h b{display:block;font:700 15px/1.2 var(--font-head);color:var(--indigo-ink);}
-.rp-combo.alt .rp-combo-h b{color:#2A3FB8;}
+.rp-combo.alt .rp-combo-h b{color:#08616B;}
 .rp-combo-h small{display:block;margin-top:1px;font-size:11.5px;color:var(--muted);}
 .rp-sq{flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:8px;background:var(--indigo);color:#fff;}
 .rp-combo.alt .rp-sq{background:var(--rp-c1);}
@@ -582,13 +583,13 @@ td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
 .rp-main > .disclaimer{margin:4px 0 0;}
 
 /* Mathematics or Mathematical Literacy, aspirational pathways, the four final answers */
-.rp-chip-aspire{background:var(--rp-k2);color:#3A2DAE;border:1.5px dashed var(--rp-c3);padding:3.5px 10px;}
+.rp-chip-aspire{background:var(--rp-k2);color:#842047;border:1.5px dashed var(--rp-c3);padding:3.5px 10px;}
 .rp-work{margin:0 0 12px;font-size:13px;line-height:1.4;}
 .rp-combo-aspirational{border-style:dashed;}
 .rp .rp-pair{display:flex;flex-wrap:wrap;gap:2px 14px;margin:0 0 3px;font-size:12px;color:var(--muted);}
 .rp-pair span b{font-weight:600;color:var(--ink);}
 .rp .rp-areawhy{margin:0 0 4px;font-size:12.5px;line-height:1.4;}
-.rp-asp{display:inline-block;font-size:11px;font-weight:700;line-height:1.3;color:#3A2DAE;background:var(--rp-k2);border:1px dashed var(--rp-c3);border-radius:999px;padding:1px 8px;margin-left:2px;}
+.rp-asp{display:inline-block;font-size:11px;font-weight:700;line-height:1.3;color:#842047;background:var(--rp-k2);border:1px dashed var(--rp-c3);border-radius:999px;padding:1px 8px;margin-left:2px;}
 .rp-concl-i:nth-child(3) .rp-concl-ic{background:var(--rp-c3);}
 .rp-concl-i:nth-child(4) .rp-concl-ic{background:var(--rp-c1);}
 .rp-disc p{margin:0 0 4px;color:inherit;}
@@ -707,7 +708,7 @@ td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
 .a4-measure .a4-page{height:296.5mm;}   /* the height a page has when printed (see the print block) */
 
 .a4-doc{
-  --ink:#1A1733; --muted:#5E5A78; --line:#E6E3F3; --soft:#F6F4FF; --track:#ECE9F6;
+  --ink:#202A44; --muted:#665767; --line:#EEDCE4; --soft:#F6F4FF; --track:#ECE9F6;
   --c1:var(--brand-blue); --c2:#7870F1; --c3:var(--brand-violet); --c4:#BC6AD7; --c5:var(--brand-pink);
   --k1:var(--tint-blue);  --k2:#EDECFF;  --k3:var(--tint-violet);  --k4:#F7EBFB;  --k5:var(--tint-pink);
   --pad:12mm; --gap:3.2mm; --tone:var(--c1); --tint:var(--k1);
@@ -738,7 +739,7 @@ td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
 .a4-fmeta{flex:none;white-space:nowrap;}
 
 /* headers: the brand gradient, as on screen */
-.a4-hero,.a4-slim{position:relative;color:#fff;background:linear-gradient(100deg,#3F31C2 0%,var(--indigo) 45%,#9A4FD6 100%);}
+.a4-hero,.a4-slim{position:relative;color:#fff;background:linear-gradient(100deg,#842047 0%,var(--indigo) 45%,#C44B79 100%);}
 .a4-hero::before,.a4-slim::before{content:"";position:absolute;left:0;right:0;top:0;height:1.6mm;background:var(--brand-grad);}
 .a4-hero{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4mm 8mm;padding:10mm var(--pad) 8mm;}
 .a4-slim{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,52mm);align-items:center;gap:5mm;padding:5.8mm var(--pad) 4.4mm;}
@@ -751,11 +752,11 @@ td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
 .a4-titleblock p{margin-top:1mm;font-size:9pt;color:#fff;}
 .a4-pagetitle{min-width:0;}
 .a4-doc .a4-pagetitle h2{font:700 16pt/1.15 var(--font-head);color:#fff;letter-spacing:-.01em;}
-.a4-doc .a4-pagetitle p{margin-top:.8mm;font-size:9.5pt;color:#F1ECFF;}
+.a4-doc .a4-pagetitle p{margin-top:.8mm;font-size:9.5pt;color:#FCE7EF;}
 .a4-who{text-align:right;color:#fff;min-width:0;}
 .a4-who b,.a4-who small{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere;}
 .a4-who b{font-size:9.5pt;line-height:1.25;}
-.a4-who small{font-size:8.5pt;line-height:1.25;color:#F1ECFF;}
+.a4-who small{font-size:8.5pt;line-height:1.25;color:#FCE7EF;}
 
 /* text */
 .a4-sectitle h2{font:700 14pt/1.2 var(--font-head);}
@@ -776,10 +777,10 @@ td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
 .a4-bar > i{display:block;height:100%;border-radius:1.5mm;background:var(--tone);}
 .a4-chip{display:inline-block;max-width:100%;padding:.9mm 2.6mm;border-radius:999px;font-size:8.5pt;font-weight:700;line-height:1.25;text-align:center;overflow-wrap:anywhere;}
 .a4-chip-strong,.a4-fit-s,.a4-area-strong{background:linear-gradient(90deg,var(--indigo-ink),var(--indigo));color:#fff;}
-.a4-chip-rec,.a4-area-good{background:#E6DDFF;color:#3A2DAE;}
-.a4-chip-consider,.a4-fit-m,.a4-area-explore{background:var(--tint-blue);color:#2A3FB8;}
-.a4-chip-effort,.a4-fit-l,.a4-area-developing{background:var(--tint-pink);color:#9C2682;}
-.a4-chip-aspire,.a4-area-aspirational{background:var(--k2);color:#3A2DAE;border:.35mm dashed var(--c3);}
+.a4-chip-rec,.a4-area-good{background:#E6DDFF;color:#842047;}
+.a4-chip-consider,.a4-fit-m,.a4-area-explore{background:var(--tint-blue);color:#08616B;}
+.a4-chip-effort,.a4-fit-l,.a4-area-developing{background:var(--tint-pink);color:#842047;}
+.a4-chip-aspire,.a4-area-aspirational{background:var(--k2);color:#842047;border:.35mm dashed var(--c3);}
 .a4-fit-na{background:#F1F2F6;color:var(--muted);}
 
 /* page 1 */
@@ -828,7 +829,7 @@ td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
 .a4-m-ov{display:block;text-align:center;}
 .a4-m-ov .a4-ml{display:block;}
 .a4-ov{font-size:11.5pt !important;font-weight:800;}
-.a4-ov-s,.a4-ov-vs{color:var(--indigo-ink);} .a4-ov-l{color:#9C2682;}
+.a4-ov-s,.a4-ov-vs{color:var(--indigo-ink);} .a4-ov-l{color:#842047;}
 .a4-recwrap{text-align:center;min-width:0;}
 .a4-doc .a4-why{margin-top:1.3mm;font-size:9pt;line-height:1.33;color:var(--indigo-ink);overflow-wrap:anywhere;}
 .a4-results{grid-template-columns:repeat(2,minmax(0,1fr));}
@@ -863,7 +864,7 @@ td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
 .a4-area .a4-why{margin-top:0;margin-bottom:1.2mm;}
 .a4-doc .a4-careers-w{margin-bottom:1mm;font-size:9pt;line-height:1.5;overflow-wrap:anywhere;}
 .a4-careers-l{margin-right:1.4mm;font-size:8.5pt;font-weight:700;color:var(--muted);}
-.a4-asp-tag{display:inline-block;margin-left:1mm;padding:0 1.8mm;border:.3mm dashed var(--c3);border-radius:999px;background:var(--k2);font-size:8.5pt;font-weight:700;color:#3A2DAE;}
+.a4-asp-tag{display:inline-block;margin-left:1mm;padding:0 1.8mm;border:.3mm dashed var(--c3);border-radius:999px;background:var(--k2);font-size:8.5pt;font-weight:700;color:#842047;}
 .a4-uses{margin-top:0;}
 
 /* page 4 */
@@ -992,11 +993,18 @@ td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
      otherwise a dark-mode learner would print near-black pages. */
   :root, :root[data-theme="dark"], :root:not([data-theme="light"]){
     color-scheme:light;
-    --bg:#F6F5FC !important; --surface:#FFFFFF !important; --ink:#1A1733 !important;
-    --muted:#5E5A78 !important; --line:#E6E3F3 !important;
-    --link:#5A4BE0 !important; --chip-bg:#F1F2F6 !important; --bar-track:#E6E3F3 !important; --ctl-line:#E6E3F3 !important; --star-off:#8F89B6 !important; --ok-ink:#167A44 !important;
-    --t-violet:#F1ECFF !important; --t-blue:#E9EDFF !important; --t-pink:#FCEAF7 !important; --t-amber:#FFF4E0 !important; --t-line:#DAD0FF !important;
-    --on-violet:#4A2DB8 !important; --on-blue:#2A3FB8 !important; --on-pink:#9C2682 !important; --on-amber:#7A4E00 !important; --on-info:#40308F !important;
-    --info-line:#DAD0FF !important; --warn-line:#F0CE8A !important;
+    --bg:#FFF7FA !important; --surface:#FFFFFF !important; --ink:#202A44 !important;
+    --muted:#665767 !important; --line:#EEDCE4 !important;
+    --link:#AA285D !important; --chip-bg:#F1F2F6 !important; --bar-track:#EEDCE4 !important; --ctl-line:#EEDCE4 !important; --star-off:#8F89B6 !important; --ok-ink:#167A44 !important;
+    --t-violet:#FCE7EF !important; --t-blue:#E1F3F4 !important; --t-pink:#FCE7EF !important; --t-amber:#FFF6CE !important; --t-line:#EBC5D4 !important;
+    --on-violet:#842047 !important; --on-blue:#08616B !important; --on-pink:#842047 !important; --on-amber:#7A4E00 !important; --on-info:#842047 !important;
+    --info-line:#EBC5D4 !important; --warn-line:#F0CE8A !important;
   }
 }
+
+/* Hero palette: blush surfaces, berry actions, sunshine and coral accents. */
+.sidebar .nav-label{color:var(--sidebar-muted);}
+.btn-amber{color:#202A44;}
+.step-num{color:#202A44;}
+.card-top-accent{border-top-color:var(--hero-yellow);}
+:focus-visible{outline-color:var(--link);}
