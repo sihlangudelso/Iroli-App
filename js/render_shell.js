@@ -1,5 +1,8 @@
 const LEARNER_NAV = [
   { r:'home', label:'Dashboard', ic:'home' },
+  // Grade 11-12 learners once Pro has launched (see pathwayOpen). Second, so the
+  // phone's bottom bar keeps it in view for them.
+  { r:'pathway', label:'My Pathway', short:'Pathway', ic:'flag', pathwayOnly:true },
   { r:'report', label:'Your Report', short:'Report', ic:'chart' },
   // Grade 9 learners only (see currentNav): the marks from their school report,
   // which the assessments below use to see how ready they are for each subject.
@@ -39,6 +42,7 @@ function roleLabel(){
 const GATED_NAV = {
   onboarding: [{ r:'onboarding', label:'Set up your profile', short:'Profile', ic:'person' }],
   activate: [{ r:'activate', label:'Activate your account', short:'Activate', ic:'shield' }],
+  finished: [{ r:'finished', label:'After Grade 12', short:'Grade 12', ic:'cap' }],
 };
 
 function currentNav(){
@@ -46,7 +50,7 @@ function currentNav(){
   const gate = learnerGate(LEARNER);
   if(gate) return GATED_NAV[gate];
   // Entering Grade 9 report results is for Grade 9 learners only.
-  const nav = LEARNER_NAV.filter(n=>!n.grade9Only || (LEARNER && isGrade9Learner(LEARNER)));
+  const nav = LEARNER_NAV.filter(n=>(!n.grade9Only || (LEARNER && isGrade9Learner(LEARNER))) && (!n.pathwayOnly || pathwayOpen(LEARNER)));
   // The Subject Choice Assessment is for Grade 9 learners (and anyone who
   // already has a saved report) -- nobody else is offered it.
   if(LEARNER && !subjectChoiceAvailable(LEARNER)) return nav.filter(n=>n.r!=='subject-choice');
@@ -208,6 +212,12 @@ function render(){
   // synthetic learner already hardcodes licenseStatus:'active', so admin
   // preview is unaffected automatically.
   if(gate==='activate' && ROUTE!=='activate'){ ROUTE='activate'; }
+  // After Grade 12: the end-of-access screen, or the profile, where a learner
+  // repeating Grade 12 corrects their grade.
+  if(gate==='finished' && ROUTE!=='finished' && ROUTE!=='profile'){ ROUTE='finished'; }
+  // Pathway screens: Grade 11-12 only, and Pro only. The menu hides them from
+  // everyone else, but a link or the Back button can still ask for one.
+  if(!gate && isPathwayRoute(ROUTE) && !pathwayOpen(l)){ ROUTE='home'; ROUTE_PARAM=null; }
   // The nav above was built before the gate moved ROUTE, so redraw it to
   // highlight the screen they are really on.
   if(gate) refreshNav();
@@ -215,6 +225,8 @@ function render(){
   try {
   if(ROUTE==='onboarding') app.innerHTML = viewOnboarding();
   else if(ROUTE==='activate') app.innerHTML = viewActivateAccount();
+  else if(ROUTE==='finished') app.innerHTML = viewSchoolFinished();
+  else if(isPathwayRoute(ROUTE)) app.innerHTML = isProLearner(l) ? viewPathwayRoute(ROUTE, ROUTE_PARAM) : viewPathwayUpgrade();
   else if(ROUTE==='home') app.innerHTML = viewHome();
   else if(ROUTE==='report') app.innerHTML = viewReport();
   else if(ROUTE==='subject-choice') app.innerHTML = viewSubjectChoice();
@@ -238,7 +250,7 @@ function render(){
     // persistDrafts() would write it straight back on every render, so the
     // screen would never recover -- drop the drafts, reset, and say so.
     console.error('render failed on route', ROUTE, err);
-    ASSESSMENT_DRAFT = null; APS_DRAFT = null; GRADE9_DRAFT = null; SUBJECT_CHOICE_DRAFT = null;
+    ASSESSMENT_DRAFT = null; APS_DRAFT = null; GRADE9_DRAFT = null; SUBJECT_CHOICE_DRAFT = null; PATHWAY_DRAFT = null;
     persistDrafts();
     try {
       ROUTE = 'home'; ROUTE_PARAM = null;

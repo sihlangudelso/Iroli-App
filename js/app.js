@@ -23,6 +23,8 @@ let CLASS_ADMINS = [];
 let ASSESSMENT_DRAFT = null;
 let APS_DRAFT = null;
 let GRADE9_DRAFT = null;
+// The Pathway marks form while it is being filled in (memory only, see views_pathway.js).
+let PATHWAY_DRAFT = null;
 let SUBJECT_CHOICE_DRAFT = null;
 let MINI_DRAFT = null;
 let AUTH_READY = false;
@@ -194,7 +196,7 @@ async function handleSession(session){
     // someone else's half-finished assessment/subject-choice/APS/Grade-9 draft.
     PREVIEW_MODE = false;
     CLASSES = []; COHORT = []; SNAPSHOTS = []; CLASS_ADMINS = [];
-    ASSESSMENT_DRAFT = null; APS_DRAFT = null; GRADE9_DRAFT = null; SUBJECT_CHOICE_DRAFT = null;
+    ASSESSMENT_DRAFT = null; APS_DRAFT = null; GRADE9_DRAFT = null; SUBJECT_CHOICE_DRAFT = null; PATHWAY_DRAFT = null;
     EXPLORE_SEARCH = ''; EXPLORE_FILTERS = {};
     window.__cohortSearch = '';
     // Decide the anonymous mini-assessment's state once, the same way
@@ -251,7 +253,7 @@ async function handleSession(session){
     ROUTE='admin-home'; await loadCohort(); await loadDashboardSnapshots();
     if(IS_SUPER_ADMIN) await loadClassAdmins();
   }
-  else { ROUTE='home'; await loadLearner(); }
+  else { ROUTE='home'; await loadLearner(); await applyGradeRollover(); }
   replaceRouteHistory();
   render();
   } catch(err){
@@ -328,9 +330,21 @@ async function loadLearner(){
     .on('postgres_changes', { event:'*', schema:'public', table:'learners', filter:`id=eq.${ME.id}` }, (payload)=>{
       if(payload.eventType === 'DELETE') return;
       LEARNER = { ...payload.new, exists:true };
-      if(['home','matches','favourites','compare','class'].includes(ROUTE)) render();
+      if(['home','matches','favourites','compare','class'].includes(ROUTE) || isPathwayRoute(ROUTE)) render();
     })
     .subscribe();
+}
+
+// The January move-up (see gradeRollover). Quiet: if it cannot be saved now
+// (offline, or a database still missing gradeYear) it simply runs again at
+// the next sign-in. ROLLOVER_NOTICE drives the one-time dashboard banner.
+let ROLLOVER_NOTICE = null;
+async function applyGradeRollover(){
+  if(!LEARNER || !LEARNER.exists) return;
+  const r = gradeRollover(LEARNER);
+  if(!r) return;
+  const ok = await saveLearnerOrRevert(r.changes, { quiet:true });
+  if(ok && r.moved) ROLLOVER_NOTICE = { toGrade: r.toGrade, year: currentSchoolYear() };
 }
 
 async function loadClasses(){
@@ -496,7 +510,7 @@ function busyButton(selector, label){
 // Which saves are in flight. While one runs, taps that would change what is
 // being saved (answers, pages) or start the same save again are ignored, so
 // what reaches the database is exactly what the learner saw when they tapped Save.
-const SAVING = { sc:false, g9:false, assess:false, onboarding:false };
+const SAVING = { sc:false, g9:false, assess:false, onboarding:false, pathway:false };
 
 /* ---------------- matching engine ---------------- */
 // Structural (enrollment) fit for a single named subject, 0-100 -- not
@@ -867,7 +881,7 @@ function previewLearner(kind){
   return {
     id:'preview', exists:false,
     grade: exploring ? null : Number(kind), school: exploring ? null : 'Preview School',
-    exploringOnly: exploring, licenseStatus:'active',
+    exploringOnly: exploring, licenseStatus:'active', plan:'pro', gradeYear: currentSchoolYear(),
     subjects:[], subjectMarks:{}, intendedSubjects:[],
     favourites:[], compare:[], viewedMatches:false,
   };
@@ -888,9 +902,52 @@ function subjectChoiceAvailable(l){
 function learnerGate(l){
   if(!l) return null;
   if(!l.exploringOnly && (!l.grade || !l.school)) return 'onboarding';
+  // Access ends after Grade 12 (pricing: one payment, Grade 9 to the end of
+  // Grade 12). Worked out from grade + gradeYear, never written anywhere, so
+  // a learner who is repeating Grade 12 can correct their grade themselves.
+  if(schoolFinished(l)) return 'finished';
   if(l.licenseStatus !== 'active') return 'activate';
   return null;
 }
+
+// ---- School year, Pro plan and the Grade 11-12 Pathway ------------------
+// The Pro plan (and with it the Pathway) opens to learners on this date;
+// before it, only an admin previewing the learner view can open it.
+const PRO_ENABLED_FROM = '2027-01-01';
+// "Today" in one place, so the year logic can be tested with any date.
+let IROLI_NOW = null;
+function nowDate(){ return IROLI_NOW ? new Date(IROLI_NOW) : new Date(); }
+function currentSchoolYear(){ return nowDate().getFullYear(); }
+function localDateISO(d){ d = d || nowDate(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function proLaunched(){ return localDateISO() >= PRO_ENABLED_FROM; }
+// A Grade 12 learner whose Grade 12 year is over.
+function schoolFinished(l){
+  return !!l && !l.exploringOnly && Number(l.grade) === 12 && !!l.gradeYear && Number(l.gradeYear) < currentSchoolYear();
+}
+// What the January move-up should change for this learner, or null.
+// gradeYear is the school year the saved grade belongs to; a learner who
+// signs in again in a later year moves up one grade per year, stopping at 12
+// (a Grade 12 learner keeps their grade and year, so schoolFinished() above
+// can tell their Grade 12 year is over). A learner saved before gradeYear
+// existed is taken to be in the grade they saved, this year.
+function gradeRollover(l){
+  if(!l || l.exploringOnly || !l.grade) return null;
+  const year = currentSchoolYear(), grade = Number(l.grade);
+  if(!l.gradeYear) return { changes:{ gradeYear: year }, moved:false };
+  const from = Number(l.gradeYear);
+  if(from >= year || grade >= 12) return null;
+  const to = Math.min(12, grade + (year - from));
+  return { changes:{ grade: to, gradeYear: from + (to - grade) }, moved:true, fromGrade: grade, toGrade: to };
+}
+// The Pathway is for Grade 11 and 12 learners.
+function pathwayGrade(l){ return !!l && !l.exploringOnly && (Number(l.grade) === 11 || Number(l.grade) === 12); }
+// Pathway screens are listed in the menu once Pro has launched (or in preview).
+function pathwayOpen(l){ return pathwayGrade(l) && (proLaunched() || PREVIEW_MODE); }
+function isProLearner(l){
+  if(PREVIEW_MODE) return true;
+  return !!l && l.licenseStatus === 'active' && l.plan === 'pro' && proLaunched();
+}
+function isPathwayRoute(r){ return r === 'pathway' || String(r).indexOf('pathway-') === 0; }
 // Where a learner adds the marks that sharpen their results: the Grade 9
 // report form for Grade 9, their profile for Grades 10-12, nowhere for an
 // exploring learner (no school marks to add). Returns a ready-made link.

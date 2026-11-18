@@ -119,6 +119,7 @@ function viewHome(){
   const cls = CLASSES.find(c=>c.id===l.classId);
   return `
   ${pageHeadHTML('Your dashboard', `Welcome back, ${esc(ME.name)||'there'}. Here\u2019s where your career pathway stands.`)}
+  ${pwRolloverBannerHTML()}
   ${PREVIEW_MODE?`<div class="disclaimer" style="margin-bottom:18px;display:block;">
     <div style="display:flex;gap:10px;align-items:flex-start;">${icon('info','ic')}<div>You are previewing the learner experience as an admin. Nothing here is saved to shared learner data, and joining or leaving a class is switched off.</div></div>
     <div class="filter-bar" style="margin:12px 0 0;align-items:center;"><span class="page-sub" style="margin:0 4px 0 0;">Preview as:</span>${[['9','Grade 9'],['10','Grade 10'],['11','Grade 11'],['12','Grade 12'],['explore','Just exploring']].map(o=>`<button class="chip-select ${(l.exploringOnly?'explore':String(l.grade))===o[0]?'on':''}" onclick="App.previewAs('${o[0]}')">${o[1]}</button>`).join('')}</div>
@@ -150,6 +151,7 @@ function viewHome(){
 
   <div class="section-title"><h2>Quick actions</h2></div>
   <div class="grid grid-3">
+    ${pwHomeTileHTML(l)}
     ${!l.exploringOnly && l.grade===9 ? `<button class="tile" style="border-top-color:var(--grass)" onclick="navigate('grade9-report')">${icon('chart','tico')}<h3>${l.grade9Report?'Update your Grade 9 report':'Enter your Grade 9 report results'}</h3><p>Add your latest marks and a few work-style questions to sharpen your profile.</p></button>` : ''}
     ${!l.exploringOnly && Number(l.grade) > 9 ? `<button class="tile" style="border-top-color:var(--grass)" onclick="navigate('profile')">${icon('chart','tico')}<h3>Update your subjects & marks</h3><p>Keep your subjects and latest marks up to date so your matches and report stay accurate.</p></button>` : ''}
     ${subjectChoiceAvailable(l) ? `<button class="tile" style="border-top-color:var(--grass)" onclick="navigate('subject-choice')">${icon('book','tico')}<h3>${l.subjectChoice&&l.subjectChoice.completedAt?'Your subject choice report':'Subject Choice Assessment'}</h3><p>A personalised look at which Grade 10 subjects fit what you enjoy, how you work and how you are doing.</p></button>` : ''}

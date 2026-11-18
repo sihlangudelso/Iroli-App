@@ -197,7 +197,7 @@ const App = {
   async signOut(){
     // On a shared computer nothing of this learner's in-progress work should
     // be left behind for the next person to find.
-    ASSESSMENT_DRAFT = null; APS_DRAFT = null; GRADE9_DRAFT = null; SUBJECT_CHOICE_DRAFT = null;
+    ASSESSMENT_DRAFT = null; APS_DRAFT = null; GRADE9_DRAFT = null; SUBJECT_CHOICE_DRAFT = null; PATHWAY_DRAFT = null;
     if(ME && ME.id) clearDraftsFor(ME.id);
     await sb.auth.signOut();
   },
@@ -260,7 +260,7 @@ const App = {
     if(!l.grade){ toast('Please select your grade.'); return; }
     const { school, subjects, subjectMarks } = readOnboardingForm(l.grade);
     if(!school || !school.trim()){ toast('Please add your school name.'); return; }
-    const profile = { exploringOnly:false, grade:l.grade, school:school.trim(), mathType: l.grade>9? l.mathType:null, subjects: subjects||[], licenseStatus: l.licenseStatus||'trial' };
+    const profile = { exploringOnly:false, grade:l.grade, gradeYear: currentSchoolYear(), school:school.trim(), mathType: l.grade>9? l.mathType:null, subjects: subjects||[], licenseStatus: l.licenseStatus||'trial' };
     // Subject marks start in Grade 10: send them (or clear old ones) only when there is something to say,
     // so a Grade 9 learner's profile never depends on that column.
     if(l.grade>9) profile.subjectMarks = subjectMarks||{};
@@ -623,14 +623,14 @@ const App = {
   togglePreview(){
     PREVIEW_MODE = !PREVIEW_MODE;
     // Neither the learner view's drafts nor the admin's own carry across the switch.
-    ASSESSMENT_DRAFT = null; APS_DRAFT = null; GRADE9_DRAFT = null; SUBJECT_CHOICE_DRAFT = null;
+    ASSESSMENT_DRAFT = null; APS_DRAFT = null; GRADE9_DRAFT = null; SUBJECT_CHOICE_DRAFT = null; PATHWAY_DRAFT = null;
     LEARNER = PREVIEW_MODE ? previewLearner('9') : null;
     navigate(PREVIEW_MODE ? 'home' : 'admin-home');
   },
   // Switch the preview to a different kind of learner (a fresh, empty one).
   previewAs(kind){
     if(!PREVIEW_MODE) return;
-    ASSESSMENT_DRAFT = null; APS_DRAFT = null; GRADE9_DRAFT = null; SUBJECT_CHOICE_DRAFT = null;
+    ASSESSMENT_DRAFT = null; APS_DRAFT = null; GRADE9_DRAFT = null; SUBJECT_CHOICE_DRAFT = null; PATHWAY_DRAFT = null;
     LEARNER = previewLearner(kind);
     navigate('home');
   },
@@ -892,3 +892,6 @@ function csvEscape(v){
   if(/[",\r\n]/.test(s)) return '"'+s.replace(/"/g,'""')+'"';
   return s;
 }
+
+// The Grade 11-12 Pathway's handlers live beside its screens (views_pathway.js).
+Object.assign(App, PATHWAY_HANDLERS);
