@@ -773,6 +773,8 @@ const App = {
     ]);
     section('Career Pathway Distribution', ['Pathway','Learner Count','Percentage'],
       d.pathwayDistribution.map(p=>[p.name, p.count, p.pct+'%']));
+    section('Personality Trends (top 3 traits)', ['Trait','Learners with it in their top 3','Percentage of assessed','Learners with it as their top trait'],
+      d.personalityTrends.list.map(t=>[t.word, t.count, t.pct+'%', t.top]));
     section('Grade 10 Subject Demand', ['Subject','Learner Count','Percentage'],
       d.subjectDemand.list.map(s=>[s.subject, s.count, s.pct+'%']));
     section('Grade 10 Subjects: Recommended vs Intended', ['Subject','Recommended (Subject Choice report)','Intended (learner says)'],
@@ -826,7 +828,8 @@ const App = {
   },
   exportCohortCSV(filterClass, facFilter){
     const search = (window.__cohortSearch||'').toLowerCase();
-    const rows = cohortRowsFiltered(facFilter||null, filterClass||'all', search);
+    const rp = (ROUTE_PARAM && typeof ROUTE_PARAM==='object') ? ROUTE_PARAM : {};
+    const rows = cohortRowsFiltered(facFilter||null, filterClass||'all', search, rp.trait || null, rp.grade || null);
     const lines = [COHORT_EXPORT_HEADERS.join(',')];
     rows.forEach(l=>lines.push(cohortExportRow(l).map(csvEscape).join(',')));
     const csv = lines.join('\r\n');
@@ -841,7 +844,8 @@ const App = {
   // The same rows as the CSV, as an Excel workbook (one "Learners" sheet).
   exportCohortXLSX(filterClass, facFilter){
     const search = (window.__cohortSearch||'').toLowerCase();
-    const rows = cohortRowsFiltered(facFilter||null, filterClass||'all', search);
+    const rp = (ROUTE_PARAM && typeof ROUTE_PARAM==='object') ? ROUTE_PARAM : {};
+    const rows = cohortRowsFiltered(facFilter||null, filterClass||'all', search, rp.trait || null, rp.grade || null);
     xlsxDownload([{ name:'Learners', rows: [COHORT_EXPORT_HEADERS].concat(rows.map(cohortExportRow)) }],
       'iroli-cohort-'+exportScopeSlug(filterClass)+'-'+todayISO().slice(0,10)+'.xlsx');
     toast('Excel workbook downloaded.');

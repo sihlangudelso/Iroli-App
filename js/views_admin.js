@@ -14,6 +14,47 @@ function cohortStats(){
   return { total, active, trial, byGrade, facCount };
 }
 
+/* ---------------- personality traits (from the personality assessment) ---------------- */
+// A learner's clearest traits -- the same "key traits" their own report shows
+// (lrKeyTraits: Analytical, Curious, Creative, Organised, People-oriented,
+// Persuasive, Practical, Reflective) -- strongest first. Empty until the
+// personality assessment is done.
+function learnerTopTraits(l, n){
+  if(!l || !l.assessmentCompletedAt || !l.riasec) return [];
+  return lrKeyTraits(l).slice(0, n || 3).map(t=>t.word);
+}
+function learnerTopTraitIds(l, n){
+  if(!l || !l.assessmentCompletedAt || !l.riasec) return [];
+  return lrKeyTraits(l).slice(0, n || 3).map(t=>t.id);
+}
+// How often each trait is among learners' top three (and how often it is the
+// very top one), for the learners who have done the personality assessment.
+function personalityTrendsFrom(rows){
+  const assessed = rows.filter(l=>l.assessmentCompletedAt && l.riasec);
+  const counts = {}, first = {};
+  assessed.forEach(l=>{
+    const ids = learnerTopTraitIds(l, 3);
+    ids.forEach(id=>{ counts[id] = (counts[id]||0) + 1; });
+    if(ids[0]) first[ids[0]] = (first[ids[0]]||0) + 1;
+  });
+  const list = Object.keys(SC_TRAITS).map((id, i)=>({ id, word: lrTraitWord(id), count: counts[id]||0, top: first[id]||0, i,
+      pct: assessed.length ? Math.round(100*(counts[id]||0)/assessed.length) : 0 }))
+    .filter(t=>t.count>0)
+    .sort((a,b)=>(b.count-a.count) || (b.top-a.top) || (a.i-b.i));
+  return { assessed: assessed.length, list };
+}
+function personalityTrendsCardHTML(tr, filterClass, grade){
+  return `<div class="card" style="min-width:0;">
+    <h3>Personality trends</h3>
+    <p class="page-sub">How often each trait is among learners’ top three, from ${tr.assessed} personality assessment${tr.assessed===1?'':'s'}. Click a trait to see its learners.</p>
+    ${tr.list.length ? tr.list.map(t=>`
+      <div style="margin-bottom:10px;cursor:pointer;" onclick="navigate('admin-cohort',{trait:'${t.id}', classId:'${filterClass||'all'}'${grade ? `, grade:${grade}` : ''}})">
+        <div style="display:flex;justify-content:space-between;gap:8px;font-size:13px;font-weight:600;"><span>${esc(t.word)}</span><span>${t.count} (${t.pct}%)${t.top ? ` · top trait for ${t.top}` : ''}</span></div>
+        <div class="aps-bar"><div style="width:${t.pct}%"></div></div>
+      </div>`).join('') : '<p class="page-sub">No personality assessments yet.</p>'}
+  </div>`;
+}
+
 function viewAdminHome(){
   const s = cohortStats();
   const maxFac = Math.max(1,...Object.values(s.facCount));
@@ -42,6 +83,9 @@ function viewAdminHome(){
           <div class="aps-bar"><div style="width:${Math.round((s.facCount[f.id]||0)/maxFac*100)}%;background:${f.color};"></div></div>
         </div>`).join('')}
     </div>
+  </div>
+  <div class="grid grid-2" style="margin-top:20px;">
+    ${personalityTrendsCardHTML(personalityTrendsFrom(COHORT), 'all')}
   </div>
   <div class="section-title"><h2>Get started</h2></div>
   <div class="grid grid-3">
@@ -115,8 +159,10 @@ function viewAdminClasses(){
 // never drift from whatever's actually narrowed on screen (found in the
 // pre-launch audit: the export used to ignore the search box and the
 // faculty drill-through filter entirely).
-function cohortRowsFiltered(facFilter, filterClass, search){
+function cohortRowsFiltered(facFilter, filterClass, search, trait, grade){
   let rows = COHORT.slice();
+  if(grade) rows = rows.filter(l=>Number(l.grade)===Number(grade));
+  if(trait) rows = rows.filter(l=>learnerTopTraitIds(l, 3).includes(trait));
   if(facFilter){
     rows = rows.filter(l=>{
       if(l.grade!==9 || !l.assessmentCompletedAt) return false;
@@ -139,10 +185,13 @@ function viewAdminCohort(){
   // same object-ROUTE_PARAM convention viewExplore/viewCareerDetail use.
   const facFilter = (ROUTE_PARAM && typeof ROUTE_PARAM==='object') ? ROUTE_PARAM.fac : null;
   const filterClass = (ROUTE_PARAM && typeof ROUTE_PARAM==='object') ? (ROUTE_PARAM.classId || 'all') : (ROUTE_PARAM || 'all');
+  const traitFilter = (ROUTE_PARAM && typeof ROUTE_PARAM==='object') ? (ROUTE_PARAM.trait || null) : null;
+  const gradeFilter = (ROUTE_PARAM && typeof ROUTE_PARAM==='object') ? (ROUTE_PARAM.grade || null) : null;
   const search = (window.__cohortSearch||'').toLowerCase();
-  let rows = cohortRowsFiltered(facFilter, filterClass, search);
+  let rows = cohortRowsFiltered(facFilter, filterClass, search, traitFilter, gradeFilter);
   return `
   ${pageHeadHTML('Cohort data', 'Every learner\u2019s profile, personality, career matches and licence status — export any time.')}
+  ${traitFilter && SC_TRAITS[traitFilter] ? `<div class="disclaimer" style="margin-bottom:14px;">${icon('info','ic')}<div>Showing ${gradeFilter ? 'Grade ' + esc(gradeFilter) + ' ' : ''}learners with <b>${esc(lrTraitWord(traitFilter))}</b> among their top three personality traits. <button class="btn btn-ghost btn-sm" style="margin-left:8px;" onclick="navigate('admin-cohort','all')">Clear filter</button></div></div>` : ''}
   ${facFilter ? `<div class="disclaimer" style="margin-bottom:14px;">${icon('info','ic')}<div>Showing learners whose top career match is in <b>${esc(facultyById(facFilter).name)}</b>. <button class="btn btn-ghost btn-sm" style="margin-left:8px;" onclick="navigate('admin-cohort','all')">Clear filter</button></div></div>` : ''}
   <div class="filter-bar" style="justify-content:space-between;">
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -157,7 +206,7 @@ function viewAdminCohort(){
   <div class="form-row" style="max-width:280px;"><input type="text" placeholder="Search learner name… (press Enter)" value="${esc(window.__cohortSearch||'')}" onchange="App.setCohortSearch(this.value)"/></div>
   <div class="table-wrap"><table>
     <thead><tr>
-      <th>Name</th><th>Grade</th><th>School</th><th>Class</th><th>Maths track</th><th>Personality</th><th>Top matches</th><th>Recommended subjects</th><th>Favourites</th><th>Licence</th><th></th>
+      <th>Name</th><th>Grade</th><th>School</th><th>Class</th><th>Maths track</th><th>Top traits</th><th>Top matches</th><th>Recommended subjects</th><th>Favourites</th><th>Licence</th><th></th>
     </tr></thead>
     <tbody>
       ${rows.length? rows.map(l=>{
@@ -170,7 +219,7 @@ function viewAdminCohort(){
           <td>${esc(l.school||'—')}</td>
           <td>${cls?esc(cls.name):'—'}</td>
           <td>${l.mathType==='Mathematics'?'Maths':(l.mathType==='MathLit'?'Maths Lit':'—')}</td>
-          <td>${esc(hollandCode(l.riasec))}</td>
+          <td style="max-width:200px;">${learnerTopTraits(l,3).length ? esc(learnerTopTraits(l,3).join(', ')) : '<span class="page-sub">Not yet</span>'}</td>
           <td style="max-width:220px;">${esc(top)}</td>
           <td style="max-width:220px;">${rec ? esc(adminRecSubjectsLine(rec)) : '—'}${rec && rec.differs && rec.differs.length ? ` <span class="badge badge-explore" title="${esc(rec.differs.join('; '))}">Differs from intended</span>` : ''}</td>
           <td>${(l.favourites||[]).length}</td>
@@ -197,6 +246,7 @@ function viewAdminLearnerDetail(id){
       <div class="kv"><b>Class</b><span>${cls?esc(cls.name):'Not in a class'}</span></div>
       <div class="kv"><b>Maths track</b><span>${esc(l.mathType)||'—'}</span></div>
       <div class="kv"><b>Subjects</b><span>${esc((l.subjects||[]).join(', '))||'—'}</span></div>
+      <div class="kv"><b>Top personality traits</b><span>${learnerTopTraits(l,3).length ? esc(learnerTopTraits(l,3).join(', ')) : 'Assessment not yet completed'}</span></div>
       <div class="kv"><b>Personality (Holland code)</b><span>${esc(hollandCode(l.riasec))}</span></div>
       <div class="kv"><b>Licence</b><span>${l.licenseStatus==='active'?'Active':'Trial'}</span></div>
       <div class="kv"><b>Plan</b><span>${l.plan==='pro'?'Pro'+(l.planSource==='class'?' (from class)':''):'Standard'}</span></div>
@@ -355,7 +405,7 @@ function adminRecStatus(rec){
 // One learner's export row, shared by the cohort CSV, the cohort workbook and
 // the dashboard workbook's Learners sheet, so the three can never disagree.
 // Numbers stay numbers (the workbook keeps them as numbers; the CSV writes them out).
-const COHORT_EXPORT_HEADERS = ['Name','Grade','School','Class','Maths Track','Subjects','Personality (Holland code)','Assessment Completed','Top 3 Career Matches',
+const COHORT_EXPORT_HEADERS = ['Name','Grade','School','Class','Maths Track','Subjects','Top Personality Traits','Personality (Holland code)','Assessment Completed','Top 3 Career Matches',
   'Subject Choice Assessment','Maths Recommendation','Physical/Technical Sciences Recommendation','IT/CAT Recommendation','Recommended Combination','Recommended Subjects','Other Strong Subject Matches',
   'Intended Maths','Intended Subjects','Intended vs Recommended',
   'Favourites Count','APS Estimate','Licence Status','Plan','Pathway Programme Goals','Subjects Needing Support','Bursary Goal','Last Updated'];
@@ -366,7 +416,7 @@ function cohortExportRow(l){
   const ready = rec && rec.state==='ready';
   return [
     cohortLearnerName(l.id), l.grade||'', l.school||'', cls?cls.name:'', l.mathType||'',
-    (l.subjects||[]).join('; '), hollandCode(l.riasec), l.assessmentCompletedAt?'Yes':'No',
+    (l.subjects||[]).join('; '), learnerTopTraits(l,3).join('; '), hollandCode(l.riasec), l.assessmentCompletedAt?'Yes':'No',
     top3,
     subjectChoiceAvailable(l) ? adminRecStatus(rec) : 'Not applicable',
     ready ? rec.mathLabel : '', ready ? (rec.pairs.science||'') : '', ready ? (rec.pairs.computing||'') : '',
@@ -433,6 +483,8 @@ function dashboardWorkbookSheets(d, filterClass){
       })) },
     { name:'Guidance', rows: [['Learner','Career pathway','Career interest','Current academic concern','Recommended subjects','Planned subject','Potential conflict','Recommended action']]
       .concat(d.guidanceRows.map(r=>[r.learnerName, r.pathway, r.interest, r.concern, r.recommended, r.planned, r.conflict, r.action])) },
+    { name:'Personality trends', rows: [['Trait','Learners with it in their top 3','% of assessed','Learners with it as their top trait']]
+      .concat(d.personalityTrends.list.map(t=>[t.word, t.count, t.pct, t.top])) },
     { name:'Career pathways', rows: [['Pathway','Learners','% of assessed']]
       .concat(d.pathwayDistribution.map(p=>[p.name, p.count, p.pct])) },
     { name:'Readiness by pathway', rows: [['Pathway','Key subject','Interested','70% and above','50–69%','Below 50%']]
@@ -472,6 +524,7 @@ function buildSchoolDashboardData(classFilter){
   const supportNeeds = supportNeedsFrom(rows);
   const guidanceRows = guidanceRowsFrom(enriched);
   const readinessByPathway = readinessCrossTabFrom(enriched);
+  const personalityTrends = personalityTrendsFrom(rows);
 
   const overview = {
     totalLearners: rows.length,
@@ -489,7 +542,7 @@ function buildSchoolDashboardData(classFilter){
 
   const insights = generateSchoolInsights({ overview, pathwayDistribution, subjectDemand, subjectRecs, supportNeeds, readinessByPathway, enriched });
 
-  return { rows, assessed, enriched, overview, pathwayDistribution, subjectDemand, subjectRecs, combinations, progress, supportNeeds, guidanceRows, readinessByPathway, insights };
+  return { rows, assessed, enriched, overview, pathwayDistribution, subjectDemand, subjectRecs, combinations, progress, supportNeeds, guidanceRows, readinessByPathway, personalityTrends, insights };
 }
 
 function pathwayDistributionFrom(enriched, assessedCount){
@@ -765,6 +818,10 @@ function viewAdminDashboard(){
         <tbody>${d.subjectRecs.list.map(s=>`<tr><td>${esc(s.subject)}</td><td>${s.recommended}</td><td>${s.intended}</td></tr>`).join('')}</tbody>
       </table></div>` : `<p class="page-sub">No Subject Choice reports or subject intentions yet.</p>`}
     </div>
+  </div>
+
+  <div class="grid grid-2" style="margin-bottom:20px;">
+    ${personalityTrendsCardHTML(d.personalityTrends, filterClass, 9)}
   </div>
 
   ${grade10PlanningHTML(d)}
