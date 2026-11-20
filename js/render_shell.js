@@ -179,6 +179,7 @@ function refreshNav(){
   document.getElementById('bottomNavEl').innerHTML = bottomNavHTML();
 }
 
+let LAST_SCREEN_KEY = null, ENTER_TIMER = null;
 function render(){
   if(AUTH_RECOVERY_MODE){ renderRecoveryOnly(); return; }
   if(!ME.id){ (MINI_DRAFT ? renderAnonymousOnly() : renderAuthGateOnly()); return; }
@@ -188,6 +189,14 @@ function render(){
   persistDrafts();
   refreshNav();
   const app = document.getElementById('app');
+  // A gentle entrance when a new screen opens (style.css "Discovery"), but
+  // not when the same screen is re-drawn after a tap.
+  const screenKey = ROUTE + '|' + JSON.stringify(ROUTE_PARAM);
+  if(screenKey !== LAST_SCREEN_KEY){
+    LAST_SCREEN_KEY = screenKey;
+    app.classList.remove('enter'); void app.offsetWidth; app.classList.add('enter');
+    clearTimeout(ENTER_TIMER); ENTER_TIMER = setTimeout(function(){ app.classList.remove('enter'); }, 900);
+  }
 
   const effectiveAdmin = IS_ADMIN && !PREVIEW_MODE;
 

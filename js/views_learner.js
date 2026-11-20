@@ -582,6 +582,7 @@ function viewExplore(){
   const fac = ROUTE_PARAM && typeof ROUTE_PARAM==='object' ? ROUTE_PARAM.fac : (ROUTE_PARAM||'all');
   return `
   ${careersHeadHTML('explore', 'Browse all ' + CAREERS.length + ' careers across ' + FACULTIES.length + ' faculties. Open any career to see its degree programmes and entry requirements.')}
+  ${fac==='all' && !EXPLORE_SEARCH ? dsDiscoverHTML(l) : ''}
   <button class="btn btn-ghost btn-sm" style="margin-bottom:14px;" onclick="navigate('clusters')">${icon('layers')} Not sure where to start? Browse by career cluster instead</button>
   <div class="filter-bar">
     <button class="chip-select ${fac==='all'?'on':''}" onclick="navigate('explore','all')">All faculties</button>
@@ -682,6 +683,7 @@ function viewCareerDetail(param){
   const isFav = (l.favourites||[]).includes(career.id);
   const inCompare = (l.compare||[]).includes(career.id);
   const ytUrl = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(career.videoQuery);
+  dsMarkViewed(career.id);
   return `
   <button class="btn btn-ghost btn-sm" style="margin-bottom:16px;" onclick="navigate(${paramLiteral(from.route)}${from.param!=null?`,${paramLiteral(from.param)}`:''})">${icon('chevron')} Back</button>
   <div class="detail-hero" style="background:linear-gradient(135deg, ${fac.color}, #14172A);">
@@ -693,6 +695,7 @@ function viewCareerDetail(param){
 
   <div class="card" style="margin-bottom:18px;">
     <h3>Why this may (or may not) suit you</h3>
+    ${dsFitMetersHTML(l, ev)}
     ${careerExplanationHTML(l, career, ev)}
   </div>
 
@@ -836,7 +839,8 @@ function careersHeadHTML(active, sub){
   return `${pageHeadHTML('Careers', sub)}
   <div class="filter-bar tabs-bar" role="tablist" aria-label="Careers">
     ${CAREER_TABS.map(t=>`<button class="chip-select ${active===t[0]?'on':''}" role="tab" aria-selected="${active===t[0]}" onclick="navigate('${t[0]}')">${t[1]}${t[0]==='favourites' && n ? ' (' + n + ')' : ''}</button>`).join('')}
-  </div>`;
+  </div>
+  ${dsTrailHTML()}`;
 }
 // Saved careers, with up to three of them side by side.
 function viewSaved(){

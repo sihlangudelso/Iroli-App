@@ -901,3 +901,4 @@ function csvEscape(v){
 
 // The Grade 11-12 Pathway's handlers live beside its screens (views_pathway.js).
 Object.assign(App, PATHWAY_HANDLERS);
+Object.assign(App, DISCOVERY_HANDLERS);
