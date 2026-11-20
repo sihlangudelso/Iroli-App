@@ -59,7 +59,7 @@
   .feature-card .ico{width:40px;height:40px;border-radius:12px;background:var(--t-violet);display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
   .step-num{width:30px;height:30px;border-radius:50%;background:var(--brand-grad);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-family:var(--font-head);font-size:14px;flex-shrink:0;}
   /* Closing call-to-action on the pink -> yellow -> orange brand gradient: fixed dark text in every theme. */
-  .cta-band{background:var(--brand-grad);border-radius:var(--radius-lg);padding:48px 32px;text-align:center;color:#0B2545;}
+  .cta-band{background:linear-gradient(110deg,#F6BDD3 0%,#F3A9CF 65%,#F7CADD 100%);border-radius:var(--radius-lg);padding:48px 32px;text-align:center;color:#0B2545;}
   .cta-band h1,.cta-band h2{color:#0B2545;}
   .cta-band p{color:#423345;}
   .feature-card:nth-child(3n+1){border-top-color:var(--hero-yellow);}
@@ -128,6 +128,7 @@
   .land-footer{border-top:1px solid var(--line);margin-top:20px;}
   .land-footer-inner{max-width:1180px;margin:0 auto;padding:28px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;}
 </style>
+<script src="js/homepage.js" defer></script>
 </head>
 <body>
 
@@ -158,9 +159,9 @@
     </div>
   </div>
   <div class="hero-stats">
-    <div><b>77</b><span>real careers</span></div>
-    <div><b>15</b><span>career fields</span></div>
-    <div><b>4</b><span>questions to start</span></div>
+    <div><b data-count-to="77" aria-hidden="true">77</b><span class="sr-only">77 </span><span>real careers</span></div>
+    <div><b data-count-to="15" aria-hidden="true">15</b><span class="sr-only">15 </span><span>career fields</span></div>
+    <div><b data-count-to="4" aria-hidden="true">4</b><span class="sr-only">4 </span><span>questions to start</span></div>
   </div>
 </header>
 
