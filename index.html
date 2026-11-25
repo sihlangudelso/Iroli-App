@@ -125,27 +125,6 @@
   .hero .btn-outline{background:rgba(255,255,255,.45);color:#0B2545;border:2px solid #7CC8F8;}
   .hero .btn-outline:hover{background:rgba(255,255,255,.65);}
   .hero-note{font-size:13px;color:#4A3F66;margin:0;}
-  /* View the sample report: a short card under the counters; the four pages open only when asked for. */
-  .report-view{position:relative;z-index:3;max-width:900px;margin:44px auto 0;padding:24px 28px;
-    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-soft);}
-  .rv-head{display:flex;align-items:center;justify-content:space-between;gap:16px 28px;flex-wrap:wrap;}
-  .rv-head h2{font-size:21px;margin:8px 0 4px;}
-  .rv-head p{margin:0;font-size:14px;color:var(--muted);max-width:520px;line-height:1.5;}
-  .ex-label{font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--on-pink);background:var(--t-pink);padding:4px 10px;border-radius:999px;}
-  .rv-toggle .chev{display:inline-block;transition:transform .25s ease;margin-left:4px;}
-  .rv-toggle[aria-expanded="true"] .chev{transform:rotate(180deg);}
-  .rv-pages{margin-top:22px;padding-top:22px;border-top:1px solid var(--line);}
-  .rv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
-  .rv-grid a{display:block;color:inherit;text-decoration:none;}
-  .rv-grid img{display:block;width:100%;height:auto;aspect-ratio:900/1273;border-radius:10px;border:1px solid var(--line);background:#fff;box-shadow:var(--shadow-soft);transition:transform .2s ease, box-shadow .2s ease;}
-  .rv-grid a:hover img{transform:translateY(-3px);box-shadow:0 14px 28px -16px rgba(11,37,69,.45);}
-  .rv-grid a:focus-visible{outline:2px solid var(--link);outline-offset:3px;border-radius:10px;}
-  .rv-grid span{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-top:8px;text-align:center;}
-  .rv-foot{display:flex;justify-content:space-between;align-items:center;gap:8px 16px;flex-wrap:wrap;margin-top:18px;font-size:13px;color:var(--muted);}
-  .rv-foot a{font-weight:600;color:var(--link);}
-  @keyframes rvOpen{ from{opacity:0; transform:translateY(-8px);} to{opacity:1; transform:none;} }
-  .motion .rv-pages:not([hidden]){ animation:rvOpen .35s cubic-bezier(.2,.7,.2,1) both; }
-  @media (max-width:760px){ .rv-grid{grid-template-columns:repeat(2,1fr);} }
   /* A slow band of the 77 real career names. */
   .career-band{overflow:hidden;margin:56px 0 0;padding:6px 0;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);}
   .cb-track{display:flex;width:max-content;}
@@ -169,7 +148,7 @@
   .motion .photo img,.motion .wide-photo img{transform:scale(1.08);transition:transform 1.4s cubic-bezier(.2,.7,.2,1);}
   .motion .photo.in img,.motion .wide-photo.in img{transform:none;}
   @media (max-width:900px){ .photo-stack .float,.photo-stack.alt .float{width:90%;margin-top:-36px;} .photo-stack .photo,.photo-stack.alt .photo{width:100%;} }
-  @media (max-width:640px){ .career-band{margin-top:40px;} .cb-track span{font-size:14px;} .report-view{margin:28px 12px 0;padding:20px 18px;} .rv-toggle{width:100%;justify-content:center;} }
+  @media (max-width:640px){ .career-band{margin-top:40px;} .cb-track span{font-size:14px;} }
   /* ---------- After the hero: sections alternate centre / left / right, one idea each ---------- */
   /* After the hero the page is plain white (the dark-theme surface in dark mode): no panels, just space. */
   body{background:var(--surface);}
@@ -208,17 +187,17 @@
   .honest-note{max-width:620px;margin:32px auto 0;text-align:center;font-size:14px;color:var(--muted);}
   /* Parents (text left): a peek at the report, using lines from the sample report. */
   .report-peek{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-soft);overflow:hidden;max-width:470px;margin-left:auto;width:100%;}
-  .rp-band{background:linear-gradient(100deg,#F5BBD3,#BFE3FB);padding:18px 22px;color:#0B2545;}
-  .rp-band b{display:block;font-family:var(--font-head);font-size:17px;}
-  .rp-band small{font-size:12.5px;color:#2B2645;}
-  .rp-body{padding:20px 22px;display:grid;gap:16px;}
-  .rp-row > small{display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
-  .rp-row p{margin:0;font-size:14px;line-height:1.5;}
-  .rp-fit{display:flex;gap:8px;flex-wrap:wrap;}
-  .rp-fit span{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--chip-bg);color:var(--ink);}
-  .rp-fit span.strong{background:var(--t-blue);color:var(--on-blue);}
-  .rp-foot{border-top:1px solid var(--line);padding:13px 22px;font-size:13px;}
-  .rp-foot a{color:var(--link);font-weight:600;}
+  .pk-band{background:linear-gradient(100deg,#F5BBD3,#BFE3FB);padding:18px 22px;color:#0B2545;}
+  .pk-band b{display:block;font-family:var(--font-head);font-size:17px;}
+  .pk-band small{font-size:12.5px;color:#2B2645;}
+  .pk-body{padding:20px 22px;display:grid;gap:16px;}
+  .pk-row > small{display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+  .pk-row p{margin:0;font-size:14px;line-height:1.5;}
+  .pk-fit{display:flex;gap:8px;flex-wrap:wrap;}
+  .pk-fit span{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--chip-bg);color:var(--ink);}
+  .pk-fit span.strong{background:var(--t-blue);color:var(--on-blue);}
+  .pk-foot{border-top:1px solid var(--line);padding:13px 22px;font-size:13px;}
+  .pk-foot a{color:var(--link);font-weight:600;}
   /* Schools (text right): steps beside a mock-up of the Grade 9 dashboard (made-up class). */
   .schools-steps{list-style:none;margin:22px 0 26px;padding:0;display:grid;gap:16px;}
   .schools-steps li{display:flex;gap:14px;}
@@ -305,7 +284,6 @@
   .motion .hero-photo img{ animation:landSettle 1.1s cubic-bezier(.2,.7,.2,1) both; }
   .motion .hero h1 .mark::after{ transform-origin:left center; animation:landDraw .7s cubic-bezier(.2,.7,.2,1) .55s both; }
   .motion .hero-eyebrow i{ animation:landPulse 2.4s ease-out 1s 3; }
-  .motion .report-view{ animation:landUp .6s cubic-bezier(.2,.7,.2,1) .5s both; }
   /* Scroll reveal, both ways (see the script at the end): scrolling down, blocks rise up into place; scrolling
      back up, the ones above drop down into place. Out of view they reset, so it plays every time. */
   .motion [data-reveal]{ opacity:0; transform:translateY(28px); transition:opacity .65s cubic-bezier(.2,.7,.2,1), transform .65s cubic-bezier(.2,.7,.2,1), box-shadow .2s ease; }
@@ -320,10 +298,10 @@
   .motion .dash-mock .dm-row{ opacity:0; transform:translateX(14px); transition:opacity .45s ease, transform .45s cubic-bezier(.2,.7,.2,1); }
   .motion .dash-mock.in .dm-row{ opacity:1; transform:none; transition-delay:.9s; }
   .motion .dash-mock.in .dm-row:last-child{ transition-delay:1.05s; }
-  .motion .report-peek .tag,.motion .report-peek .rp-fit span{ opacity:0; transform:translateY(6px); transition:opacity .4s ease, transform .4s ease; }
-  .motion .report-peek.in .tag,.motion .report-peek.in .rp-fit span{ opacity:1; transform:none; }
+  .motion .report-peek .tag,.motion .report-peek .pk-fit span{ opacity:0; transform:translateY(6px); transition:opacity .4s ease, transform .4s ease; }
+  .motion .report-peek.in .tag,.motion .report-peek.in .pk-fit span{ opacity:1; transform:none; }
   .motion .report-peek.in .tag:nth-child(1){ transition-delay:.3s; } .motion .report-peek.in .tag:nth-child(2){ transition-delay:.4s; } .motion .report-peek.in .tag:nth-child(3){ transition-delay:.5s; }
-  .motion .report-peek.in .rp-fit span:nth-child(1){ transition-delay:.65s; } .motion .report-peek.in .rp-fit span:nth-child(2){ transition-delay:.75s; } .motion .report-peek.in .rp-fit span:nth-child(3){ transition-delay:.85s; }
+  .motion .report-peek.in .pk-fit span:nth-child(1){ transition-delay:.65s; } .motion .report-peek.in .pk-fit span:nth-child(2){ transition-delay:.75s; } .motion .report-peek.in .pk-fit span:nth-child(3){ transition-delay:.85s; }
   .motion .ticks li{ opacity:0; transform:translateX(-10px); transition:opacity .45s ease, transform .45s cubic-bezier(.2,.7,.2,1); }
   .motion .split-text.in .ticks li{ opacity:1; transform:none; }
   .motion .split-text.in .ticks li:nth-child(1){ transition-delay:.25s; } .motion .split-text.in .ticks li:nth-child(2){ transition-delay:.4s; } .motion .split-text.in .ticks li:nth-child(3){ transition-delay:.55s; }
@@ -354,6 +332,7 @@
   <img class="brand-wordmark" src="assets/logo-wordmark.png" alt="Iroli Career Pathway"/>
   <nav class="top-nav" aria-label="Main">
     <div class="top-links" id="top-links">
+      <a href="reports.html">View reports</a>
       <a href="pricing.html">Pricing</a>
       <a href="privacy.html">Privacy</a>
       <a href="mailto:info@iroli.co.za">Contact</a>
@@ -387,28 +366,6 @@
     <div><b data-count="15" aria-hidden="true">15</b><span class="sr-only">15 </span><span>career fields</span></div>
     <div><b data-count="4" aria-hidden="true">4</b><span class="sr-only">4 </span><span>questions to start</span></div>
   </div>
-  <section class="report-view" aria-labelledby="rv-title">
-    <div class="rv-head">
-      <div>
-        <span class="ex-label">Sample report</span>
-        <h2 id="rv-title">See what a learner gets</h2>
-        <p>The full report for a made-up Grade 9 learner: profile, subject fit, pathways and next steps, on four pages.</p>
-      </div>
-      <button type="button" class="btn btn-primary rv-toggle" aria-expanded="false" aria-controls="rv-pages"><span class="rv-label">View report</span><span class="chev" aria-hidden="true">▾</span></button>
-    </div>
-    <div class="rv-pages" id="rv-pages" hidden>
-      <div class="rv-grid">
-        <a href="assets/sample-report-p1.webp" target="_blank" rel="noopener"><img data-src="assets/sample-report-p1.webp" width="900" height="1273" alt="Sample report page 1: Your learner profile"><span>1. Your learner profile</span></a>
-        <a href="assets/sample-report-p2.webp" target="_blank" rel="noopener"><img data-src="assets/sample-report-p2.webp" width="900" height="1273" alt="Sample report page 2: Your subject fit"><span>2. Your subject fit</span></a>
-        <a href="assets/sample-report-p3.webp" target="_blank" rel="noopener"><img data-src="assets/sample-report-p3.webp" width="900" height="1273" alt="Sample report page 3: Your pathway"><span>3. Your pathway</span></a>
-        <a href="assets/sample-report-p4.webp" target="_blank" rel="noopener"><img data-src="assets/sample-report-p4.webp" width="900" height="1273" alt="Sample report page 4: Your recommendation"><span>4. Your recommendation</span></a>
-      </div>
-      <div class="rv-foot">
-        <span>Tap a page to see it full size.</span>
-        <a href="assets/sample-report.pdf" target="_blank" rel="noopener">Download the full PDF →</a>
-      </div>
-    </div>
-  </section>
 </header>
 
 <div class="career-band" aria-hidden="true"><div class="cb-track"><span>Civil Engineer</span><span>Mechanical Engineer</span><span>Electrical Engineer</span><span>Chemical Engineer</span><span>Industrial Engineer</span><span>Mechatronics Engineer</span><span>Software Developer</span><span>Data Scientist</span><span>Computer / Network Systems Engineer</span><span>Cybersecurity Specialist</span><span>IT / Systems Business Analyst</span><span>Medical Doctor</span><span>Pharmacist</span><span>Physiotherapist</span><span>Dentist</span><span>Biomedical Scientist / Medical Technologist</span><span>Environmental Scientist</span><span>Geologist</span><span>Biotechnologist</span><span>Architect</span><span>Quantity Surveyor</span><span>Urban &amp; Regional Planner</span><span>Agricultural Scientist (Agronomist)</span><span>Agricultural Engineer</span><span>Actuary</span><span>Chartered Accountant CA(SA)</span><span>Financial / Investment Analyst</span><span>Quantitative Analyst (&quot;Quant&quot;)</span><span>Economist</span><span>Teacher</span><span>Social Worker</span><span>Graphic Designer</span><span>Photographer</span><span>Filmmaker</span><span>Musician</span><span>Dancer / Choreographer</span><span>Attorney</span><span>Advocate</span><span>Paralegal</span><span>Policy Analyst</span><span>Diplomat / Foreign Service Officer</span><span>Police Officer</span><span>Firefighter</span><span>Lecturer / Academic</span><span>Early Childhood Development (ECD) Practitioner</span><span>Journalist</span><span>Writer / Author</span><span>Translator / Interpreter</span><span>Public Relations Specialist</span><span>Animator</span><span>Fashion Designer</span><span>Tourism Manager</span><span>Travel Consultant</span><span>Hotel Manager</span><span>Chef</span><span>Event Manager</span><span>Sports Coach</span><span>Sports Scientist / Biokineticist</span><span>Community Development Worker</span><span>Psychologist</span><span>Electrician</span><span>Plumber</span><span>Welder</span><span>Automotive Mechanic</span><span>Boilermaker / Artisan (Metalwork)</span><span>Logistics Manager</span><span>Commercial Pilot</span><span>Heavy Vehicle / Truck Driver</span><span>Entrepreneur / Business Owner</span><span>Human Resources Manager</span><span>Marketing Manager</span><span>Historian</span><span>Sociologist</span><span>GIS Specialist</span><span>Conservation Officer / Field Ranger</span><span>Agricultural Economist</span><span>Farmer</span></div></div>
@@ -464,19 +421,19 @@
       </ul>
       <p class="fine">If their school doesn't use Iroli, an individual licence is a once-off R300 and lasts until the end of Grade 12.</p>
       <div class="split-actions">
-        <a href="assets/sample-report.pdf" target="_blank" rel="noopener" class="btn btn-primary">See a sample report</a>
+        <a href="reports.html" class="btn btn-primary">See a sample report</a>
         <a href="pricing.html" class="btn btn-ghost">See pricing</a>
       </div>
     </div>
     <div class="photo-stack alt">
       <figure class="photo" data-reveal style="--d:1;"><picture><source media="(max-width:700px)" srcset="assets/photo-learners-tablet-800.webp"><img src="assets/photo-learners-tablet.webp" width="1536" height="1024" loading="lazy" alt="Two learners look at a tablet together in a technology workshop" style="object-position:40% 40%;"></picture></figure>
       <div class="report-peek float" data-reveal style="--d:2;" role="img" aria-label="A preview of the sample Grade 9 Subject Choice Report: best-fit subjects Maths, Physical Sciences and Life Sciences, with a very strong interest fit, a strong personality fit and a moderate academic fit.">
-      <div class="rp-band"><b>Grade 9 Subject Choice Report</b><small>Sample learner · 4 pages</small></div>
-      <div class="rp-body">
-        <div class="rp-row"><small>Best-fit subjects</small><div class="pill-list"><span class="tag">Maths</span><span class="tag">Physical Sciences</span><span class="tag">Life Sciences</span></div></div>
-        <div class="rp-row"><small>How well they fit</small><div class="rp-fit"><span class="strong">Interest: Very strong</span><span class="strong">Personality: Strong</span><span>Academic: Moderate</span></div></div>
+      <div class="pk-band"><b>Grade 9 Subject Choice Report</b><small>Sample learner · 4 pages</small></div>
+      <div class="pk-body">
+        <div class="pk-row"><small>Best-fit subjects</small><div class="pill-list"><span class="tag">Maths</span><span class="tag">Physical Sciences</span><span class="tag">Life Sciences</span></div></div>
+        <div class="pk-row"><small>How well they fit</small><div class="pk-fit"><span class="strong">Interest: Very strong</span><span class="strong">Personality: Strong</span><span>Academic: Moderate</span></div></div>
       </div>
-        <div class="rp-foot"><a href="assets/sample-report.pdf" target="_blank" rel="noopener">Open the full sample report (PDF) →</a></div>
+        <div class="pk-foot"><a href="reports.html">Open the full sample report →</a></div>
       </div>
     </div>
   </div>
@@ -593,18 +550,6 @@
     btn.addEventListener('click', function(e){ e.stopPropagation(); set(!links.classList.contains('open')); if(links.classList.contains('open')) links.querySelector('a').focus(); });
     document.addEventListener('click', function(e){ if(!links.contains(e.target)) set(false); });
     document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && links.classList.contains('open')){ set(false); btn.focus(); } });
-  })();
-  // View report: the four page images load only when the report is opened.
-  (function(){
-    var btn = document.querySelector('.rv-toggle'), box = document.getElementById('rv-pages');
-    if(!btn || !box) return;
-    btn.addEventListener('click', function(){
-      var open = btn.getAttribute('aria-expanded') !== 'true';
-      if(open) box.querySelectorAll('img[data-src]').forEach(function(img){ img.src = img.getAttribute('data-src'); img.removeAttribute('data-src'); });
-      box.hidden = !open;
-      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-      btn.querySelector('.rv-label').textContent = open ? 'Hide report' : 'View report';
-    });
   })();
   // The career band loops seamlessly with a second copy of the names (only when it moves).
   (function(){
