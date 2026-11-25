@@ -55,7 +55,7 @@
 <style>
   .topbar-land{display:flex;align-items:center;justify-content:space-between;max-width:1400px;margin:0 auto;padding:20px clamp(20px,3vw,48px);}
   .topbar-land .brand-wordmark{height:28px;display:block;}
-  .section{max-width:1180px;margin:0 auto;padding:88px 20px;}
+  .section{max-width:1320px;margin:0 auto;padding:88px clamp(20px,3vw,48px);}
   .feature-card{border-top:4px solid var(--indigo);height:100%;}
   .feature-card .ico{width:40px;height:40px;border-radius:12px;background:var(--t-violet);display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
   .step-num{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#F5BBD3,#7CC8F8);color:#0B2545;display:flex;align-items:center;justify-content:center;font-weight:800;font-family:var(--font-head);font-size:14px;flex-shrink:0;}
@@ -110,7 +110,7 @@
   .hero-photo{position:absolute;top:0;right:0;height:100%;margin:0;display:block;}
   .hero-photo img{height:100%;width:auto;display:block;
     -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 10%);mask-image:linear-gradient(90deg,transparent 0,#000 10%);}
-  /* On wide screens the copy lines up with the logo in a 1400px frame, so it sits further left than the 1180px content below. */
+  /* On wide screens the copy lines up with the logo in a 1400px frame, a little wider than the 1320px content below. */
   .hero-copy{position:relative;z-index:2;max-width:calc(440px + 2 * clamp(20px,3vw,48px));padding:116px clamp(20px,3vw,48px) 80px;margin-left:max(0px,calc((100vw - 1400px)/2));}
   .hero-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;letter-spacing:.02em;
     padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.9);color:#0B2545;margin-bottom:20px;}
@@ -155,7 +155,7 @@
   body{background:var(--surface);}
   /* A soft hairline between sections: fades out at both ends, so it marks a new section without boxing it in. */
   .section{position:relative;}
-  .section + .section::before{content:"";position:absolute;top:0;left:20px;right:20px;height:1px;
+  .section + .section::before{content:"";position:absolute;top:0;left:clamp(20px,3vw,48px);right:clamp(20px,3vw,48px);height:1px;
     background:linear-gradient(90deg,transparent,var(--t-line) 12%,var(--t-line) 88%,transparent);}
   .section + .section::after{content:"";position:absolute;top:-2px;left:50%;width:48px;height:5px;border-radius:5px;transform:translateX(-50%);
     background:linear-gradient(90deg,#F5BBD3,#7CC8F8);}
@@ -272,7 +272,7 @@
     .hero .btn{flex:1 1 100%;justify-content:center;text-align:center;}
   }
   .land-footer{border-top:1px solid var(--line);margin-top:20px;}
-  .land-footer-inner{max-width:1180px;margin:0 auto;padding:24px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--muted);}
+  .land-footer-inner{max-width:1400px;margin:0 auto;padding:24px clamp(20px,3vw,48px);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--muted);}
   /* ---------- Subtle motion (only with JavaScript on and "reduce motion" off: the .motion class
      is added by the script just below; without it everything simply shows) ---------- */
   @keyframes landUp{ from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:none;} }
