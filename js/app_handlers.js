@@ -45,19 +45,17 @@ const App = {
   // existing completed `answers`, never replacing them, since a later
   // signup should still be able to carry those forward.
   declineAnonFlow(){
+    cancelPendingAnswer();
     const saved = readMiniAssessment() || {};
     writeMiniAssessment(Object.assign({}, saved, { declined:true }));
     MINI_DRAFT = null;
-    render();
+    App.setAuthMode('signin');
   },
   // From the sign-in card's reciprocal link: an explicit request overrides
   // any earlier decline. A previously completed mini-assessment is shown
   // again rather than re-asked.
   showAnonFlow(){
-    const saved = readMiniAssessment();
-    MINI_DRAFT = (saved && saved.answers)
-      ? { step:'results', answers: saved.answers }
-      : { step:'intro', answers:{interest:null,strength:null,motivation:null,activity:null} };
+    MINI_DRAFT = miniDraftFromSaved(readMiniAssessment(), 'intro');
     render();
   },
   // Switches to the (existing) signup form. The completed mini-assessment

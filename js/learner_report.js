@@ -1177,10 +1177,10 @@ function rpFitTableHTML(R){
     <tbody>${rows}</tbody>
   </table>`;
 }
-function rpFitHTML(R, l){
+function rpFitHTML(R, l, sample){
   const f = R.fit;
   if(f.state === 'ready'){
-    return rpFitTableHTML(R) + rpAcademicHTML(R, l) + `<div class="rp-actions">${lrButton('See the full subject-by-subject breakdown', "navigate('subject-choice')")}</div>`;
+    return rpFitTableHTML(R) + rpAcademicHTML(R, l) + (sample ? '' : `<div class="rp-actions">${lrButton('See the full subject-by-subject breakdown', "navigate('subject-choice')")}</div>`);
   }
   if(f.state === 'needsPersonality'){
     return rpEmpty('Your Subject Choice answers are saved. Take the personality assessment to see how each subject fits you — it only takes a few minutes.', 'Take the personality assessment', "navigate('assessment')") + rpAcademicHTML(R, l);
@@ -1228,12 +1228,14 @@ function rpComboHTML(R){
 }
 
 /* ---- 4: career pathways ---- */
-function rpAreasHTML(R){
+function rpAreasHTML(R, sample){
   const A = R.areas;
   if(!A.ready) return rpEmpty('Take the personality assessment to see which broad career areas fit you.', 'Take the personality assessment', "navigate('assessment')");
   return `<ul class="rp-areas">${A.list.map(function(a, i){
     const careers = a.careers.map(function(c){
-      return `<a href="#" onclick="navigate('career',{id:'${c.id}',from:{route:'report',param:'overview'}});return false;">${esc(c.name)}</a>${c.aspirational ? ' <span class="rp-asp">Aspirational — ' + esc(c.needs || 'Mathematics') + ' required</span>' : ''}`;
+      const name = esc(c.name);
+      const career = sample ? name : `<a href="#" onclick="navigate('career',{id:'${c.id}',from:{route:'report',param:'overview'}});return false;">${name}</a>`;
+      return career + (c.aspirational ? ' <span class="rp-asp">Aspirational — ' + esc(c.needs || 'Mathematics') + ' required</span>' : '');
     }).join(', ');
     const uses = a.gaps.length ? `<b>${A.basis === 'none' ? 'Typically needs' : 'Often also needs'}</b> ${esc(a.gaps.join(', '))}` : '';
     return `
@@ -1251,7 +1253,7 @@ function rpAreasHTML(R){
 }
 
 /* ---- 5: final recommendation, summary table and next steps ---- */
-function rpFinalHTML(R){
+function rpFinalHTML(R, sample){
   const f = R.final, S = R.summary;
   const concl = [];
   if(f.thrive) concl.push(['star', 'Where you are likely to thrive', [f.thrive]]);
@@ -1266,7 +1268,7 @@ function rpFinalHTML(R){
     else val = esc(r.result);
     return `<tr class="${r.kind === 'fit' ? 'rp-sum-main' : ''}"><th scope="row">${esc(r.area)}</th><td>${val}${r.note ? `<div class="rp-note">${esc(r.note)}</div>` : ''}</td></tr>`;
   }).join('');
-  const steps = f.steps.map(function(s){ return `<li><span>${esc(s.text)}${s.action ? ` <span class="rp-act">${lrButton(s.action.label, s.action.onclick)}</span>` : ''}</span></li>`; }).join('');
+  const steps = f.steps.map(function(s){ return `<li><span>${esc(s.text)}${s.action && !sample ? ` <span class="rp-act">${lrButton(s.action.label, s.action.onclick)}</span>` : ''}</span></li>`; }).join('');
   return `
   ${concl.length ? `<div class="rp-concl${concl.length === 1 ? ' rp-concl-one' : ''}${concl.length > 2 ? ' rp-concl-four' : ''}">${concl.map(function(c){ return `<div class="rp-concl-i"><span class="rp-concl-ic">${icon(c[0], 'rp-ic')}</span><div><h3>${esc(c[1])}</h3>${c[2].map(function(t){ return `<p>${esc(t)}</p>`; }).join('')}</div></div>`; }).join('')}</div>` : ''}
   <div class="rp-final">
@@ -1289,8 +1291,7 @@ function rpDisclaimerHTML(R){
 // The whole report: header, then the sections that apply to this learner,
 // numbered in order (a learner who is not choosing Grade 10 subjects has no
 // "Recommended Subject Combination", so the numbers simply close up).
-function learnerReportHTML(l, R, opts){
-  opts = opts || {};
+function learnerReportHTML(l, R, { sample = false } = {}){
   const idp = 'rps';
   const known = R.summary.rows.some(function(r){ return r.kind !== 'todo'; });
   let main;
@@ -1301,14 +1302,14 @@ function learnerReportHTML(l, R, opts){
     const secs = [
       { key:'profile', title:'Your Learner Profile', body: rpProfileHTML(R) },
       { key:'fit', title: general ? 'Subjects Your Careers Rely On' : 'Subject Fit', cls:'rp-fit',
-        body: rpFitHTML(R, l) },
+        body: rpFitHTML(R, l, sample) },
     ];
     // Side by side only when there is a combination to show; otherwise each section stands alone, full width.
     const sideBySide = !general && R.combo.state === 'ready' && !!R.combo.best;
     if(!general) secs.push({ key:'combo', title:'Recommended Subject Combination', body: rpComboHTML(R), cls: sideBySide ? 'rp-half' : '' });
     const A = R.areas;
-    secs.push({ key:'areas', title:'Career Pathways', cls: sideBySide ? 'rp-half' : '', body: rpAreasHTML(R) });
-    secs.push({ key:'final', title:'Your Final Recommendation & Next Steps', body: rpFinalHTML(R) });
+    secs.push({ key:'areas', title:'Career Pathways', cls: sideBySide ? 'rp-half' : '', body: rpAreasHTML(R, sample) });
+    secs.push({ key:'final', title:'Your Final Recommendation & Next Steps', body: rpFinalHTML(R, sample) });
     const tones = rpTones(secs.length);
     const html = secs.map(function(s, i){
       return rpSection({ id: idp + '-' + s.key, n: i + 1, tone: tones[i], title: s.title, sub: s.sub, body: s.body, cls: s.cls });

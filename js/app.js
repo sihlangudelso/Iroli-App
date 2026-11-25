@@ -178,6 +178,7 @@ function boot(){
 }
 
 async function handleSession(session){
+  const firstSession = !AUTH_READY;
   AUTH_READY = true;
   // Found in the pre-launch audit: this function's call graph covers
   // every data load and the first render() of a session, with no
@@ -188,6 +189,8 @@ async function handleSession(session){
   try {
   const user = session && session.user;
   if(!user){
+    // Both getSession and the auth listener can report the same signed-out state.
+    if(!firstSession && !ME.id) return;
     if(learnerChannel){ sb.removeChannel(learnerChannel); learnerChannel = null; }
     ME = { id:null, name:'', email:'', avatarUrl:'' };
     IS_ADMIN = false; IS_SUPER_ADMIN = false; LEARNER = null;
@@ -203,21 +206,19 @@ async function handleSession(session){
     ASSESSMENT_DRAFT = null; APS_DRAFT = null; GRADE9_DRAFT = null; SUBJECT_CHOICE_DRAFT = null; PATHWAY_DRAFT = null;
     EXPLORE_SEARCH = ''; EXPLORE_FILTERS = {};
     window.__cohortSearch = '';
-    // Decide the anonymous mini-assessment's state once, the same way
-    // AUTH_RECOVERY_MODE is decided once -- but only if it isn't already
-    // set, so a re-fire of this listener (e.g. on tab refocus, same as the
-    // signed-in case above) never wipes out-of-progress answers.
-    if(!MINI_DRAFT){
-      // `answers` (a completed result) and `declined` (an explicit "I
-      // already have an account") are independent facts, not one status
-      // enum -- a visitor can decline the invitation to sign up right now
-      // and still have their answers preserved for later, and `declined`
-      // is only ever a *default-routing* preference: it must never cause a
-      // real completed result to be discarded (see declineAnonFlow).
+    const start = firstSession ? new URLSearchParams(window.location.search).get('start') : null;
+    AUTH_MODE = start === 'signup' ? 'signup' : 'signin';
+    AUTH_ERROR = '';
+    AUTH_SHOW_RESET = false;
+    if(start === 'signin' || start === 'signup'){
+      MINI_DRAFT = null;
+    } else if(!MINI_DRAFT){
+      // An explicit quiz link overrides the default sign-in preference and
+      // keeps any completed answers so they can still follow a later signup.
       const saved = readMiniAssessment();
-      if(saved && saved.declined) MINI_DRAFT = null;
-      else if(saved && saved.answers) MINI_DRAFT = { step:'results', answers: saved.answers };
-      else MINI_DRAFT = { step:'intro', answers:{interest:null,strength:null,motivation:null,activity:null} };
+      if(start === 'quiz' || !(saved && saved.declined)){
+        MINI_DRAFT = miniDraftFromSaved(saved, start === 'quiz' ? 0 : 'intro');
+      }
     }
     (MINI_DRAFT ? renderAnonymousOnly() : renderAuthGateOnly());
     return;
