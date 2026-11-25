@@ -166,9 +166,12 @@ function viewSchoolFinished(){
   ${pageHeadHTML('Your Iroli access has ended', 'Iroli covers learners from Grade 9 to the end of Grade 12.')}
   <div class="card">
     <h3>Well done on finishing Grade 12</h3>
-    <p class="page-sub">Your account was set up for Grade 12 in ${esc(l.gradeYear)}. Your saved results stay in your account.</p>
+    <p class="page-sub">Your account was set up for Grade 12 in ${esc(l.gradeYear)}. Your saved results stay in your account, and you can still open and download your report.</p>
     <p class="page-sub">Still in Grade 12, or repeating a grade? Change your grade and you can carry on.</p>
-    <button class="btn btn-primary" onclick="navigate('profile')">Not my grade? Change it</button>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="navigate('report')">Open my report</button>
+      <button class="btn btn-ghost" onclick="navigate('profile')">Not my grade? Change it</button>
+    </div>
   </div>`;
 }
 
@@ -718,6 +721,7 @@ const PATHWAY_HANDLERS = {
     const l = ensureLearnerObj(); const k = pwLearnerSubjects(l)[i]; if(!k || !PATHWAY_DRAFT) return;
     if(v === '' || v == null || isNaN(Number(v))) delete PATHWAY_DRAFT.marks[k];
     else PATHWAY_DRAFT.marks[k] = clamp(Math.round(Number(v) * 10) / 10, 0, 100);
+    persistDrafts();
   },
   pwToggleSupport(i, on){
     const l = ensureLearnerObj(); const k = pwLearnerSubjects(l)[i]; if(!k || !PATHWAY_DRAFT) return;

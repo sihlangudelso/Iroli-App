@@ -220,9 +220,16 @@ create policy "profiles_update_admin_only"
   with check (public.is_admin());
 
 -- ---------- classes policies ----------
-create policy "classes_select_authenticated"
+-- Admins, the class's own class admin, and learners already in the class
+-- (see restrict_class_select.sql: the old "any signed-in user" rule exposed
+-- every join code).
+create policy "classes_select_scoped"
   on public.classes for select
-  using (auth.role() = 'authenticated');
+  using (
+    public.is_admin()
+    or "classAdminId" = auth.uid()
+    or id = (select l."classId" from public.learners l where l.id = auth.uid())
+  );
 
 create policy "classes_insert_admin"
   on public.classes for insert

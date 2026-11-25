@@ -158,8 +158,8 @@ const App = {
     const { error } = await sb.auth.updateUser({ data: { display_name: name } });
     if(error){ toast('Could not save — '+friendlyAuthError(error)); console.error(error); return; }
     ME.name = name;
-    await saveLearner({ cellNumber });
-    toast('Details saved.');
+    // Only say it was saved if it was (saveLearner already explains a failure).
+    if(await saveLearnerOrRevert({ cellNumber })) toast('Details saved.');
     render();
   },
   async changeEmail(){
@@ -515,12 +515,10 @@ const App = {
     const l = ensureLearnerObj();
     let subs = l.intendedSubjects || [];
     subs = subs.includes(subject) ? subs.filter(x=>x!==subject) : [...subs, subject];
-    await saveLearner({ intendedSubjects: subs });
-    render();
+    await saveAndShow({ intendedSubjects: subs });
   },
   async setIntendedMathType(type){
-    await saveLearner({ intendedMathType: type });
-    render();
+    await saveAndShow({ intendedMathType: type });
   },
 
   // ---- favourites / compare ----
@@ -529,8 +527,7 @@ const App = {
     const l = ensureLearnerObj();
     let favs = l.favourites || [];
     favs = favs.includes(id) ? favs.filter(x=>x!==id) : [...favs, id];
-    await saveLearner({ favourites: favs });
-    render();
+    await saveAndShow({ favourites: favs });
   },
   async toggleCompare(id){
     const l = ensureLearnerObj();
@@ -538,8 +535,7 @@ const App = {
     if(cmp.includes(id)) cmp = cmp.filter(x=>x!==id);
     else if(cmp.length<3) cmp = [...cmp, id];
     else { toast('You can compare up to 3 careers at a time.'); return; }
-    await saveLearner({ compare: cmp });
-    render();
+    await saveAndShow({ compare: cmp });
   },
 
 
@@ -562,8 +558,7 @@ const App = {
   async apsCompute(){
     const d = ensureApsDraft();
     const { rows, aps } = computeAPSFromMarks(d.marks);
-    await saveLearner({ apsLast: { aps, rows, marksMap: {...d.marks}, savedAt: todayISO() } });
-    render();
+    await saveAndShow({ apsLast: { aps, rows, marksMap: {...d.marks}, savedAt: todayISO() } });
   },
 
   // ---- class & licence ----
@@ -600,6 +595,8 @@ const App = {
       const { data: fresh, error: readErr } = await sb.from('learners').select('licenseStatus, licenseSource, plan, planSource, classId').eq('id', ME.id).maybeSingle();
       if(!readErr && fresh) Object.assign(LEARNER, fresh);
     }catch(e){ console.error('Could not reload the learner after joining', e); }
+    // A learner can only read a class once they are in it, so fetch it now (Account shows its name).
+    try{ await loadClasses(); }catch(e){ console.error('Could not reload classes after joining', e); }
     toast('Joined '+row.class_name+'. Your account is now active.');
     const wanted = ACTIVATE_WANTED; ACTIVATE_WANTED = null;
     navigate(wanted || 'home');

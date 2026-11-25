@@ -1558,6 +1558,8 @@ const NSC_LEVELS = [
 ];
 function nscLevel(pct){
   pct = Math.max(0, Math.min(100, Number(pct)||0));
-  const row = NSC_LEVELS.find(r => pct >= r.min && pct <= r.max) || NSC_LEVELS[NSC_LEVELS.length-1];
+  // Bands run from the top down, so the first whose minimum the mark reaches is its level. (Matching
+  // min..max as whole numbers sent a mark between bands, such as 79.5%, to level 1.)
+  const row = NSC_LEVELS.find(r => pct >= r.min) || NSC_LEVELS[NSC_LEVELS.length-1];
   return row.level;
 }

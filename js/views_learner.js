@@ -1025,5 +1025,6 @@ function viewActivateAccount(){
       <a href="mailto:info@iroli.co.za?subject=Iroli%20Career%20Pathway%20-%20Activate%20my%20account&body=My%20account%20email%3A%20${encodeURIComponent(ME.email||'')}" class="btn btn-ghost" style="width:100%;text-align:center;">Contact us to activate</a>
     </div>
   </div>
+  <p class="page-sub" style="text-align:center;margin-top:18px;">Already activated? <a href="#" onclick="recheckActivation(true);return false;">Check again</a></p>
   `;
 }

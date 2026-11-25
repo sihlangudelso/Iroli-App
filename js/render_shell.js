@@ -47,7 +47,7 @@ function roleLabel(){
 const GATED_NAV = {
   onboarding: [{ r:'onboarding', label:'Set up your profile', short:'Profile', ic:'person' }],
   activate: [{ r:'activate', label:'Activate your account', short:'Activate', ic:'shield' }],
-  finished: [{ r:'finished', label:'After Grade 12', short:'Grade 12', ic:'cap' }],
+  finished: [{ r:'finished', label:'After Grade 12', short:'Grade 12', ic:'cap' }, { r:'report', label:'My Report', short:'Report', ic:'chart' }],
 };
 
 function currentNav(){
@@ -242,7 +242,8 @@ function render(){
   if(gate==='activate' && ROUTE!=='activate' && ROUTE!=='onboarding'){ ROUTE='activate'; }
   // After Grade 12: the end-of-access screen, or the profile, where a learner
   // repeating Grade 12 corrects their grade.
-  if(gate==='finished' && ROUTE!=='finished' && ROUTE!=='profile'){ ROUTE='finished'; }
+  // (They can still open their report and download it: "your saved results stay".)
+  if(gate==='finished' && ROUTE!=='finished' && ROUTE!=='profile' && ROUTE!=='report'){ ROUTE='finished'; }
   // Pathway screens: Grade 11-12 only, and Pro only. The menu hides them from
   // everyone else, but a link or the Back button can still ask for one.
   if(!gate && isPathwayRoute(ROUTE) && !pathwayOpen(l)){ ROUTE='home'; ROUTE_PARAM=null; refreshNav(); }

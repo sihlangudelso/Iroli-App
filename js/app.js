@@ -23,7 +23,8 @@ let CLASS_ADMINS = [];
 let ASSESSMENT_DRAFT = null;
 let APS_DRAFT = null;
 let GRADE9_DRAFT = null;
-// The Pathway marks form while it is being filled in (memory only, see views_pathway.js).
+// The Pathway forms while they are being filled in (see views_pathway.js). The term-marks form
+// is also kept in localStorage once something in it changes, like the other drafts.
 let PATHWAY_DRAFT = null;
 // The school-profile form (grade, school, maths, subjects) while it is being
 // edited: a copy, so nothing changes until Save (see App.setGrade).
@@ -40,6 +41,12 @@ let AUTH_LINK_MODE = null;
 let ACTIVATE_WANTED = null;
 let AUTH_GATE_PINNED = false;
 let AUTH_READY = false;
+// The user whose account load has started (or finished). Supabase fires the auth listener
+// several times for one session: once from onAuthStateChange and once from getSession() at
+// boot, and again on token refresh / tab refocus. Only the first call for a user loads data;
+// the others just refresh ME. (Checking LEARNER instead missed admins, who have none, so an
+// admin's screen was reloaded and sent back to Overview on every refocus.)
+let SESSION_LOADED_FOR = null;
 let learnerChannel = null;
 let JUST_CONFIRMED_EMAIL = false;
 let AUTH_RECOVERY_MODE = false;
@@ -83,10 +90,16 @@ function persistDrafts(){
       APS_DRAFT: draftTouched(APS_DRAFT) ? APS_DRAFT : null,
       GRADE9_DRAFT: draftTouched(GRADE9_DRAFT) ? GRADE9_DRAFT : null,
       SUBJECT_CHOICE_DRAFT,
+      PATHWAY_DRAFT: pathwayMarksTouched(PATHWAY_DRAFT) ? PATHWAY_DRAFT : null,
     };
     if(Object.values(drafts).some(d=>d!=null)) localStorage.setItem(draftsLsKey(), JSON.stringify({ v:2, savedAt:Date.now(), drafts }));
     else localStorage.removeItem(draftsLsKey());
   }catch(e){ /* private mode / storage disabled -- silently no-op */ }
+}
+// The Grade 10-12 term-marks form counts as started once a mark in the current term
+// differs from what is saved, or another term already holds edits.
+function pathwayMarksTouched(d){
+  return !!d && d.kind === 'marks' && (JSON.stringify(d.marks) !== d.base || Object.keys(d.edits || {}).length > 0);
 }
 // A restored draft must have the shape its form expects. One saved by an older
 // build, or edited by hand, is dropped instead of being allowed to crash a page.
@@ -97,6 +110,7 @@ function validDraft(kind, d){
   if(kind === 'assessment') return isArr(d.answers) && isArr(d.strengths) && typeof d.step === 'number';
   if(kind === 'aps') return isObj(d.marks) && isArr(d.subjects);
   if(kind === 'grade9') return isObj(d.marks) && isObj(d.workStyle) && isArr(d.creativeArtsFocus) && typeof d.step === 'number';
+  if(kind === 'pathwayMarks') return d.kind === 'marks' && isObj(d.marks) && typeof d.base === 'string' && isObj(d.edits) && isObj(d.languages) && isArr(d.support) && typeof d.year === 'string' && typeof d.term === 'string';
   return false;
 }
 function restoreDrafts(){
@@ -114,6 +128,7 @@ function restoreDrafts(){
     if(validDraft('aps', d.APS_DRAFT)) APS_DRAFT = d.APS_DRAFT;
     if(validDraft('grade9', d.GRADE9_DRAFT)) GRADE9_DRAFT = d.GRADE9_DRAFT;
     if(d.SUBJECT_CHOICE_DRAFT && typeof d.SUBJECT_CHOICE_DRAFT === 'object') SUBJECT_CHOICE_DRAFT = d.SUBJECT_CHOICE_DRAFT;
+    if(validDraft('pathwayMarks', d.PATHWAY_DRAFT)) PATHWAY_DRAFT = d.PATHWAY_DRAFT;
   }catch(e){ /* corrupt/unavailable storage -- just start fresh */ }
 }
 
@@ -203,7 +218,7 @@ async function handleSession(session){
   if(!user){
     if(learnerChannel){ sb.removeChannel(learnerChannel); learnerChannel = null; }
     ME = { id:null, name:'', email:'', avatarUrl:'' };
-    IS_ADMIN = false; IS_SUPER_ADMIN = false; LEARNER = null;
+    IS_ADMIN = false; IS_SUPER_ADMIN = false; LEARNER = null; SESSION_LOADED_FOR = null;
     // Found in the pre-launch audit: on a shared/lab computer, none of this
     // was being cleared on sign-out, so the next person signing into the
     // same tab could inherit the previous account's state -- an admin's
@@ -253,7 +268,7 @@ async function handleSession(session){
   // identity fields in place and stop -- otherwise switching back to this
   // tab would reset ROUTE to the dashboard and blow away whatever the
   // learner was in the middle of (an assessment, a form, etc).
-  const alreadySignedIn = ME.id === user.id && LEARNER;
+  const alreadySignedIn = SESSION_LOADED_FOR === user.id;
   ME = {
     id: user.id,
     name: (user.user_metadata && user.user_metadata.display_name) || user.email,
@@ -261,6 +276,7 @@ async function handleSession(session){
     avatarUrl: (user.user_metadata && user.user_metadata.avatar_url) || '',
   };
   if(alreadySignedIn) return;
+  SESSION_LOADED_FOR = user.id;
   restoreDrafts();
 
   if(learnerChannel){ sb.removeChannel(learnerChannel); learnerChannel = null; }
@@ -282,6 +298,7 @@ async function handleSession(session){
   render();
   } catch(err){
     console.error('handleSession failed:', err);
+    SESSION_LOADED_FOR = null;   // let the next auth event try the load again
     toast('Something went wrong loading your account — please refresh the page.');
     if(!document.getElementById('sidebarEl')) renderAuthGateOnly();
   }
@@ -353,11 +370,38 @@ async function loadLearner(){
     .channel('learner-'+ME.id)
     .on('postgres_changes', { event:'*', schema:'public', table:'learners', filter:`id=eq.${ME.id}` }, (payload)=>{
       if(payload.eventType === 'DELETE') return;
+      const wasActive = LEARNER && LEARNER.licenseStatus === 'active';
       LEARNER = { ...payload.new, exists:true };
-      if(['home','matches','favourites','account','marks','report'].includes(ROUTE) || isPathwayRoute(ROUTE)) render();
+      if(!wasActive && LEARNER.licenseStatus === 'active' && (ROUTE === 'activate' || ROUTE === 'onboarding')){ onLicenceActivated(); return; }
+      if(['home','matches','favourites','account','marks','report','activate','finished'].includes(ROUTE) || isPathwayRoute(ROUTE)) render();
     })
     .subscribe();
 }
+
+// A learner waiting on the Activate screen whose licence has just been switched on
+// (by the owner, or a school paying): say so and open what they were trying to reach.
+function onLicenceActivated(){
+  toast('Your account is now active.');
+  const wanted = ACTIVATE_WANTED; ACTIVATE_WANTED = null;
+  navigate(wanted || 'home');
+}
+// Without Realtime switched on for the learners table, nothing pushes that change,
+// so the Activate screen also checks when the learner comes back to the tab, and on
+// its "Check again" button. Reads only the licence fields.
+async function recheckActivation(manual){
+  if(!ME.id || !LEARNER || PREVIEW_MODE) return;
+  try{
+    const { data, error } = await sb.from('learners').select('licenseStatus, licenseSource, plan, planSource, classId').eq('id', ME.id).maybeSingle();
+    if(error || !data){ if(manual) toast('Could not check right now. Please try again.'); return; }
+    const was = LEARNER.licenseStatus;
+    Object.assign(LEARNER, data);
+    if(was !== 'active' && LEARNER.licenseStatus === 'active') onLicenceActivated();
+    else if(manual) toast('Not active yet. If payment has been arranged, it can take a short while.');
+  }catch(e){ if(manual) toast('Could not check right now. Please try again.'); }
+}
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'visible' && ROUTE === 'activate') recheckActivation(false);
+});
 
 // The January move-up (see gradeRollover). Quiet: if it cannot be saved now
 // (offline, or a database still missing gradeYear) it simply runs again at
@@ -376,10 +420,10 @@ async function loadClasses(){
   CLASSES = error ? [] : (data || []);
 }
 
-// classes_select_authenticated lets every signed-in user read every class
-// row (the learner join-by-code flow depends on this), so CLASSES itself
-// is never scoped -- any admin view that should only show a class admin's
-// own class(es) must filter through this instead of reading CLASSES raw.
+// The database only returns the classes a person may see (classes_select_scoped:
+// admins see all, a class admin their own, a learner only the class they are in),
+// but any admin view that should only show a class admin's own class(es) still
+// filters through this.
 function myClasses(){
   return IS_SUPER_ADMIN ? CLASSES : CLASSES.filter(c=>c.classAdminId===ME.id);
 }
@@ -514,6 +558,16 @@ async function saveLearnerOrRevert(partial, opts){
   Object.keys(partial).forEach(k=>{ before[k] = { had: Object.prototype.hasOwnProperty.call(l, k), value: l[k] }; });
   const ok = await saveLearner(partial, opts);
   if(!ok) Object.keys(before).forEach(k=>{ if(before[k].had) l[k] = before[k].value; else delete l[k]; });
+  return ok;
+}
+// For small taps (a heart, a compare tick, an intended subject): show the change at once,
+// save in the background, and if the save fails put it back (saveLearner says why).
+// saveLearnerOrRevert changes LEARNER before its first await, so render() already sees it.
+async function saveAndShow(partial){
+  const saving = saveLearnerOrRevert(partial);
+  render();
+  const ok = await saving;
+  if(!ok) render();
   return ok;
 }
 // Disables a button and shows "Saving…" while a slow save is in flight (a
