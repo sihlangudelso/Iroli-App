@@ -23,9 +23,19 @@ const SUBJECT_TIER_META = {
   complementary: { label:'Optional / complementary', pillClass:'' },
 };
 
+// The four-page print copy is only needed when someone prints, so it is built then
+// (the Download PDF button builds its own copy). Building it on every redraw made
+// each tap on the report screen redo the whole report twice. This listener is added
+// before report_pdf.js's own beforeprint fit pass, so the pages exist when it runs.
+function fillReportPrintCopies(){
+  const hosts = document.querySelectorAll('[data-print-report]');
+  if(!hosts.length || !ME.id) return;
+  const l = ensureLearnerObj(), R = buildLearnerReport(l), html = reportPrintHTML(l, R);
+  hosts.forEach(function(h){ h.innerHTML = html; });
+}
+window.addEventListener('beforeprint', fillReportPrintCopies);
 function viewReport(){
   const l = ensureLearnerObj();
-  const R = buildLearnerReport(l);
   const detail = REPORT_DETAILS.filter(function(d){ return d.id === ROUTE_PARAM; })[0];
   if(detail){
     const body = detail.id === 'profile' ? learnerProfileBodyHTML(l)
@@ -40,17 +50,18 @@ function viewReport(){
     <button class="btn btn-ghost btn-sm" style="margin-bottom:18px;" onclick="navigate('report')">← Back to your report</button>
     ${body}
     </div>
-    <div class="print-only">${reportPrintHTML(l, R)}</div>`;
+    <div class="print-only" data-print-report></div>`;
   }
   // The report draws its own header (logo, title, name / grade / school / date),
   // so there is no separate page heading above it.
+  const R = buildLearnerReport(l);
   return `
   <div class="screen-only">
   <div class="rp-toolbar"><button class="btn btn-ghost btn-sm" onclick="downloadReportPDF(this)">${icon('download')} Download PDF</button></div>
   ${learnerReportHTML(l, R)}
   ${reportMoreDetailHTML(l, R)}
   </div>
-  <div class="print-only">${reportPrintHTML(l, R)}</div>`;
+  <div class="print-only" data-print-report></div>`;
 }
 
 // Where this learner's Grade 10 subject recommendations come from:

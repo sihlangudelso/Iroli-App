@@ -47,6 +47,22 @@ let AUTH_READY = false;
 // the others just refresh ME. (Checking LEARNER instead missed admins, who have none, so an
 // admin's screen was reloaded and sent back to Overview on every refocus.)
 let SESSION_LOADED_FOR = null;
+// The screen named in the address bar when the page loaded (#r=...&p=..., written by
+// routeHash), so a refresh reopens it instead of Home. Read once at boot and used
+// once; render()'s own gates still decide whether that screen is allowed.
+let BOOT_ROUTE = null;
+function readBootRoute(){
+  try{
+    const h = window.location.hash || '';
+    const m = h.match(/^#r=([^&]+)(?:&p=(.*))?$/);
+    if(!m) return null;
+    const route = decodeURIComponent(m[1]);
+    if(!/^[a-z0-9-]{1,40}$/.test(route)) return null;
+    let param = null;
+    if(m[2] != null){ try{ param = JSON.parse(decodeURIComponent(m[2])); }catch(e){ param = null; } }
+    return { route, param };
+  }catch(e){ return null; }
+}
 let learnerChannel = null;
 let JUST_CONFIRMED_EMAIL = false;
 let AUTH_RECOVERY_MODE = false;
@@ -197,6 +213,7 @@ function boot(){
   // "set a new password" screen instead of silently back in the app with
   // their old password unchanged.
   AUTH_RECOVERY_MODE = /type=recovery/.test(window.location.hash);
+  BOOT_ROUTE = readBootRoute();
   try{
     const m = new URLSearchParams(window.location.search).get('auth');
     if(m === 'signin' || m === 'signup') AUTH_LINK_MODE = m;
@@ -289,11 +306,20 @@ async function handleSession(session){
   IS_ADMIN = IS_SUPER_ADMIN || profile.role === 'class_admin';
   renderShell();
   await loadClasses();
+  // Reopen the screen the page was refreshed on, if it belongs to this kind of account.
+  const boot = BOOT_ROUTE; BOOT_ROUTE = null;
+  const bootIsAdmin = !!boot && boot.route.indexOf('admin') === 0;
   if(IS_ADMIN){
-    ROUTE='admin-home'; await loadCohort(); await loadDashboardSnapshots();
+    ROUTE='admin-home'; ROUTE_PARAM=null;
+    if(boot && bootIsAdmin){ ROUTE = boot.route; ROUTE_PARAM = boot.param; }
+    await loadCohort(); await loadDashboardSnapshots();
     if(IS_SUPER_ADMIN) await loadClassAdmins();
   }
-  else { ROUTE='home'; await loadLearner(); await applyGradeRollover(); }
+  else {
+    ROUTE='home'; ROUTE_PARAM=null;
+    if(boot && !bootIsAdmin){ ROUTE = boot.route; ROUTE_PARAM = boot.param; }
+    await loadLearner(); await applyGradeRollover();
+  }
   replaceRouteHistory();
   render();
   } catch(err){

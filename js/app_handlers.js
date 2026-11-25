@@ -658,8 +658,9 @@ const App = {
   },
   async deleteClass(id){
     if(!confirm('Delete this class? Learners already assigned will keep their data but lose the class link.')) return;
-    const { error } = await sb.from('classes').delete().eq('id', id);
-    if(error){ toast('Could not delete class — check your connection and try again.'); console.error(error); return; }
+    // .select(): a delete the database's access rules block changes nothing and returns no error, only no rows.
+    const { data, error } = await sb.from('classes').delete().eq('id', id).select('id');
+    if(error || !data || !data.length){ toast('Could not delete class — check your connection, and that you are an Institute Admin.'); console.error(error || 'no row deleted'); return; }
     CLASSES = CLASSES.filter(c=>c.id!==id);
     render();
   },
@@ -671,8 +672,8 @@ const App = {
   // remove anyone, it just blocks further joins until the count drops.
   async updateClassSeats(id, rawValue){
     const seatLimit = Number(rawValue) || null;
-    const { error } = await sb.from('classes').update({ seatLimit }).eq('id', id);
-    if(error){ toast('Could not update seats — check your connection and try again.'); console.error(error); return; }
+    const { data, error } = await sb.from('classes').update({ seatLimit }).eq('id', id).select('id');
+    if(error || !data || !data.length){ toast('Could not update seats — check your connection, and that you are an Institute Admin.'); console.error(error || 'no row updated'); return; }
     const cls = CLASSES.find(c=>c.id===id);
     if(cls) cls.seatLimit = seatLimit;
     toast('Seats updated.');
@@ -681,8 +682,8 @@ const App = {
   // Which plan a class code gives to learners who join from now on.
   async setClassPlan(id, plan){
     plan = plan === 'pro' ? 'pro' : 'standard';
-    const { error } = await sb.from('classes').update({ plan }).eq('id', id);
-    if(error){ toast('Could not update the plan. The database may need supabase/add_pathway.sql.'); console.error(error); return; }
+    const { data, error } = await sb.from('classes').update({ plan }).eq('id', id).select('plan');
+    if(error || !data || !data.length || data[0].plan !== plan){ toast('Could not update the plan. Check you are an Institute Admin; the database may need supabase/add_pathway.sql.'); console.error(error || 'no row updated'); return; }
     const cls = CLASSES.find(c=>c.id===id);
     if(cls) cls.plan = plan;
     toast('Plan updated. Learners who join with this code from now on get '+(plan==='pro'?'Pro':'Standard')+'.');
@@ -700,14 +701,22 @@ const App = {
     if(lookupError){ toast('Could not look up that account.'); console.error(lookupError); return; }
     if(!found){ toast('No account found with that email — ask them to sign up first, then try again.'); return; }
     if(found.role==='admin'){ toast(found.email+' is already an Institute Admin — not changing their role.'); return; }
+    // The class first, then the role: if the class cannot be updated, nobody is left
+    // promoted to class admin with no class. Each write asks for its row back,
+    // because one the database's access rules block returns no error, only no rows.
+    const cls = CLASSES.find(c=>c.id===classId);
+    const prevAdmin = cls ? cls.classAdminId : null;
+    const { data: clsRows, error } = await sb.from('classes').update({ classAdminId: found.id }).eq('id', classId).select('id');
+    if(error || !clsRows || !clsRows.length){ toast('Could not assign class admin — check you’re a super admin.'); console.error(error || 'no class row updated'); return; }
     if(found.role!=='class_admin'){
-      const { error } = await sb.from('profiles').update({ role:'class_admin' }).eq('id', found.id);
-      if(error){ toast('Could not update that account’s role.'); console.error(error); return; }
+      const { data: roleRows, error: roleError } = await sb.from('profiles').update({ role:'class_admin' }).eq('id', found.id).select('role');
+      if(roleError || !roleRows || !roleRows.length || roleRows[0].role !== 'class_admin'){
+        // Put the class back as it was, so the two never disagree.
+        await sb.from('classes').update({ classAdminId: prevAdmin }).eq('id', classId);
+        toast('Could not update that account’s role, so the class was left as it was.'); console.error(roleError || 'no profile row updated'); return;
+      }
       CLASS_ADMINS.push({ id:found.id, email:found.email, role:'class_admin' });
     }
-    const { error } = await sb.from('classes').update({ classAdminId: found.id }).eq('id', classId);
-    if(error){ toast('Could not assign class admin — check you’re a super admin.'); console.error(error); return; }
-    const cls = CLASSES.find(c=>c.id===classId);
     if(cls) cls.classAdminId = found.id;
     toast(found.email+' is now the class admin for this class.');
     render();
@@ -725,12 +734,14 @@ const App = {
     // the learner later leaves/loses that class -- see
     // protect_license_status() in supabase/schema.sql).
     const nextSource = next==='active' ? 'admin' : null;
-    const { error } = await sb.from('learners').update({ licenseStatus: next, licenseSource: nextSource, updatedAt: todayISO() }).eq('id', id);
+    // .select(): a blocked update returns no error, only no rows; and protect_license_status()
+    // can quietly put the value back, so the badge follows what was really saved.
+    const { data, error } = await sb.from('learners').update({ licenseStatus: next, licenseSource: nextSource, updatedAt: todayISO() }).eq('id', id).select('licenseStatus');
     // Only reflect the change locally once it's actually confirmed saved --
     // flipping the badge first and leaving it flipped on error (found in
     // the pre-launch audit) showed a success state in the same breath as
     // the failure toast.
-    if(error){ toast('Could not update licence — check your connection and try again.'); console.error(error); return; }
+    if(error || !data || !data.length || data[0].licenseStatus !== next){ toast('Could not update licence — check your connection, and that you are an Institute Admin.'); console.error(error || 'no row updated'); return; }
     l.licenseStatus = next;
     l.licenseSource = nextSource;
     render();

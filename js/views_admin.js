@@ -7,7 +7,7 @@ function cohortStats(){
   const facCount = {}; FACULTIES.forEach(f=>facCount[f.id]=0);
   COHORT.forEach(c=>{
     if(c.assessmentCompletedAt){
-      const top = bestSuitedCareers(c,1)[0];
+      const top = adminBestSuited(c,1)[0];
       if(top) facCount[top.career.faculty] = (facCount[top.career.faculty]||0)+1;
     }
   });
@@ -166,7 +166,7 @@ function cohortRowsFiltered(facFilter, filterClass, search, trait, grade){
   if(facFilter){
     rows = rows.filter(l=>{
       if(l.grade!==9 || !l.assessmentCompletedAt) return false;
-      const top = bestSuitedCareers(l,1)[0];
+      const top = adminBestSuited(l,1)[0];
       return top && top.career.faculty===facFilter;
     });
   }
@@ -211,7 +211,7 @@ function viewAdminCohort(){
     <tbody>
       ${rows.length? rows.map(l=>{
         const cls = CLASSES.find(c=>c.id===l.classId);
-        const top = l.assessmentCompletedAt ? bestSuitedCareers(l,3).map(m=>m.career.name).join(', ') : '—';
+        const top = l.assessmentCompletedAt ? adminBestSuited(l,3).map(m=>m.career.name).join(', ') : '—';
         const rec = adminSubjectRecFor(l);
         return `<tr>
           <td><a href="#" onclick="navigate('admin-learner','${l.id}');return false;"><b>${esc(cohortLearnerName(l.id))}</b></a></td>
@@ -236,7 +236,7 @@ function viewAdminLearnerDetail(id){
   const l = COHORT.find(c=>c.id===id);
   if(!l) return `${pageHeadHTML('Learner not found')}<div class="empty-state">${icon('users')}<p>This learner record could not be found.</p></div>`;
   const cls = CLASSES.find(c=>c.id===l.classId);
-  const matches = l.assessmentCompletedAt ? bestSuitedCareers(l,5) : [];
+  const matches = l.assessmentCompletedAt ? adminBestSuited(l,5) : [];
   return `
   <button class="btn btn-ghost btn-sm" style="margin-bottom:16px;" onclick="navigate('admin-cohort')">${icon('chevron')} Back to cohort</button>
   ${pageHeadHTML(cohortLearnerName(l.id), `Grade ${l.grade||'—'} · ${esc(l.school||'No school set')}`)}
@@ -331,6 +331,18 @@ function viewAdminCareers(){
 // lrCombos) -- the admin side always says what the learner was told.
 // Cached per learner object and updatedAt: the cohort table, dashboard and
 // both exports ask for it on every render.
+// Each learner's full career ranking, worked out once per cohort row instead of on every
+// redraw (admin pages used to rank all 77 careers for every learner each time). Cohort
+// rows are replaced when the cohort reloads, so a row's ranking cannot go stale; the
+// signed-in learner's own record is edited in place, so it is never cached here.
+const ADMIN_MATCH_CACHE = new WeakMap();
+function adminBestSuited(l, n){
+  if(!l || !l.assessmentCompletedAt) return [];
+  if(l === LEARNER) return bestSuitedCareers(l, n);
+  let all = ADMIN_MATCH_CACHE.get(l);
+  if(!all){ all = bestSuitedCareers(l, CAREERS.length); ADMIN_MATCH_CACHE.set(l, all); }
+  return all.slice(0, n);
+}
 const ADMIN_SC_CACHE = new WeakMap();
 function adminSubjectRecFor(l){ const c = adminSCEntry(l); return c ? c.rec : null; }
 function adminSubjectReportFor(l){ const c = adminSCEntry(l); return c ? c.rep : null; }
@@ -391,7 +403,7 @@ function learnerGuidance(l){
 }
 // The best-suited career inside a pathway (the "career interest" a teacher sees).
 function topCareerIn(l, facultyId){
-  const all = bestSuitedCareers(l, CAREERS.length);
+  const all = adminBestSuited(l, CAREERS.length);
   return all.find(m=>m.career.faculty===facultyId) || all[0] || null;
 }
 
@@ -463,7 +475,7 @@ const COHORT_EXPORT_HEADERS = ['Name','Grade','School','Class','Maths Track','Su
   'Favourites Count','APS Estimate','Licence Status','Plan','Pathway Programme Goals','Subjects Needing Support','Bursary Goal','Last Updated'];
 function cohortExportRow(l){
   const cls = CLASSES.find(c=>c.id===l.classId);
-  const top3 = l.assessmentCompletedAt ? bestSuitedCareers(l,3).map(m=>m.career.name).join('; ') : '';
+  const top3 = l.assessmentCompletedAt ? adminBestSuited(l,3).map(m=>m.career.name).join('; ') : '';
   const rec = adminSubjectRecFor(l);
   const ready = rec && rec.state==='ready';
   return [

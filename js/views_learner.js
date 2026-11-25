@@ -822,12 +822,28 @@ function viewAPS(){
       ${result.rows.sort((a,b)=>b.level-a.level).map(r=>`<tr><td>${esc(r.subject)}</td><td>${r.pct}%</td><td>${r.level}</td><td>${r.subject!=='Life Orientation'?'Yes':'Excluded from most APS totals'}</td></tr>`).join('')}
     </tbody></table></div>
     ${disclaimerHTML('This APS uses the common "best 6 subjects excluding Life Orientation" method. Some universities include Life Orientation at reduced weight, use an 8-subject total, or run their own points scale (often out of a different maximum) — always confirm on the specific university\u2019s official APS/points calculator.')}
-    <h4 style="margin-top:16px;">Careers your APS estimate may support</h4>
-    ${CAREERS.filter(c=>{
-      const lo = parseInt(c.apsGuidance.typical); return !isNaN(lo) && result.aps >= lo-4;
-    }).slice(0,6).map(c=>careerRowHTML(c,null,l,null,{route:'aps'})).join('') || '<p class="page-sub">Add more subject marks to see suggestions.</p>'}
+    ${apsCareersHTML(l, result.aps)}
   </div>` : ''}
   `;
+}
+
+// Careers for an APS estimate, picked for this learner: the ones whose usual APS the
+// estimate reaches, best matches first, then a few that ask for a little more (up to 4
+// points) under their own heading -- not the first six careers in the library, and not
+// "may support" for careers that need more points than the learner has.
+function apsCareersHTML(l, aps){
+  const order = {};
+  (l.assessmentCompletedAt ? bestSuitedCareers(l, CAREERS.length).map(m=>m.career) : CAREERS.slice())
+    .forEach((c, i)=>{ order[c.id] = i; });
+  const withLo = CAREERS.map(c=>({ c, lo: parseInt(c.apsGuidance && c.apsGuidance.typical) })).filter(x=>!isNaN(x.lo));
+  // Without an assessment there is no match order: the closest usual APS first.
+  const rank = (a, b)=> l.assessmentCompletedAt ? order[a.c.id] - order[b.c.id] : (b.lo - a.lo);
+  const within = withLo.filter(x=>aps >= x.lo).sort(rank).slice(0, 6);
+  const stretch = withLo.filter(x=>aps < x.lo && aps >= x.lo - 4).sort(rank).slice(0, 3);
+  const rows = list => list.map(x=>careerRowHTML(x.c, null, l, null, {route:'aps'})).join('');
+  if(!within.length && !stretch.length) return '<h4 style="margin-top:16px;">Careers for your APS</h4><p class="page-sub">Add more subject marks to see suggestions.</p>';
+  return (within.length ? `<h4 style="margin-top:16px;">Careers your APS estimate may support</h4>${rows(within)}` : '')
+    + (stretch.length ? `<h4 style="margin-top:16px;">A few points more would open</h4><p class="page-sub" style="margin-top:-4px;">These usually ask for up to 4 points more than your estimate.</p>${rows(stretch)}` : '');
 }
 
 /* ---------------- Careers: tabs, saved careers and compare ---------------- */
