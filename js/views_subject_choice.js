@@ -95,7 +95,7 @@ function subjectChoicePrerequisiteHTML(l){
   ${pageHeadHTML('Subject Choice Assessment', 'A personalised look at which Grade 10 subjects fit you.')}
   <div class="card">
     <h3>Add your results first</h3>
-    <p class="page-sub">We look at three things together — what you enjoy, how you naturally work, and how you are currently performing. Add your Grade 9 report marks first so we can see how ready you are for each subject, then come back to answer the questions.</p>
+    <p class="page-sub">Add your Grade 9 report marks first, then come back to answer the questions.</p>
     <button class="btn btn-primary" onclick="navigate('grade9-report','subject-choice')">Enter my Grade 9 report results</button>
   </div>`;
 }
@@ -230,7 +230,7 @@ function subjectChoiceReportHTML(l){
   <div class="card card-top-accent">
     ${rep.profile.summary.map(function(s){ return `<p>${esc(s)}</p>`; }).join('')}
     ${pti ? `<div class="sc-label">Your personality type</div><div class="pill-list"><span class="pill rec"><b>${esc(pti.code)}</b> · ${esc(pti.top[0].name)} · ${esc(pti.top[1].name)}</span></div>` : ''}
-    <p class="page-sub" style="margin-top:12px;font-size:12.5px;">Each match percentage blends what you enjoy (${pctOf(W.interest)}%), how you naturally work (${pctOf(W.personality)}%) and how you are currently performing (${pctOf(W.academic)}%).</p>
+    <p class="page-sub" style="margin-top:12px;font-size:12.5px;"><a href="help.html#subjects" target="_blank" rel="noopener">How subject matches are worked out</a></p>
   </div>
 
   <div class="section-title"><h2>2. Your strongest subject matches</h2></div>

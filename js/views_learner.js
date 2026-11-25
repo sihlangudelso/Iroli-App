@@ -27,7 +27,7 @@ function viewOnboarding(isEdit){
     <div style="text-align:center;margin-bottom:26px;">
       <img class="brand-mark-img" src="assets/logo-mark.png" alt="Iroli"/>
       <h1>${isEdit?'Your school details':'Welcome to Iroli Career Pathway'}</h1>
-      <p class="page-sub" style="margin:0 auto;">${isEdit ? 'Your grade, school and subjects. Nothing changes until you save.' : 'Discover careers that match who you are, see what your results reveal about your strengths, and find the subjects and pathways to get there, whether or not you\u2019re currently at school.'}</p>
+      <p class="page-sub" style="margin:0 auto;">${isEdit ? 'Your grade, school and subjects. Nothing changes until you save.' : 'Find careers that fit you, and the subjects and pathways to get there.'}</p>
     </div>
 
     ${!isEdit && d.exploringOnly !== false ? `
@@ -42,7 +42,7 @@ function viewOnboarding(isEdit){
     ${!pathChosen ? `
     <div class="card">
       <h3 style="margin-bottom:4px;">Are you currently a Grade 9\u201312 learner at school?</h3>
-      <p class="page-sub" style="margin-bottom:14px;">This just tailors your subject choice report and your school\u2019s class view. Everything above works either way.</p>
+      <p class="page-sub" style="margin-bottom:14px;">This tailors your report to your grade.</p>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <button class="btn btn-primary" onclick="App.chooseOnboardingPath(false)">Yes, I\u2019m a school learner</button>
         <button class="btn btn-ghost" onclick="App.chooseOnboardingPath(true)">No, I\u2019m just exploring</button>
@@ -51,7 +51,7 @@ function viewOnboarding(isEdit){
     ` : d.exploringOnly ? `
     <div class="card">
       <h3>${isEdit ? 'Using Iroli without a school' : 'You\u2019re all set'}</h3>
-      <p class="page-sub" style="margin-bottom:14px;">${isEdit ? 'Save to use Iroli without a grade or school. Your saved results stay.' : 'No school details needed. Jump straight into the personality assessment or start exploring careers. You can add a school later in Account.'}</p>
+      <p class="page-sub" style="margin-bottom:14px;">${isEdit ? 'Save to use Iroli without a grade or school. Your saved results stay.' : 'No school details needed. You can add a school later in Account.'}</p>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <button class="btn btn-ghost btn-sm" onclick="App.chooseOnboardingPath(false)">Actually, I\u2019m a school learner</button>
         <button class="btn btn-primary" onclick="App.saveOnboarding()">${icon('check')} ${isEdit ? 'Save' : 'Continue'}</button>
@@ -62,7 +62,7 @@ function viewOnboarding(isEdit){
       ${isEdit ? '' : `<div class="form-row">
         <label>Your name</label>
         <input type="text" value="${esc(ME.name)||'Learner'}" disabled/>
-        <div class="hint">From your Iroli account. Only your school\u2019s admins can see the real names of learners in their classes.</div>
+        <div class="hint">From your Iroli account.</div>
       </div>`}
       <div class="form-row">
         <label>Grade</label>
@@ -94,9 +94,8 @@ function viewOnboarding(isEdit){
               </label>`).join('')}
           </div>
         `).join('')}
-      </div>
-      <div class="disclaimer">${icon('info','ic')}<div>Add your marks for each term on <b>My Marks</b> after saving.</div></div>` : (grade ? `
-      <div class="disclaimer">${icon('info','ic')}<div>Grade 9 learners choose subjects for Grade 10 soon. After saving, add your <b>Grade 9 report results</b> on My Marks and take the <b>Subject Choice Assessment</b>. No need to pick subjects here yet.</div></div>
+      </div>` : (grade ? `
+      <div class="disclaimer">${icon('info','ic')}<div>No need to pick subjects yet: that comes after the Subject Choice Assessment.</div></div>
       ` : '')}
       <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;">
         <button class="btn btn-ghost btn-sm" onclick="App.chooseOnboardingPath(true)">Actually, I\u2019m just exploring</button>
@@ -137,7 +136,7 @@ function viewHome(){
   const { steps: done, pct } = progressState(l);
   const doneCount = done.filter(s=>s.done).length;
   return `
-  ${pageHeadHTML('Welcome back, ' + ((ME.name||'there').split(' ')[0]), 'Here\u2019s where things stand and what to do next.')}
+  ${pageHeadHTML('Welcome back, ' + ((ME.name||'there').split(' ')[0]))}
   ${pwRolloverBannerHTML()}
   ${PREVIEW_MODE?`<div class="disclaimer" style="margin-bottom:18px;display:block;">
     <div style="display:flex;gap:10px;align-items:flex-start;">${icon('info','ic')}<div>You are previewing the learner experience as an admin. Nothing here is saved to shared learner data, and joining or leaving a class is switched off.</div></div>
@@ -152,10 +151,9 @@ function viewHome(){
     ${steps.length ? `<ol class="pw-steps">${steps.map(s=>`<li><span>${s.html || esc(s.text)}</span><button class="btn btn-ghost btn-sm" onclick="${s.action || `navigate('${s.route}')`}">${esc(s.label)}</button></li>`).join('')}</ol>`
       : `<p class="page-sub" style="margin:8px 0 0;">You\u2019re up to date. Keep your marks current each term.</p>`}
   </div>
-  <div class="grid grid-3" style="margin-bottom:26px;">
+  <div class="grid grid-2" style="margin-bottom:26px;">
     <div class="stat-pill"><div class="dot" style="background:var(--indigo)"></div><div><div class="n">${l.exploringOnly?'Exploring':'Grade '+(l.grade||'\u2014')}</div><div class="l">${l.exploringOnly?'Not currently in school':esc(l.school||'No school set')}</div></div></div>
     <div class="stat-pill"><div class="dot" style="background:var(--amber)"></div><div><div class="n">${(l.favourites||[]).length}</div><div class="l">Saved careers</div></div></div>
-    <div class="stat-pill"><div class="dot" style="background:${l.licenseStatus==='active'?'var(--grass)':'var(--coral)'}"></div><div><div class="n">${l.licenseStatus==='active'?'Active':'Trial'}${l.plan==='pro'?' \u00b7 Pro':''}</div><div class="l">Licence</div></div></div>
   </div>
   <div class="section-title"><h2>Your top career matches</h2>${matches.length ? `<button class="btn btn-ghost btn-sm" onclick="navigate('matches')">See all</button>` : ''}</div>
   ${matches.length ? matches.map(m=>careerRowHTML(m.career, m.score, l, m.category, {route:'home'})).join('') : `<div class="empty-state">${icon('target')}<p>Take the <a href="#" onclick="navigate('assessment');return false;">personality assessment</a> to see your best-suited careers.</p></div>`}
@@ -327,7 +325,7 @@ function viewGrade9Report(){
 }
 function grade9ReportStepHTML(d, l){
   return `
-  ${pageHeadHTML('Grade 9 Report Results', 'Step 1 of 2 — enter your latest marks. This helps build a fuller picture alongside your interests — skip anything you don’t have to hand yet.')}
+  ${pageHeadHTML('Grade 9 Report Results', 'Step 1 of 2 — enter your latest marks. Skip any you don’t have yet.')}
   <div class="card">
     <div class="form-row">
       <label>Report period</label>
@@ -491,7 +489,7 @@ function viewAssessment(){
   ${pageHeadHTML(headTitle, headSub)}
   ${step===0 ? `
   <div class="detail-hero" style="background:linear-gradient(135deg, var(--indigo), #14172A);">
-    <p style="font-size:15px;">${TOTAL} quick questions (about 6 minutes) — ${TOTAL_R} using the RIASEC framework (Realistic, Investigative, Artistic, Social, Enterprising, Conventional) and ${TOTAL_S} rating your strengths. Your answers directly shape your career matches.</p>
+    <p style="font-size:15px;">${TOTAL} quick questions, about 6 minutes. Your answers shape your career matches. <a href="help.html#interests" target="_blank" rel="noopener">How it works</a></p>
   </div>
   ` : ''}
   ${step===0 && l.miniAssessment ? `
@@ -581,7 +579,7 @@ function viewExplore(){
   const l = ensureLearnerObj();
   const fac = ROUTE_PARAM && typeof ROUTE_PARAM==='object' ? ROUTE_PARAM.fac : (ROUTE_PARAM||'all');
   return `
-  ${careersHeadHTML('explore', 'Browse all ' + CAREERS.length + ' careers across ' + FACULTIES.length + ' faculties. Open any career to see its degree programmes and entry requirements.')}
+  ${careersHeadHTML('explore', 'Browse all ' + CAREERS.length + ' careers.')}
   ${fac==='all' && !EXPLORE_SEARCH ? dsDiscoverHTML(l) : ''}
   <button class="btn btn-ghost btn-sm" style="margin-bottom:14px;" onclick="navigate('clusters')">${icon('layers')} Not sure where to start? Browse by career cluster instead</button>
   <div class="filter-bar">
@@ -973,9 +971,8 @@ function viewAccount(){
         <span class="badge badge-good">${pro ? 'Pro plan' : 'Standard plan'}</span>
       </div>
       <p class="page-sub" style="margin-top:12px;">${l.licenseStatus==='active'
-        ? 'Your access lasts until the end of Grade 12.' + (!pro && pathwayGrade(l) ? ' Pro adds My Pathway: programme goals, target marks and a bursary goal.' : '')
-        : 'Access comes from your school\u2019s class code or an individually activated account.'}
-        See <a href="pricing.html" target="_blank" rel="noopener">pricing</a>.</p>
+        ? '' : 'Join your class with your school\u2019s class code.'}
+        <a href="pricing.html" target="_blank" rel="noopener">See pricing</a></p>
     </div>
   </div>
   <div class="grid grid-2">
@@ -1018,7 +1015,7 @@ function viewActivateAccount(){
   <div class="grid grid-2">
     <div class="card">
       <h3>Have a class code?</h3>
-      <p class="page-sub">Your school hands out a class code once they've arranged payment for their learners' seats. Enter it below to join your class and activate your account.</p>
+      <p class="page-sub">Enter the class code from your school.</p>
       <div class="form-row"><input type="text" id="joinCode" placeholder="e.g. 7F3KQ" style="text-transform:uppercase;"/></div>
       <button class="btn btn-primary" style="width:100%;" onclick="App.joinClass()">Join class</button>
     </div>
@@ -1028,6 +1025,5 @@ function viewActivateAccount(){
       <a href="mailto:info@iroli.co.za?subject=Iroli%20Career%20Pathway%20-%20Activate%20my%20account&body=My%20account%20email%3A%20${encodeURIComponent(ME.email||'')}" class="btn btn-ghost" style="width:100%;text-align:center;">Contact us to activate</a>
     </div>
   </div>
-  <p class="page-sub" style="text-align:center;margin-top:18px;">Already arranged payment? It can take a short while to activate \u2014 check back soon.</p>
   `;
 }

@@ -1,14 +1,15 @@
 :root{
   color-scheme:light;
-  /* Iroli palette, taken from the landing-page photo: blush PINK backdrop, light BLUE actions, near-BLACK ink and
-     sunshine YELLOW accents. Text on fills: white on --indigo (#1E66C9, 5.6:1) / --indigo-ink (#0B2545, 15:1);
-     navy #0B2545 on the light blue (#7CC8F8, 9:1), the pink (#F5BBD3) and the yellow (#FFD43B). */
-  --bg:#FFF7FA; --surface:#FFFFFF; --ink:#141826; --muted:#5C5666; --line:#F0DDE6;
-  --indigo:#1E66C9; --indigo-ink:#0B2545; --amber:#FFD43B; --teal:#1E66C9; --coral:#E0457F;
-  --grass:#1FA25A; --sky:#1E66C9; --olive:#FFD43B; --plum:#0B2545;
+  /* Iroli palette, taken from the landing-page photo: blush PINK, light BLUE actions and near-BLACK ink on a clean
+     WHITE page (since 2026-11-25 the app matches the landing page: no yellow; the learner report and its PDF keep
+     their own colours, pinned below). Text on fills: white on --indigo (#1E66C9, 5.6:1) / --indigo-ink (#0B2545,
+     15:1); navy #0B2545 on the light blue (#7CC8F8, 9:1) and the pink (#F5BBD3). */
+  --bg:#FFFFFF; --surface:#FFFFFF; --ink:#141826; --muted:#5C5666; --line:#F0DDE6;
+  --indigo:#1E66C9; --indigo-ink:#0B2545; --amber:#F5BBD3; --teal:#1E66C9; --coral:#E0457F;
+  --grass:#1FA25A; --sky:#1E66C9; --olive:#7CC8F8; --plum:#0B2545;
   --brand-blue:#1E66C9; --brand-violet:#C8326F; --brand-pink:#E0457F; --brand-pink-bright:#F5BBD3;
   --hero-pink:#F5BBD3; --hero-yellow:#FFD43B; --hero-blue:#7CC8F8; --hero-navy:#0B2545;
-  --brand-grad:linear-gradient(100deg,#F5BBD3,#FFD43B 55%,#7CC8F8);
+  --brand-grad:linear-gradient(100deg,#F5BBD3,#7CC8F8);
   --tint-violet:#E3F0FC; --tint-blue:#E3F0FC; --tint-pink:#FDE7F0; --tint-line:#F3C9DA; --tint-amber:#FFF3C4;
   --sidebar-bg:#F5BBD3; --sidebar-border:#EBA3C2; --sidebar-muted:#3E2433;
   --radius-sm:10px; --radius-md:16px; --radius-lg:26px;
@@ -29,9 +30,9 @@
      (The dark values are repeated for the two ways dark mode is switched on, the operating system and
      data-theme="dark": keep them identical.) */
   --link:#1A5DB8; --chip-bg:#F6EEF2; --bar-track:#F0DDE6; --ctl-line:#EAD3DE; --star-off:#9A8494; --ok-ink:#167A44;
-  --t-violet:#E3F0FC; --t-blue:#E3F0FC; --t-pink:#FDE7F0; --t-amber:#FFF3C4; --t-line:#F3C9DA;
-  --on-violet:#0F4F99; --on-blue:#0F4F99; --on-pink:#9C1D52; --on-amber:#6B4E00; --on-info:#0F4F99;
-  --info-line:#BFDDF7; --warn-line:#F0CE8A;
+  --t-violet:#E3F0FC; --t-blue:#E3F0FC; --t-pink:#FDE7F0; --t-amber:#FDEBE6; --t-line:#F3C9DA;
+  --on-violet:#0F4F99; --on-blue:#0F4F99; --on-pink:#9C1D52; --on-amber:#8A2E12; --on-info:#0F4F99;
+  --info-line:#BFDDF7; --warn-line:#F2C3B5;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
@@ -41,9 +42,9 @@
     --sidebar-bg:#241A21; --sidebar-border:#4A3341; --sidebar-muted:#EBCFDB;
     --shadow-soft:0 1px 2px rgba(0,0,0,.30), 0 8px 24px -12px rgba(0,0,0,.55);
     --link:#7CC8F8; --chip-bg:#252935; --bar-track:#313545; --ctl-line:#3C4152; --star-off:#6F7488; --ok-ink:#5BDB8E;
-    --t-violet:#14304D; --t-blue:#14304D; --t-pink:#3A1D2B; --t-amber:#3A3110; --t-line:#4A3341;
-    --on-violet:#BEE2FB; --on-blue:#BEE2FB; --on-pink:#FFC9DE; --on-amber:#FFE08A; --on-info:#BEE2FB;
-    --info-line:#2B4D70; --warn-line:#6B5520;
+    --t-violet:#14304D; --t-blue:#14304D; --t-pink:#3A1D2B; --t-amber:#3A2320; --t-line:#4A3341;
+    --on-violet:#BEE2FB; --on-blue:#BEE2FB; --on-pink:#FFC9DE; --on-amber:#FFC7B8; --on-info:#BEE2FB;
+    --info-line:#2B4D70; --warn-line:#6B3A30;
   }
 }
 :root[data-theme="dark"]{
@@ -53,9 +54,9 @@
   --sidebar-bg:#241A21; --sidebar-border:#4A3341; --sidebar-muted:#EBCFDB;
   --shadow-soft:0 1px 2px rgba(0,0,0,.30), 0 8px 24px -12px rgba(0,0,0,.55);
   --link:#7CC8F8; --chip-bg:#252935; --bar-track:#313545; --ctl-line:#3C4152; --star-off:#6F7488; --ok-ink:#5BDB8E;
-  --t-violet:#14304D; --t-blue:#14304D; --t-pink:#3A1D2B; --t-amber:#3A3110; --t-line:#4A3341;
-  --on-violet:#BEE2FB; --on-blue:#BEE2FB; --on-pink:#FFC9DE; --on-amber:#FFE08A; --on-info:#BEE2FB;
-  --info-line:#2B4D70; --warn-line:#6B5520;
+  --t-violet:#14304D; --t-blue:#14304D; --t-pink:#3A1D2B; --t-amber:#3A2320; --t-line:#4A3341;
+  --on-violet:#BEE2FB; --on-blue:#BEE2FB; --on-pink:#FFC9DE; --on-amber:#FFC7B8; --on-info:#BEE2FB;
+  --info-line:#2B4D70; --warn-line:#6B3A30;
 }
 /* The learner report, its PDF pages and the download host are light sheets in every theme: every token that
    changes with the theme is pinned to its light value there (their own colours come from the same --tint-* /
@@ -66,6 +67,7 @@
   --t-violet:#E3F0FC; --t-blue:#E3F0FC; --t-pink:#FDE7F0; --t-amber:#FFF3C4; --t-line:#F3C9DA;
   --on-violet:#0F4F99; --on-blue:#0F4F99; --on-pink:#9C1D52; --on-amber:#6B4E00; --on-info:#0F4F99;
   --info-line:#BFDDF7; --warn-line:#F0CE8A;
+  --brand-grad:linear-gradient(100deg,#F5BBD3,#FFD43B 55%,#7CC8F8);
 }
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;}
@@ -367,7 +369,7 @@ td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
 .sc-pct{font-family:var(--font-head);font-size:28px;font-weight:800;line-height:1;}
 .sc-label{font-size:11.5px;font-weight:700;color:var(--muted);margin:12px 0 4px;}
 .sc-grade{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0;}
-.sc-grade > div{background:var(--bg);border-radius:12px;padding:9px 11px;}
+.sc-grade > div{background:var(--chip-bg);border-radius:12px;padding:9px 11px;}
 .sc-grade .k{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:4px;}
 @media(max-width:640px){
   .sc-grade{grid-template-columns:1fr;gap:6px;}
@@ -1066,5 +1068,5 @@ td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
 .sidebar .nav-label{color:var(--sidebar-muted);}
 .btn-amber{color:#0B2545;}
 .step-num{color:#0B2545;}
-.card-top-accent{border-top-color:var(--hero-yellow);}
+.card-top-accent{border-top-color:var(--hero-pink);}
 :focus-visible{outline-color:var(--link);}

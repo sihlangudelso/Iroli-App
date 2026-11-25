@@ -102,7 +102,6 @@ function reportPathwaysHTML(l){
     return `<div class="empty-state">${icon('target')}<p>Complete the <a href="#" onclick="navigate('assessment');return false;">personality assessment</a> to see which career pathways align with you.</p></div>`;
   }
   return `
-  <p class="page-sub" style="margin-bottom:16px;">Broader fields before specific careers — starting points to explore, not a ranked list of "correct" choices.</p>
   ${pathways.map(p=>{
     const al = alignmentLabel(p.alignment);
     const rl = readinessLabel(p.readiness);
@@ -154,7 +153,6 @@ function reportCareersHTML(l){
     return `<div class="empty-state">${icon('search')}<p>Take the <a href="#" onclick="navigate('assessment');return false;">personality assessment</a> to see careers worth exploring.</p></div>`;
   }
   return `
-  <p class="page-sub" style="margin-bottom:16px;">Several careers worth a look — not a single "best" answer. Open any one for the full picture.</p>
   ${matches.map(m=>{
     const c = m.career;
     const fac = facultyById(c.faculty);

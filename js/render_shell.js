@@ -131,7 +131,10 @@ function sidebarHTML(){
       ${IS_ADMIN ? `<button class="nav-item" onclick="App.togglePreview()">${icon(PREVIEW_MODE?'switch':'spark')}<span>${PREVIEW_MODE?'Exit preview':'Preview learner view'}</span></button>` : ''}
       <div class="role-pill" style="margin-top:8px;">${icon('shield','ic')} ${roleLabel()}</div>
       <button class="nav-item" style="margin-top:6px;" onclick="App.signOut()">${icon('logout')}<span>Sign out</span></button>
-      <a href="privacy.html" target="_blank" rel="noopener" style="display:block;text-align:center;font-size:11px;color:var(--sidebar-muted,var(--muted));margin-top:12px;">Privacy Notice</a>
+      <div style="display:flex;justify-content:center;gap:12px;margin-top:12px;font-size:11px;">
+        <a href="help.html" target="_blank" rel="noopener" style="color:var(--sidebar-muted,var(--muted));">How Iroli works</a>
+        <a href="privacy.html" target="_blank" rel="noopener" style="color:var(--sidebar-muted,var(--muted));">Privacy Notice</a>
+      </div>
     </div>
   `;
 }

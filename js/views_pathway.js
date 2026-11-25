@@ -150,13 +150,7 @@ function viewPathwayUpgrade(){
   <div class="card pw-upgrade">
     <span class="badge badge-good">Pro plan</span>
     <h3 style="margin-top:10px;">Work towards three university programmes and a bursary</h3>
-    <ul class="pw-list">
-      <li>Save three programmes you want to study, with their entry requirements.</li>
-      <li>Add your marks each term and see the marks to aim for in every subject.</li>
-      <li>Choose a bursary goal and track what you still need for it.</li>
-      <li>In Grade 12: application deadlines and application tracking.</li>
-    </ul>
-    <p class="page-sub">${onStandard ? 'You are on the Standard plan. Move up to Pro for the R150 difference.' : 'Pro is R450 once-off and lasts until the end of Grade 12.'}</p>
+    <p class="page-sub">Pro adds programme goals, target marks and a bursary goal.</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
       <a class="btn btn-primary" href="mailto:info@iroli.co.za?subject=Iroli%20Pro%20plan&body=My%20account%20email%3A%20${encodeURIComponent(ME.email||'')}">Ask about Pro</a>
       <a class="btn btn-ghost" href="pricing.html" target="_blank" rel="noopener">See pricing</a>
@@ -370,7 +364,7 @@ function viewTermMarks(){
   const keys = pwLearnerSubjects(l);
   const unsaved = Object.keys(d.edits).filter(function(k){ return k !== d.year + '|' + d.term; }).length;
   return `
-  ${pageHeadHTML('My Marks', 'Add your report marks for each term. Your report, career matches' + (pathwayOpen(l) ? ', My Pathway' : '') + ' and APS use them.')}
+  ${pageHeadHTML('My Marks', 'Add your report marks for each term.')}
   <div class="card" style="margin-bottom:16px;">
     <h3>Grade ${esc(gradeForYear)} marks, ${esc(year)}</h3>
     <div class="filter-bar" style="margin:8px 0 14px;" role="group" aria-label="Term">
@@ -662,7 +656,7 @@ function pwBursaryDetailHTML(l){
   </div>
   ${st.docs.length ? `<div class="card" style="margin-bottom:16px;">
     <h3>Documents checklist</h3>
-    <p class="page-sub">Get these ready before you apply. Don't upload them here.</p>
+    <p class="page-sub">Get these ready before you apply.</p>
     ${st.docs.map(function(d, i){ return `<div class="pw-answer"><span>${esc(d)}</span><div class="filter-bar" role="group" aria-label="${esc(d)}">${[['have','Have it'],['need','Need to get it'],['notsure','Not sure']].map(function(o){ return `<button class="chip-select ${docAns[d] === o[0] ? 'on' : ''}" aria-pressed="${docAns[d] === o[0]}" onclick="App.pwDoc(${i},'${o[0]}')">${o[1]}</button>`; }).join('')}</div></div>`; }).join('')}
   </div>` : ''}
   <div class="card" style="margin-bottom:16px;">

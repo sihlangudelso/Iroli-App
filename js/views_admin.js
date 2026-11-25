@@ -315,7 +315,7 @@ function adminSubjectRecCardHTML(l){
 
 function viewAdminCareers(){
   return `
-  ${pageHeadHTML('Career library', `${CAREERS.length} careers seeded across ${FACULTIES.length} faculties. The data model supports adding more faculties, careers and real per-institution admission data later.`)}
+  ${pageHeadHTML('Career library', `${CAREERS.length} careers across ${FACULTIES.length} faculties.`)}
   ${FACULTIES.map(f=>{
     const list = CAREERS.filter(c=>c.faculty===f.id);
     return `<div class="section-title"><h2>${f.name} <span class="tag" style="background:${f.color};color:#fff;box-shadow:inset 0 0 0 50px rgba(0,0,0,.24);">${list.length}</span></h2></div>
