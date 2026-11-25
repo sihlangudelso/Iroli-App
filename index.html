@@ -114,7 +114,42 @@
   .ex-dir p{font-size:13.5px;color:var(--muted);margin:0 0 10px;line-height:1.5;}
   .ex-foot{display:flex;justify-content:space-between;align-items:center;gap:10px 16px;flex-wrap:wrap;margin-top:14px;font-size:13px;color:var(--muted);}
   .ex-foot a{font-weight:600;color:var(--link);}
-  @media (max-width:640px){ .ex-dirs{grid-template-columns:1fr;} .hero-example{margin:28px 12px 0;padding:18px 16px 16px;} }
+  .ex-links{display:flex;gap:6px 18px;flex-wrap:wrap;}
+  .hero-example .ex-head{justify-content:flex-start;align-items:center;gap:8px 12px;}
+  .hero-example .ex-head p{font-size:17px;color:var(--ink);font-family:var(--font-head);}
+  /* The live first question: tapping an interest shows the app's real result for that answer. */
+  .ex-choices{display:flex;flex-wrap:wrap;gap:8px;margin:-4px 0 16px;}
+  .ex-choice{font:inherit;font-size:13px;font-weight:600;padding:7px 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;transition:background-color .2s ease,border-color .2s ease,transform .15s ease;}
+  .ex-choice:hover{border-color:var(--hero-blue);}
+  .ex-choice[aria-pressed="true"]{background:var(--hero-blue);border-color:var(--hero-blue);color:#0B2545;}
+  .ex-choice:focus-visible{outline:2px solid var(--link);outline-offset:2px;}
+  .motion .ex-choice:hover{transform:translateY(-1px);}
+  .motion .ex-dirs.swap .ex-dir{animation:landUp .45s cubic-bezier(.2,.7,.2,1) both;}
+  .motion .ex-dirs.swap .ex-dir + .ex-dir{animation-delay:.07s;}
+  /* A slow band of the 77 real career names. */
+  .career-band{overflow:hidden;margin:56px 0 0;padding:6px 0;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);}
+  .cb-track{display:flex;width:max-content;}
+  .cb-track span{font-family:var(--font-head);font-weight:600;font-size:15px;color:var(--muted);white-space:nowrap;padding:0 18px;position:relative;}
+  .cb-track span::after{content:"";position:absolute;right:-3px;top:50%;width:6px;height:6px;border-radius:50%;background:var(--hero-pink);transform:translateY(-50%);}
+  .cb-track span:nth-child(3n+2)::after{background:var(--hero-blue);}
+  @keyframes cbScroll{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
+  .motion .cb-track{animation:cbScroll 160s linear infinite;}
+  .motion .career-band:hover .cb-track{animation-play-state:paused;}
+  /* Photos with a card overlapping one corner. */
+  .photo{margin:0;border-radius:24px;overflow:hidden;box-shadow:var(--shadow-soft);}
+  .photo img,.wide-photo img{display:block;width:100%;height:100%;object-fit:cover;}
+  .photo-stack{position:relative;}
+  .photo-stack .photo{width:88%;aspect-ratio:4/3;}
+  .photo-stack .float{position:relative;z-index:2;width:70%;margin:-96px 0 0 auto;}
+  .photo-stack.alt .photo{margin-left:auto;}
+  .photo-stack.alt .float{margin:-96px auto 0 0;}
+  .photo-stack .report-peek{max-width:none;}
+  .wide-photo{margin:0 0 44px;border-radius:24px;overflow:hidden;height:clamp(220px,28vw,360px);}
+  .wide-photo img{object-position:75% 22%;}
+  .motion .photo img,.motion .wide-photo img{transform:scale(1.08);transition:transform 1.4s cubic-bezier(.2,.7,.2,1);}
+  .motion .photo.in img,.motion .wide-photo.in img{transform:none;}
+  @media (max-width:900px){ .photo-stack .float,.photo-stack.alt .float{width:90%;margin-top:-36px;} .photo-stack .photo,.photo-stack.alt .photo{width:100%;} }
+  @media (max-width:640px){ .ex-dirs{grid-template-columns:1fr;} .career-band{margin-top:40px;} .cb-track span{font-size:14px;} .hero-example{margin:28px 12px 0;padding:18px 16px 16px;} }
   /* ---------- After the hero: sections alternate centre / left / right, one idea each ---------- */
   /* After the hero the page is plain white (the dark-theme surface in dark mode): no panels, just space. */
   body{background:var(--surface);}
@@ -257,6 +292,27 @@
   .motion [data-reveal].from-above{ transform:translateY(-28px); }
   .motion [data-reveal].in{ opacity:1; transform:none; transition-delay:calc(var(--d, 0) * 90ms); }
   .motion [data-reveal].in:hover{ transition-delay:0s; }
+  /* Mock-ups come to life as they scroll in: bars grow, flags and chips arrive one by one, ticks check in. */
+  .motion .dash-mock .dm-bar i{ transform:scaleX(0); transform-origin:left center; transition:transform .9s cubic-bezier(.2,.7,.2,1); }
+  .motion .dash-mock.in .dm-bar i{ transform:none; }
+  .motion .dash-mock.in .dm-bar i{ transition-delay:.35s; } .motion .dash-mock.in .dm-bar + .dm-bar i{ transition-delay:.45s; }
+  .motion .dash-mock.in .dm-bar + .dm-bar + .dm-bar i{ transition-delay:.55s; } .motion .dash-mock.in .dm-bar + .dm-bar + .dm-bar + .dm-bar i{ transition-delay:.65s; }
+  .motion .dash-mock .dm-row{ opacity:0; transform:translateX(14px); transition:opacity .45s ease, transform .45s cubic-bezier(.2,.7,.2,1); }
+  .motion .dash-mock.in .dm-row{ opacity:1; transform:none; transition-delay:.9s; }
+  .motion .dash-mock.in .dm-row:last-child{ transition-delay:1.05s; }
+  .motion .report-peek .tag,.motion .report-peek .rp-fit span{ opacity:0; transform:translateY(6px); transition:opacity .4s ease, transform .4s ease; }
+  .motion .report-peek.in .tag,.motion .report-peek.in .rp-fit span{ opacity:1; transform:none; }
+  .motion .report-peek.in .tag:nth-child(1){ transition-delay:.3s; } .motion .report-peek.in .tag:nth-child(2){ transition-delay:.4s; } .motion .report-peek.in .tag:nth-child(3){ transition-delay:.5s; }
+  .motion .report-peek.in .rp-fit span:nth-child(1){ transition-delay:.65s; } .motion .report-peek.in .rp-fit span:nth-child(2){ transition-delay:.75s; } .motion .report-peek.in .rp-fit span:nth-child(3){ transition-delay:.85s; }
+  .motion .ticks li{ opacity:0; transform:translateX(-10px); transition:opacity .45s ease, transform .45s cubic-bezier(.2,.7,.2,1); }
+  .motion .split-text.in .ticks li{ opacity:1; transform:none; }
+  .motion .split-text.in .ticks li:nth-child(1){ transition-delay:.25s; } .motion .split-text.in .ticks li:nth-child(2){ transition-delay:.4s; } .motion .split-text.in .ticks li:nth-child(3){ transition-delay:.55s; }
+  /* Small responses: buttons lift, FAQ answers slide open, in-page links scroll smoothly. */
+  .motion .btn{ transition:transform .15s ease, box-shadow .15s ease, background-color .2s ease, border-color .2s ease; }
+  .motion .btn:hover{ transform:translateY(-2px); box-shadow:0 10px 20px -12px rgba(11,37,69,.5); }
+  @keyframes faqOpen{ from{opacity:0; transform:translateY(-6px);} to{opacity:1; transform:none;} }
+  .motion .faq details[open] p{ animation:faqOpen .3s ease both; }
+  html.motion{ scroll-behavior:smooth; }
   .motion .feature-card.in:hover{ transform:translateY(-4px); }
   .feature-card{ transition:transform .2s ease, box-shadow .2s ease; }
   .feature-card:hover{ transform:translateY(-4px); box-shadow:var(--shadow-soft); }
@@ -306,10 +362,18 @@
   </div>
   <section class="hero-example" aria-labelledby="ex-title">
     <div class="ex-head">
-      <span class="ex-label" id="ex-title">Example quick-quiz result</span>
-      <p>For a learner drawn to <strong>investigative &amp; analytical</strong> work</p>
+      <span class="ex-label">Try the first question</span>
+      <p id="ex-title"><strong>What kind of work are you drawn to?</strong></p>
     </div>
-    <div class="ex-dirs">
+    <div class="ex-choices" role="group" aria-labelledby="ex-title">
+      <button type="button" class="ex-choice" data-int="R" aria-pressed="false">Practical &amp; Hands-on</button>
+      <button type="button" class="ex-choice" data-int="I" aria-pressed="true">Investigative &amp; Analytical</button>
+      <button type="button" class="ex-choice" data-int="A" aria-pressed="false">Creative &amp; Expressive</button>
+      <button type="button" class="ex-choice" data-int="S" aria-pressed="false">People-focused</button>
+      <button type="button" class="ex-choice" data-int="E" aria-pressed="false">Enterprising &amp; Persuasive</button>
+      <button type="button" class="ex-choice" data-int="C" aria-pressed="false">Organised &amp; Precise</button>
+    </div>
+    <div class="ex-dirs" id="ex-dirs" aria-live="polite">
       <div class="ex-dir">
         <small>DIRECTION 1</small>
         <h3>Science and Research</h3>
@@ -324,11 +388,13 @@
       </div>
     </div>
     <div class="ex-foot">
-      <span>Directions worth exploring, never a verdict. The full assessments go much deeper.</span>
-      <a href="assets/sample-report.pdf" target="_blank" rel="noopener">See a sample full report (PDF) →</a>
+      <span>Directions worth exploring from one answer, never a verdict.</span>
+      <span class="ex-links"><a href="app.html" class="ex-go">Answer 3 more to see yours →</a><a href="assets/sample-report.pdf" target="_blank" rel="noopener">Sample full report (PDF)</a></span>
     </div>
   </section>
 </header>
+
+<div class="career-band" aria-hidden="true"><div class="cb-track"><span>Civil Engineer</span><span>Mechanical Engineer</span><span>Electrical Engineer</span><span>Chemical Engineer</span><span>Industrial Engineer</span><span>Mechatronics Engineer</span><span>Software Developer</span><span>Data Scientist</span><span>Computer / Network Systems Engineer</span><span>Cybersecurity Specialist</span><span>IT / Systems Business Analyst</span><span>Medical Doctor</span><span>Pharmacist</span><span>Physiotherapist</span><span>Dentist</span><span>Biomedical Scientist / Medical Technologist</span><span>Environmental Scientist</span><span>Geologist</span><span>Biotechnologist</span><span>Architect</span><span>Quantity Surveyor</span><span>Urban &amp; Regional Planner</span><span>Agricultural Scientist (Agronomist)</span><span>Agricultural Engineer</span><span>Actuary</span><span>Chartered Accountant CA(SA)</span><span>Financial / Investment Analyst</span><span>Quantitative Analyst (&quot;Quant&quot;)</span><span>Economist</span><span>Teacher</span><span>Social Worker</span><span>Graphic Designer</span><span>Photographer</span><span>Filmmaker</span><span>Musician</span><span>Dancer / Choreographer</span><span>Attorney</span><span>Advocate</span><span>Paralegal</span><span>Policy Analyst</span><span>Diplomat / Foreign Service Officer</span><span>Police Officer</span><span>Firefighter</span><span>Lecturer / Academic</span><span>Early Childhood Development (ECD) Practitioner</span><span>Journalist</span><span>Writer / Author</span><span>Translator / Interpreter</span><span>Public Relations Specialist</span><span>Animator</span><span>Fashion Designer</span><span>Tourism Manager</span><span>Travel Consultant</span><span>Hotel Manager</span><span>Chef</span><span>Event Manager</span><span>Sports Coach</span><span>Sports Scientist / Biokineticist</span><span>Community Development Worker</span><span>Psychologist</span><span>Electrician</span><span>Plumber</span><span>Welder</span><span>Automotive Mechanic</span><span>Boilermaker / Artisan (Metalwork)</span><span>Logistics Manager</span><span>Commercial Pilot</span><span>Heavy Vehicle / Truck Driver</span><span>Entrepreneur / Business Owner</span><span>Human Resources Manager</span><span>Marketing Manager</span><span>Historian</span><span>Sociologist</span><span>GIS Specialist</span><span>Conservation Officer / Field Ranger</span><span>Agricultural Economist</span><span>Farmer</span></div></div>
 
 <section class="section" id="what-we-do">
   <div class="sec-head" data-reveal>
@@ -385,14 +451,16 @@
         <a href="pricing.html" class="btn btn-ghost">See pricing</a>
       </div>
     </div>
-    <div class="report-peek" data-reveal style="--d:1;" role="img" aria-label="A preview of the sample Grade 9 Subject Choice Report: best-fit subjects Maths, Physical Sciences and Life Sciences, a strong overall fit, and a next step to talk it through with a teacher or parent.">
+    <div class="photo-stack alt">
+      <figure class="photo" data-reveal style="--d:1;"><picture><source media="(max-width:700px)" srcset="assets/photo-learners-tablet-800.webp"><img src="assets/photo-learners-tablet.webp" width="1536" height="1024" loading="lazy" alt="Two learners look at a tablet together in a technology workshop" style="object-position:40% 40%;"></picture></figure>
+      <div class="report-peek float" data-reveal style="--d:2;" role="img" aria-label="A preview of the sample Grade 9 Subject Choice Report: best-fit subjects Maths, Physical Sciences and Life Sciences, with a very strong interest fit, a strong personality fit and a moderate academic fit.">
       <div class="rp-band"><b>Grade 9 Subject Choice Report</b><small>Sample learner · 4 pages</small></div>
       <div class="rp-body">
         <div class="rp-row"><small>Best-fit subjects</small><div class="pill-list"><span class="tag">Maths</span><span class="tag">Physical Sciences</span><span class="tag">Life Sciences</span></div></div>
         <div class="rp-row"><small>How well they fit</small><div class="rp-fit"><span class="strong">Interest: Very strong</span><span class="strong">Personality: Strong</span><span>Academic: Moderate</span></div></div>
-        <div class="rp-row"><small>Next step</small><p>Talk this report through with your Life Orientation teacher, counsellor or parent/guardian.</p></div>
       </div>
-      <div class="rp-foot"><a href="assets/sample-report.pdf" target="_blank" rel="noopener">Open the full sample report (PDF) →</a></div>
+        <div class="rp-foot"><a href="assets/sample-report.pdf" target="_blank" rel="noopener">Open the full sample report (PDF) →</a></div>
+      </div>
     </div>
   </div>
 </section>
@@ -414,21 +482,24 @@
       </div>
       <p class="privacy-line"><svg viewBox="0 0 24 24" width="18" height="18" stroke="var(--link)" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>Learners see only their own results, and a teacher sees only the classes they manage. Learner data is never sold or used for advertising. <a href="privacy.html">Read our Privacy Notice</a></span></p>
     </div>
-    <div class="dash-mock" data-reveal style="--d:0;" role="img" aria-label="Example Grade 9 dashboard for a made-up class: 32 learners, 28 assessed, 5 requiring guidance, with the top career pathways and two learners flagged for a conversation.">
-      <div class="dm-top"><b>Grade 9 Dashboard</b><span>Example class · 9B</span></div>
-      <div class="dm-tiles">
-        <div><b>32</b><span>Learners</span></div>
-        <div><b>28</b><span>Assessed</span></div>
-        <div class="flag"><b>5</b><span>Requiring guidance</span></div>
+    <div class="photo-stack alt">
+      <figure class="photo" data-reveal><picture><source media="(max-width:700px)" srcset="assets/photo-teacher-class-800.webp"><img src="assets/photo-teacher-class.webp" width="1536" height="1024" loading="lazy" alt="A teacher shows a class of learners a small electronics board in a robotics lab" style="object-position:60% 40%;"></picture></figure>
+      <div class="dash-mock float" data-reveal data-stats style="--d:1;" role="img" aria-label="Example Grade 9 dashboard for a made-up class: 32 learners, 28 assessed, 5 requiring guidance, with the top career pathways and two learners flagged for a conversation.">
+        <div class="dm-top"><b>Grade 9 Dashboard</b><span>Example class · 9B</span></div>
+        <div class="dm-tiles">
+          <div><b data-count="32">32</b><span>Learners</span></div>
+          <div><b data-count="28">28</b><span>Assessed</span></div>
+          <div class="flag"><b data-count="5">5</b><span>Requiring guidance</span></div>
+        </div>
+        <p class="dm-sub">TOP CAREER PATHWAYS</p>
+        <div class="dm-bar"><span>Health &amp; Medical</span><i style="width:100%"></i><em>8</em></div>
+        <div class="dm-bar"><span>Engineering</span><i style="width:75%"></i><em>6</em></div>
+        <div class="dm-bar"><span>Business</span><i style="width:62%"></i><em>5</em></div>
+        <div class="dm-bar"><span>Arts &amp; Design</span><i style="width:38%"></i><em>3</em></div>
+        <p class="dm-sub" style="margin-top:12px;">LEARNERS REQUIRING GUIDANCE</p>
+        <div class="dm-row"><span>Learner A · wants Engineering</span><span>Planned subjects don't support it</span></div>
+        <div class="dm-row"><span>Learner B · wants Medicine</span><span>Maths mark below 50%</span></div>
       </div>
-      <p class="dm-sub">TOP CAREER PATHWAYS</p>
-      <div class="dm-bar"><span>Health &amp; Medical</span><i style="width:100%"></i><em>8</em></div>
-      <div class="dm-bar"><span>Engineering</span><i style="width:75%"></i><em>6</em></div>
-      <div class="dm-bar"><span>Business</span><i style="width:62%"></i><em>5</em></div>
-      <div class="dm-bar"><span>Arts &amp; Design</span><i style="width:38%"></i><em>3</em></div>
-      <p class="dm-sub" style="margin-top:12px;">LEARNERS REQUIRING GUIDANCE</p>
-      <div class="dm-row"><span>Learner A · wants Engineering</span><span>Planned subjects don't support it</span></div>
-      <div class="dm-row"><span>Learner B · wants Medicine</span><span>Maths mark below 50%</span></div>
     </div>
   </div>
 </section>
@@ -438,6 +509,7 @@
     <span class="eyebrow">How it works</span>
     <h2 class="sec-title">From a quick quiz to a full report</h2>
   </div>
+  <figure class="wide-photo" data-reveal><picture><source media="(max-width:700px)" srcset="assets/photo-lab-microscope-800.webp"><img src="assets/photo-lab-microscope.webp" width="1536" height="1024" loading="lazy" alt="A young woman in a lab coat looks through a microscope"></picture></figure>
   <div class="steps-row">
     <div class="step" data-reveal style="--d:0;"><div class="step-num">1</div><h4>Try the free quiz</h4><p class="page-sub">Answer 4 quick questions for a first look at careers worth exploring. It's free and needs no account.</p></div>
     <div class="step" data-reveal style="--d:1;"><div class="step-num">2</div><h4>Unlock the assessments</h4><p class="page-sub">Create an account, then use a school class code or an individual licence for the personality assessment and, in Grade 9, the subject-choice assessment.</p></div>
@@ -500,6 +572,31 @@
   </div>
 </div>
 
+<script>
+  // The live first question. Each answer shows the app's own quick-quiz result for that interest alone
+  // (worked out from js/app.js computeMiniDirections and kept here so the landing page loads no app code).
+  (function(){
+    var DATA = {"R": [{"n": "Skilled Trades and Technical Careers", "o": "Hands-on, practical trades that keep homes, buildings and industry running — learned through apprenticeship rather than a university degree.", "c": ["Electrician", "Plumber", "Welder"]}, {"n": "Safety and Protective Services", "o": "Protecting communities and responding to emergencies — policing, firefighting and related public-safety work.", "c": ["Police Officer", "Firefighter"]}], "I": [{"n": "Science and Research", "o": "Investigating how the natural and physical world works, and generating new knowledge through research.", "c": ["Environmental Scientist", "Geologist", "Biotechnologist"]}, {"n": "Geography, Environment and Conservation", "o": "Understanding places, landscapes and ecosystems, and working to manage and protect them.", "c": ["Conservation Officer / Field Ranger", "GIS Specialist"]}], "A": [{"n": "Media, Communication and Journalism", "o": "Researching, writing and producing content that informs, persuades or tells a story to the public.", "c": ["Journalist", "Writer / Author", "Translator / Interpreter"]}, {"n": "Arts, Design and Creative Industries", "o": "Creating visual, performing or applied art professionally — design, film, music, dance and more.", "c": ["Graphic Designer", "Photographer", "Filmmaker"]}], "S": [{"n": "Education and Training", "o": "Teaching and developing people’s knowledge and skills, from early childhood through to adult and higher education.", "c": ["Teacher", "Lecturer / Academic", "Early Childhood Development (ECD) Practitioner"]}, {"n": "Safety and Protective Services", "o": "Protecting communities and responding to emergencies — policing, firefighting and related public-safety work.", "c": ["Police Officer", "Firefighter"]}], "E": [{"n": "Business, Management and Entrepreneurship", "o": "Running and growing organisations — strategy, people, operations and new ventures.", "c": ["Entrepreneur / Business Owner", "Human Resources Manager", "Marketing Manager"]}, {"n": "Tourism and Hospitality", "o": "Creating and delivering travel, accommodation and hospitality experiences — a major South African industry.", "c": ["Tourism Manager", "Hotel Manager", "Chef"]}], "C": [{"n": "Finance, Accounting and Economics", "o": "Managing, analysing and advising on money — for individuals, businesses, markets or government.", "c": ["Actuary", "Chartered Accountant CA(SA)", "Financial / Investment Analyst"]}, {"n": "Law and Legal Services", "o": "Interpreting and applying the law — advising clients, resolving disputes, and representing people in court.", "c": ["Attorney", "Advocate", "Paralegal"]}]};
+    var box = document.getElementById('ex-dirs'); if(!box) return;
+    function esc(t){ var d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+    document.querySelectorAll('.ex-choice').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var k = btn.getAttribute('data-int'); if(!DATA[k] || btn.getAttribute('aria-pressed') === 'true') return;
+        document.querySelectorAll('.ex-choice').forEach(function(b){ b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'); });
+        box.innerHTML = DATA[k].map(function(d, i){
+          return '<div class="ex-dir"><small>DIRECTION ' + (i + 1) + '</small><h3>' + esc(d.n) + '</h3><p>' + esc(d.o) + '</p><div class="pill-list">' +
+            d.c.map(function(c){ return '<span class="tag">' + esc(c) + '</span>'; }).join('') + '</div></div>';
+        }).join('');
+        box.classList.remove('swap'); void box.offsetWidth; box.classList.add('swap');
+      });
+    });
+  })();
+  // The career band loops seamlessly with a second copy of the names (only when it moves).
+  (function(){
+    var t = document.querySelector('.cb-track');
+    if(t && document.documentElement.classList.contains('motion')) t.innerHTML += t.innerHTML;
+  })();
+</script>
 <script>
   // Scroll reveal in both directions, and the counters counting up each time they come into view.
   // Only runs with motion on (see the head script); without it everything simply shows, numbers and all.
