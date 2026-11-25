@@ -52,199 +52,188 @@
 }
 </script>
 <style>
-  .topbar-land{display:flex;align-items:center;justify-content:space-between;max-width:1180px;margin:0 auto;padding:16px 20px;gap:12px;}
-  .topbar-band{background:var(--hero-pink);position:relative;z-index:2;}
-  .topbar-band .brand-wordmark{display:block;background:#fff;border-radius:999px;padding:6px 12px;height:40px;}
-  .account-nav{display:flex;gap:8px;}
-  .account-nav .btn{min-height:44px;color:#1A1733;white-space:nowrap;}
-  .account-nav .btn-ghost{border-color:rgba(26,23,51,.28);background:rgba(255,255,255,.55);}
-  .account-nav .btn-ghost:hover{border-color:var(--hero-navy);background:#fff;}
-  .account-nav .signin-link:hover,.hero-school-link:hover{text-decoration:underline;}
+  .topbar-land{display:flex;align-items:center;justify-content:space-between;max-width:1180px;margin:0 auto;padding:20px 20px;}
+  .topbar-land .brand-wordmark{height:28px;display:block;}
+  .section{max-width:1180px;margin:0 auto;padding:60px 20px;}
+  .feature-card{border-top:4px solid var(--indigo);height:100%;}
+  .feature-card .ico{width:40px;height:40px;border-radius:12px;background:var(--t-violet);display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
+  .step-num{width:30px;height:30px;border-radius:50%;background:var(--brand-grad);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-family:var(--font-head);font-size:14px;flex-shrink:0;}
+  /* Closing call-to-action on the pink -> yellow -> orange brand gradient: fixed dark text in every theme. */
+  .cta-band{background:linear-gradient(110deg,#F6BDD3 0%,#F3A9CF 65%,#F7CADD 100%);border-radius:var(--radius-lg);padding:48px 32px;text-align:center;color:#0B2545;}
+  .cta-band h1,.cta-band h2{color:#0B2545;}
+  .cta-band p{color:#423345;}
+  .feature-card:nth-child(3n+1){border-top-color:var(--hero-yellow);}
+  .feature-card:nth-child(3n+2){border-top-color:var(--hero-blue);}
+  /* Top bar + hero: full-bleed, edge to edge, in the photo's own light-pink studio backdrop (#F5BBD3), so the bar,
+     the panel and the photo read as one piece with no seam. Fixed colours in every theme; text is dark ink
+     (#1A1733 is 10:1 on this pink). Accent is light blue (#7CC8F8) carrying navy text (#0B2545, 9:1).
+     On wide screens the bar floats over the photo, whose top is extended so the yellow ring carries on behind it. */
+  .topbar-band{background:#F5BBD3;position:relative;z-index:4;}
+  .topbar-band .brand-wordmark{background:#fff;border-radius:999px;padding:6px 12px;height:40px;box-sizing:border-box;}
+  .topbar-band .btn-ghost{color:#1A1733;border-color:rgba(26,23,51,.28);}
+  .topbar-band .btn-ghost{background:rgba(255,255,255,.55);}
+  .topbar-band .btn-ghost:hover{border-color:#0B2545;background:#fff;}
+  .topbar-band .btn-primary{background:#7CC8F8;color:#0B2545;}
+  .topbar-band .btn-primary:hover{background:#A5DAFB;}
   @media (min-width:1141px){ .topbar-band{position:absolute;top:0;left:0;right:0;background:transparent;} }
-
-  .hero{position:relative;isolation:isolate;overflow:hidden;min-height:clamp(550px,48vw,790px);display:flex;align-items:center;background:var(--hero-pink);color:#1A1733;}
+  .hero-wrap{padding:0;margin-top:-1px;}
+  .hero{position:relative;overflow:hidden;height:clamp(640px,50vw,900px);display:flex;align-items:center;background:#F5BBD3;color:#1A1733;}
   .hero::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
-    background:linear-gradient(90deg,rgba(245,187,211,.94) 0%,rgba(245,187,211,.72) 34%,rgba(245,187,211,0) 57%);}
+    background:linear-gradient(90deg,rgba(245,187,211,.9) 0%,rgba(245,187,211,.7) 33%,rgba(245,187,211,0) 55%);}
   .hero-photo{position:absolute;top:0;right:0;height:100%;margin:0;display:block;}
   .hero-photo img{height:100%;width:auto;display:block;
     -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 10%);mask-image:linear-gradient(90deg,transparent 0,#000 10%);}
-  .hero-copy{position:relative;z-index:2;max-width:508px;padding:96px 20px 56px;margin-left:max(0px,calc((100vw - 1180px)/2));}
-  .hero-audience{color:var(--hero-navy);font-size:13px;font-weight:700;margin-bottom:14px;}
-  .hero h1{color:#1A1733;font-size:clamp(41px,4.1vw,62px);line-height:1.08;letter-spacing:-.04em;margin-bottom:18px;font-weight:800;}
-  .hero h1 .mark{text-decoration:underline;text-decoration-color:var(--hero-blue);text-decoration-thickness:.09em;text-underline-offset:.12em;white-space:nowrap;}
-  .hero-lead{max-width:360px;color:#2B2645;font-size:18px;line-height:1.55;margin-bottom:22px;}
-  .hero-actions{display:flex;gap:16px;flex-wrap:wrap;align-items:center;}
-  .hero .btn-primary{padding:13px 22px;font-size:15px;}
-  .hero-school-link{display:inline-flex;align-items:center;min-height:44px;color:var(--hero-navy);font-size:14px;font-weight:700;}
+  .hero-copy{position:relative;z-index:2;max-width:480px;padding:116px 20px 80px;margin-left:max(0px,calc((100vw - 1180px)/2));}
+  .hero-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;letter-spacing:.02em;
+    padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.9);color:#0B2545;margin-bottom:20px;}
+  .hero-eyebrow i{width:8px;height:8px;border-radius:50%;background:#3BA4EC;display:block;}
+  .hero h1{color:#1A1733;font-size:46px;line-height:1.14;letter-spacing:-.02em;margin-bottom:18px;font-weight:800;}
+  .hero h1 .mark{position:relative;white-space:nowrap;}
+  .hero h1 .mark::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:5px;border-radius:5px;background:#7CC8F8;}
+  .hero-lead{color:#2B2645;font-size:17px;line-height:1.55;margin-bottom:26px;}
+  .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;}
+  .hero .btn{padding:13px 22px;font-size:15px;}
+  .hero .btn-primary{background:#7CC8F8;color:#0B2545;}
+  .hero .btn-primary:hover{background:#A5DAFB;}
+  .hero .btn-outline{background:rgba(255,255,255,.45);color:#0B2545;border:2px solid #7CC8F8;}
+  .hero .btn-outline:hover{background:rgba(255,255,255,.65);}
+  .hero-note{font-size:13px;color:#4A3F66;margin:0;}
+  .hero-stats{position:relative;z-index:3;max-width:760px;margin:-44px auto 0;display:grid;grid-template-columns:repeat(3,1fr);
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-md);box-shadow:var(--shadow-soft);}
+  .hero-stats div{padding:18px 20px;text-align:center;}
+  .hero-stats div+div{border-left:1px solid var(--line);}
+  .hero-stats b{display:block;font-family:var(--font-head);font-size:26px;font-weight:800;color:#2B93DB;line-height:1.1;}
+  .hero-stats span{font-size:13px;color:var(--muted);}
+  @media (max-width:1280px){ .hero h1{font-size:42px;} .hero-copy{max-width:440px;} }
   @media (max-width:1140px){
-    .hero{min-height:460px;}
-    .hero-copy{max-width:430px;padding:44px 20px;}
-  }
-  @media (max-width:820px){
-    .hero{flex-direction:column;align-items:stretch;min-height:0;}
+    .hero{flex-direction:column;align-items:stretch;height:auto;background:#F5BBD3;}
     .hero::before{display:none;}
     .hero-photo{position:relative;height:auto;width:100%;}
-    .hero-photo img{width:100%;height:clamp(190px,53vw,330px);object-fit:cover;object-position:55% 54%;
-      -webkit-mask-image:linear-gradient(180deg,transparent,#000 15%);mask-image:linear-gradient(180deg,transparent,#000 15%);}
-    .hero-copy{max-width:none;margin:0;padding:22px 20px 12px;}
-    .hero h1{font-size:clamp(34px,6.4vw,50px);margin-bottom:14px;}
-    .hero-lead{font-size:16px;margin-bottom:16px;}
-    .hero-actions{column-gap:16px;row-gap:4px;}
+    .hero-photo img{width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;object-position:60% 12%;
+      -webkit-mask-image:linear-gradient(180deg,#000 75%,transparent);mask-image:linear-gradient(180deg,#000 75%,transparent);}
+    .hero-copy{max-width:none;margin:-20px 0 0;padding:0 24px 76px;}
+    .hero h1{font-size:32px;}
+    .hero-lead{font-size:16px;}
   }
-
-  .section{max-width:1180px;margin:0 auto;padding:0 20px 56px;}
-  .section h2{font-size:clamp(25px,3.1vw,34px);line-height:1.15;letter-spacing:-.025em;margin-bottom:10px;}
-  .section h3{font-size:17px;line-height:1.3;margin-bottom:8px;}
-  .section p{margin:0;}
-  .section > h2{margin-bottom:20px;}
-  .section .page-sub{line-height:1.6;}
-  .result-section{padding-top:42px;}
-  .result-layout{display:grid;grid-template-columns:minmax(225px,.85fr) minmax(0,2fr);gap:8px 24px;align-items:start;}
-  .result-cards{grid-area:1 / 2 / span 2;}
-  .result-layout > .text-link{justify-self:start;align-self:start;}
-  .result-card{height:100%;border-top:4px solid var(--hero-blue);}
-  .result-card:nth-child(2){border-top-color:var(--hero-yellow);}
-  .result-card ul{list-style:none;margin:14px 0 0;padding:0;}
-  .result-card .tag{font-size:13px;}
-  .text-link{display:inline-flex;align-items:center;min-height:44px;color:var(--link);font-weight:700;font-size:14px;text-decoration:underline;text-underline-offset:.2em;}
-  .grade-card{height:100%;}
-  .step-list{margin:0;padding:0;list-style:none;}
-  .step-list li{display:grid;grid-template-columns:32px 1fr;gap:12px;align-items:start;}
-  .step-num{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--t-blue);color:var(--on-blue);font-weight:800;}
-  .school-panel{display:grid;grid-template-columns:minmax(0,1fr) minmax(225px,.8fr);gap:24px;align-items:center;background:var(--t-blue);border-radius:var(--radius-lg);padding:clamp(24px,4vw,44px);}
-  .school-panel p{color:var(--on-blue);}
-  .school-panel .school-actions{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:flex-end;}
-  .school-actions .btn,.land-footer a{min-height:44px;}
-  .cta-band{background:linear-gradient(110deg,#F6BDD3,#F3A9CF 65%,#F7CADD);border-radius:var(--radius-lg);padding:36px 24px;text-align:center;}
-  .cta-band h2{color:var(--hero-navy);margin-bottom:16px;}
-  .land-footer{border-top:1px solid var(--line);}
-  .land-footer-inner{max-width:1180px;margin:0 auto;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
-  .land-footer nav{display:flex;gap:0 18px;flex-wrap:wrap;font-size:13.5px;}
-  .land-footer a{display:inline-flex;align-items:center;}
-  @media (max-width:820px){
-    .result-layout,.school-panel{grid-template-columns:1fr;gap:16px;}
-    .result-cards{grid-area:auto;}
-    .school-panel .school-actions{justify-content:flex-start;}
+  @media (max-width:640px){ .hero-photo img{aspect-ratio:4/3;object-position:72% 30%;} }
+  @media (max-width:480px){
+    .hero-copy{padding:0 18px 72px;}
+    .hero h1{font-size:28px;}
+    .hero .btn{flex:1 1 100%;justify-content:center;text-align:center;}
+    .hero-stats{margin:-40px 12px 0;}
+    .hero-stats div{padding:14px 6px;}
+    .hero-stats b{font-size:21px;}
+    .hero-stats span{font-size:11.5px;}
   }
-  @media (max-width:640px){
-    .section{padding-bottom:36px;}
-    .result-section{padding-top:30px;}
-  }
+  .land-footer{border-top:1px solid var(--line);margin-top:20px;}
+  .land-footer-inner{max-width:1180px;margin:0 auto;padding:28px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;}
 </style>
+<script src="js/homepage.js" defer></script>
 </head>
 <body>
 
-<header class="topbar-band">
-  <div class="topbar-land">
-    <img class="brand-wordmark" src="assets/logo-wordmark.png" alt="Iroli Career Pathway"/>
-    <nav class="account-nav" aria-label="Account">
-      <a href="app.html?start=signin" class="btn btn-sm signin-link">Log In</a>
-      <a href="app.html?start=signup" class="btn btn-ghost btn-sm">Sign Up</a>
-    </nav>
+<div class="topbar-band"><div class="topbar-land">
+  <img class="brand-wordmark" src="assets/logo-wordmark.png" alt="Iroli Career Pathway"/>
+  <div style="display:flex;gap:10px;">
+    <a href="app.html" class="btn btn-ghost btn-sm">Log In</a>
+    <a href="app.html" class="btn btn-primary btn-sm">Sign Up</a>
+  </div>
+</div>
+</div>
+
+<header class="hero-wrap">
+  <div class="hero">
+    <picture class="hero-photo">
+      <source type="image/webp" media="(max-width:860px)" srcset="assets/hero-photo-960.webp">
+      <img src="assets/hero-photo.webp" width="1672" height="1151" fetchpriority="high" alt="Two learners in school blazers sit laughing together in front of a nurse, an engineer holding a hard hat and a businesswoman with a tablet">
+    </picture>
+    <div class="hero-copy">
+      <div class="hero-eyebrow"><i></i>For Grade 9–12 learners in South Africa</div>
+      <h1>Find the career that <span class="mark">fits you</span> and the subjects to get there.</h1>
+      <p class="hero-lead">Career guidance and Grade 10 subject choice in one place. Start with 4 quick questions, no account needed.</p>
+      <div class="hero-actions">
+        <a href="app.html" class="btn btn-primary">Get Started</a>
+        <a href="pricing.html" class="btn btn-outline">For schools</a>
+      </div>
+      <p class="hero-note">Your school’s class code unlocks the full assessments and your report.</p>
+    </div>
+  </div>
+  <div class="hero-stats">
+    <div><b data-count-to="77" aria-hidden="true">77</b><span class="sr-only">77 </span><span>real careers</span></div>
+    <div><b data-count-to="15" aria-hidden="true">15</b><span class="sr-only">15 </span><span>career fields</span></div>
+    <div><b data-count-to="4" aria-hidden="true">4</b><span class="sr-only">4 </span><span>questions to start</span></div>
   </div>
 </header>
 
-<main>
-  <section class="hero" aria-labelledby="hero-title">
-    <div class="hero-copy">
-      <p class="hero-audience">For Grade 9–12 learners in South Africa</p>
-      <h1 id="hero-title">Find careers that <span class="mark">fit you</span></h1>
-      <p class="hero-lead">Answer 4 quick questions and get two career directions to explore. No account needed.</p>
-      <div class="hero-actions">
-        <a href="app.html?start=quiz" class="btn btn-primary">Start the free quiz</a>
-        <a href="#schools" class="hero-school-link">For schools</a>
-      </div>
+<section class="section" id="what-we-do" style="padding-top:56px;">
+  <div style="text-align:center;max-width:640px;margin:0 auto 40px;">
+    <h2 style="font-size:28px;">What Iroli does</h2>
+    <p class="page-sub">One place to figure out who you are, what fits you, and the subjects and steps to get there — never a prediction, always a starting point.</p>
+  </div>
+  <div class="grid grid-3" style="gap:18px;">
+    <div class="card feature-card">
+      <div class="ico"><svg viewBox="0 0 24 24" width="22" height="22" stroke="var(--link)" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-2 6-6 2 2-6 6-2z"/></svg></div>
+      <h3>Discover your fit</h3>
+      <p class="page-sub">A quick interest and strengths assessment matched against 77 real careers across 15 fields — blending your interests, strengths, subjects and marks, never marks alone.</p>
     </div>
-    <picture class="hero-photo">
-      <source type="image/webp" media="(max-width:860px)" srcset="assets/hero-photo-960.webp">
-      <img src="assets/hero-photo.webp" width="1672" height="1151" fetchpriority="high" alt="Two learners in school blazers sit with a nurse, an engineer and a businesswoman">
-    </picture>
-  </section>
-
-  <section class="section result-section" aria-labelledby="result-title">
-    <div class="result-layout">
-      <div class="result-copy">
-        <h2 id="result-title">What a quiz result looks like</h2>
-        <p class="page-sub">A learner who enjoys solving problems and analysing data might see these two career directions.</p>
-      </div>
-      <div class="grid grid-2 result-cards">
-        <article class="card result-card">
-          <h3>Geography, Environment and Conservation</h3>
-          <p class="page-sub">Study landscapes and ecosystems, and help protect them.</p>
-          <ul class="pill-list" aria-label="Example careers" role="list">
-            <li class="tag">Environmental Scientist</li>
-            <li class="tag">Conservation Officer</li>
-            <li class="tag">GIS Specialist</li>
-          </ul>
-        </article>
-        <article class="card result-card">
-          <h3>Science and Research</h3>
-          <p class="page-sub">Investigate how the natural and physical world works.</p>
-          <ul class="pill-list" aria-label="Example careers" role="list">
-            <li class="tag">Geologist</li>
-            <li class="tag">Biotechnologist</li>
-          </ul>
-        </article>
-      </div>
-      <a class="text-link" href="sample-report.html">View a sample full learner report</a>
+    <div class="card feature-card">
+      <div class="ico"><svg viewBox="0 0 24 24" width="22" height="22" stroke="var(--link)" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="var(--indigo)" stroke="none"/></svg></div>
+      <h3>Choose the right subjects</h3>
+      <p class="page-sub">A Grade 9 Subject Choice Assessment that matches Grade 10 subjects to what you enjoy, how you work and how you're performing — and flags it clearly if the subjects you're leaning toward don't support the careers you're excited about.</p>
     </div>
-  </section>
-
-  <section class="section" id="what-we-do" aria-labelledby="grade-title">
-    <h2 id="grade-title">Find the next step for your grade</h2>
-    <div class="grid grid-2">
-      <article class="card grade-card">
-        <h3>Grade 9 · Choose your Grade 10 subjects</h3>
-        <p class="page-sub">Use your interests, strengths and marks to see which subject combinations fit you and which career options they keep open.</p>
-      </article>
-      <article class="card grade-card">
-        <h3>Grades 10–12 · Explore careers and study options</h3>
-        <p class="page-sub">Explore 77 careers, calculate your Admission Point Score (APS) and check university entry requirements as you plan your next step.</p>
-      </article>
+    <div class="card feature-card">
+      <div class="ico"><svg viewBox="0 0 24 24" width="22" height="22" stroke="var(--link)" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M19 19l-4-4"/></svg></div>
+      <h3>Explore real careers</h3>
+      <p class="page-sub">Browse every career with real degree programmes, APS scores and entry requirements from an actual national course-requirements dataset, plus a built-in APS calculator.</p>
     </div>
-  </section>
-
-  <section class="section" aria-labelledby="how-title">
-    <h2 id="how-title">How it works</h2>
-    <ol class="grid grid-3 step-list" role="list">
-      <li><span class="step-num" aria-hidden="true">1</span><div><h3>Take the free quiz</h3><p class="page-sub">Answer four questions and see your result without creating an account.</p></div></li>
-      <li><span class="step-num" aria-hidden="true">2</span><div><h3>Unlock the full assessments</h3><p class="page-sub">Create an account and use your school’s class code or an individual licence.</p></div></li>
-      <li><span class="step-num" aria-hidden="true">3</span><div><h3>Get your learner report</h3><p class="page-sub">See career matches, subject guidance and next steps you can discuss with a parent or teacher.</p></div></li>
-    </ol>
-  </section>
-
-  <section class="section" id="schools" aria-labelledby="school-title">
-    <div class="school-panel">
-      <div>
-        <h2 id="school-title">Iroli for schools</h2>
-        <p class="page-sub">Give learners a class code to join. Use the Grade 9 dashboard to track assessment progress, see which pathways interest your class and identify learners who may need a follow-up conversation.</p>
-      </div>
-      <div class="school-actions">
-        <a class="btn btn-primary" href="mailto:info@iroli.co.za?subject=Iroli%20school%20enquiry">Enquire for your school</a>
-        <a class="text-link" href="pricing.html">View pricing</a>
-      </div>
+    <div class="card feature-card">
+      <div class="ico"><svg viewBox="0 0 24 24" width="22" height="22" stroke="var(--link)" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M11 20V4M18 20v-7"/><path d="M2.5 20h19"/></svg></div>
+      <h3>Your full report</h3>
+      <p class="page-sub">One personalised report — your personality type, best-suited careers, Grade 10 subject recommendations and next steps — that you can print or save as a PDF to talk through with a parent or teacher.</p>
     </div>
-  </section>
-
-  <section class="section" aria-labelledby="closing-title">
-    <div class="cta-band">
-      <h2 id="closing-title">What could your interests lead to?</h2>
-      <a href="app.html?start=quiz" class="btn btn-primary">Start the free quiz</a>
+    <div class="card feature-card">
+      <div class="ico"><svg viewBox="0 0 24 24" width="22" height="22" stroke="var(--link)" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M2.5 19c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5"/><circle cx="17" cy="8" r="2.4"/><path d="M15.5 13.6c2.7.5 4.5 2.4 4.5 5.4"/></svg></div>
+      <h3>Built for schools</h3>
+      <p class="page-sub">Class codes and seat tracking, a Grade 9 cohort dashboard showing pathway trends and who needs guidance, and admin roles scoped to a teacher's own class or the whole institute.</p>
     </div>
-  </section>
-</main>
+    <div class="card feature-card">
+      <div class="ico"><svg viewBox="0 0 24 24" width="22" height="22" stroke="var(--link)" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5.2c0 4.6-3 8.2-7 9.8-4-1.6-7-5.2-7-9.8V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg></div>
+      <h3>Honest, never final</h3>
+      <p class="page-sub">Every result is framed as "worth exploring", never "you can't become this" — a starting point for a conversation with a teacher or parent, not a verdict on your future.</p>
+    </div>
+  </div>
+</section>
 
-<footer class="land-footer">
+<section class="section" style="padding-top:0;">
+  <div class="card" style="padding:36px;">
+    <h2 style="font-size:24px;text-align:center;margin-bottom:28px;">How it works</h2>
+    <div class="grid grid-3" style="gap:24px;">
+      <div style="display:flex;gap:14px;"><div class="step-num">1</div><div><h4 style="margin-bottom:4px;">Try the quick start</h4><p class="page-sub" style="margin:0;">Answer 4 quick questions for a first look at careers worth exploring — no account needed.</p></div></div>
+      <div style="display:flex;gap:14px;"><div class="step-num">2</div><div><h4 style="margin-bottom:4px;">Activate and take the assessments</h4><p class="page-sub" style="margin:0;">Create your account, then use your school’s class code (or an individual licence) to take the personality assessment and the Grade 9 subject-choice assessment, using your latest marks.</p></div></div>
+      <div style="display:flex;gap:14px;"><div class="step-num">3</div><div><h4 style="margin-bottom:4px;">Get your report</h4><p class="page-sub" style="margin:0;">See your personality type, best-suited careers and Grade 10 subject recommendations — ready to print or share.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0;">
+  <div class="cta-band">
+    <h2 style="font-size:26px;">Ready to find your path?</h2>
+    <p style="max-width:480px;margin:0 auto 20px;">Start with 4 quick questions — no account needed. Your school’s class code unlocks the full assessments and your report.</p>
+    <a href="app.html" class="btn btn-primary">Get Started</a>
+  </div>
+</section>
+
+<div class="land-footer">
   <div class="land-footer-inner">
     <img src="assets/logo-mark.png" alt="Iroli" width="28" height="28"/>
-    <nav aria-label="Footer">
+    <div style="display:flex;gap:18px;flex-wrap:wrap;font-size:13.5px;">
       <a href="pricing.html">Pricing</a>
       <a href="privacy.html">Privacy Notice</a>
       <a href="mailto:info@iroli.co.za">Contact</a>
-      <a href="app.html?start=signin">Log In</a>
-    </nav>
+      <a href="app.html">Log In</a>
+    </div>
   </div>
-</footer>
+</div>
 
 </body>
 </html>

@@ -24,11 +24,6 @@ function writeMiniAssessment(data){
 function clearMiniAssessment(){
   try{ localStorage.removeItem(MINI_LS_KEY); }catch(e){}
 }
-function miniDraftFromSaved(saved, firstStep){
-  return saved && saved.answers
-    ? { step:'results', answers:saved.answers }
-    : { step:firstStep, answers:{interest:null,strength:null,motivation:null,activity:null} };
-}
 
 // The 4 questions, in order. Reuses existing taxonomies as the answer
 // options wherever one already exists (RIASEC, STRENGTH_DOMAINS) rather
