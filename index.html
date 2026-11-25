@@ -118,6 +118,13 @@
   /* ---------- After the hero: sections alternate centre / left / right, one idea each ---------- */
   /* After the hero the page is plain white (the dark-theme surface in dark mode): no panels, just space. */
   body{background:var(--surface);}
+  /* A soft hairline between sections: fades out at both ends, so it marks a new section without boxing it in. */
+  .section{position:relative;}
+  .section + .section::before{content:"";position:absolute;top:0;left:20px;right:20px;height:1px;
+    background:linear-gradient(90deg,transparent,var(--t-line) 12%,var(--t-line) 88%,transparent);}
+  .section + .section::after{content:"";position:absolute;top:-2px;left:50%;width:48px;height:5px;border-radius:5px;transform:translateX(-50%);
+    background:linear-gradient(90deg,#F5BBD3,#7CC8F8);}
+  .section.cta-section::before,.section.cta-section::after{display:none;}
   .eyebrow{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--on-pink);background:var(--t-pink);padding:4px 11px;border-radius:999px;margin-bottom:14px;}
   .sec-head{max-width:640px;margin:0 auto 44px;text-align:center;}
   .sec-title{font-size:32px;line-height:1.2;letter-spacing:-.01em;margin:0 0 12px;}
@@ -470,7 +477,7 @@
   </div>
 </section>
 
-<section class="section" style="padding-top:24px;">
+<section class="section cta-section" style="padding-top:24px;">
   <div class="cta-band" data-reveal>
     <h2 style="font-size:26px;">Ready to find your path?</h2>
     <p style="max-width:480px;margin:0 auto 20px;">Start with the free 4-question quiz, no account needed. A school class code or an individual licence unlocks the full assessments and your report.</p>
