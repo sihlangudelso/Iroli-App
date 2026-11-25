@@ -234,7 +234,9 @@ function render(){
   // trick that escapes it for longer than one render cycle. PREVIEW_MODE's
   // synthetic learner already hardcodes licenseStatus:'active', so admin
   // preview is unaffected automatically.
-  if(gate==='activate' && ROUTE!=='activate'){ ROUTE='activate'; }
+  // The welcome screen stays reachable, so a learner who picked a card there
+  // can go back and pick another, or say they are a school learner after all.
+  if(gate==='activate' && ROUTE!=='activate' && ROUTE!=='onboarding'){ ROUTE='activate'; }
   // After Grade 12: the end-of-access screen, or the profile, where a learner
   // repeating Grade 12 corrects their grade.
   if(gate==='finished' && ROUTE!=='finished' && ROUTE!=='profile'){ ROUTE='finished'; }

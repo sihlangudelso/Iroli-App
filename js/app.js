@@ -35,6 +35,9 @@ let MINI_DRAFT = null;
 // signed-out view stays on the sign-in card (AUTH_GATE_PINNED) instead of
 // falling back to a saved quiz result when the auth listener fires again.
 let AUTH_LINK_MODE = null;
+// The welcome-screen card a not-yet-activated learner picked (a route, e.g.
+// 'matches'): the activation screen names it, and joining a class opens it.
+let ACTIVATE_WANTED = null;
 let AUTH_GATE_PINNED = false;
 let AUTH_READY = false;
 let learnerChannel = null;

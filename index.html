@@ -47,7 +47,8 @@
       "email": "info@iroli.co.za",
       "areaServed": "ZA",
       "description": "Career guidance and Grade 10 subject choice for South African Grade 9–12 learners and schools."
-    }
+    },
+    {"@type": "FAQPage", "@id": "https://www.iroli.co.za/#faq", "mainEntity": [{"@type": "Question", "name": "Is Iroli free?", "acceptedAnswer": {"@type": "Answer", "text": "The 4-question quiz is free and needs no account. The full assessments and report need a licence: a school class code, or an individual licence for a once-off R300 that lasts until the end of Grade 12."}}, {"@type": "Question", "name": "What does a school pay?", "acceptedAnswer": {"@type": "Answer", "text": "R300 once-off per learner, covering them until the end of Grade 12, with class codes and the teacher dashboard included. There is no payment in the app: we invoice the school, and a trial licence is available while that is arranged."}}, {"@type": "Question", "name": "Who can see my results?", "acceptedAnswer": {"@type": "Answer", "text": "You can always see your own. Teachers see only the learners in the classes they manage, and the Iroli team who run the platform can see learner records to support schools. No other learner can see your data, and it is never sold or used for advertising."}}, {"@type": "Question", "name": "Does it work on a phone?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Iroli runs in the browser on any phone, tablet or computer, with nothing to install. Your report downloads as a PDF."}}, {"@type": "Question", "name": "Which grades is it for?", "acceptedAnswer": {"@type": "Answer", "text": "Grades 9 to 12. Grade 9 learners also get the Subject Choice Assessment for choosing Grade 10 subjects. If you're not at school, you can still use Iroli to explore careers."}}]}
   ]
 }
 </script>
@@ -143,6 +144,23 @@
   .dm-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:12.5px;}
   .dm-row span:last-child{color:var(--on-amber);background:var(--t-amber);border-radius:8px;padding:1px 8px;font-size:11.5px;font-weight:600;align-self:center;text-align:right;}
   @media (max-width:900px){ .schools{grid-template-columns:1fr;} }
+  .privacy-line{display:flex;gap:10px;align-items:flex-start;margin:18px 0 0;font-size:13px;color:var(--muted);line-height:1.5;}
+  .privacy-line svg{flex-shrink:0;margin-top:1px;}
+  .privacy-line a{color:var(--link);font-weight:600;}
+  /* For parents: one band between the learner cards and the schools section. */
+  .parents{display:flex;gap:18px 28px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:26px 28px;background:var(--t-blue);border:1px solid var(--info-line);border-radius:var(--radius-lg);}
+  .parents h2{font-size:20px;margin:0 0 6px;color:var(--ink);}
+  .parents p{margin:0;max-width:640px;color:var(--ink);font-size:14.5px;line-height:1.55;}
+  /* FAQ: native <details>, so it opens and closes with no script and works with a keyboard. */
+  .faq{max-width:760px;margin:0 auto;}
+  .faq details{border-bottom:1px solid var(--line);}
+  .faq summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px 2px;font-family:var(--font-head);font-weight:700;font-size:16px;color:var(--ink);}
+  .faq summary::-webkit-details-marker{display:none;}
+  .faq summary::after{content:"+";font-size:22px;font-weight:400;color:var(--link);line-height:1;transition:transform .2s ease;}
+  .faq details[open] summary::after{transform:rotate(45deg);}
+  .faq summary:focus-visible{outline:2px solid var(--link);outline-offset:2px;border-radius:6px;}
+  .faq details p{margin:0 2px 16px;color:var(--muted);font-size:14.5px;line-height:1.6;}
+  .faq details p a{color:var(--link);font-weight:600;}
   @media (max-width:420px){ .dm-bar{grid-template-columns:92px 1fr 22px;} }
   @media (max-width:1280px){ .hero h1{font-size:42px;} .hero-copy{max-width:440px;} }
   @media (max-width:1140px){
@@ -284,6 +302,16 @@
   <p class="honest-note" data-reveal>Every result is framed as “worth exploring”, never “you can't become this”: a starting point for a conversation, not a verdict on your future.</p>
 </section>
 
+<section class="section" id="parents" style="padding-top:0;">
+  <div class="parents" data-reveal>
+    <div>
+      <h2>For parents and guardians</h2>
+      <p>The full report is written to be talked through together at home: your child's interests, best-fit careers, subject advice and next steps, ready to print or save as a PDF. If their school doesn't use Iroli, an individual licence is a once-off R300 and lasts until the end of Grade 12.</p>
+    </div>
+    <a href="pricing.html" class="btn btn-ghost">See pricing</a>
+  </div>
+</section>
+
 <section class="section" id="schools" style="padding-top:0;scroll-margin-top:16px;">
   <div class="schools">
     <div data-reveal>
@@ -293,12 +321,13 @@
       <ol class="schools-steps">
         <li><div class="step-num">1</div><div><h4>Share a class code</h4><p class="page-sub">Learners join your class with one code. Seats are tracked for you.</p></div></li>
         <li><div class="step-num">2</div><div><h4>Learners take the assessments</h4><p class="page-sub">In class or at home, on a phone or a computer.</p></div></li>
-        <li><div class="step-num">3</div><div><h4>Open the Grade 9 dashboard</h4><p class="page-sub">Pathway trends, subject demand and the learners requiring guidance, with a class summary you can download. Teachers see their own class; the school sees everyone.</p></div></li>
+        <li><div class="step-num">3</div><div><h4>Open the Grade 9 dashboard</h4><p class="page-sub">Pathway trends, subject demand and the learners requiring guidance, with a class summary you can download. Each teacher sees only the classes they manage.</p></div></li>
       </ol>
       <div class="schools-actions">
         <a href="mailto:info@iroli.co.za?subject=Iroli%20school%20enquiry" class="btn btn-primary">Make a school enquiry</a>
         <a href="pricing.html" class="btn btn-ghost">See school pricing</a>
       </div>
+      <p class="privacy-line"><svg viewBox="0 0 24 24" width="18" height="18" stroke="var(--link)" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>Learners see only their own results, and a teacher sees only the classes they manage. Learner data is never sold or used for advertising. <a href="privacy.html">Read our Privacy Notice</a></span></p>
     </div>
     <div class="dash-mock" data-reveal style="--d:1;" role="img" aria-label="Example Grade 9 dashboard for a made-up class: 32 learners, 28 assessed, 5 requiring guidance, with the top career pathways and two learners flagged for a conversation.">
       <div class="dm-top"><b>Grade 9 Dashboard</b><span>Example class · 9B</span></div>
@@ -327,6 +356,32 @@
       <div style="display:flex;gap:14px;"><div class="step-num">2</div><div><h4 style="margin-bottom:4px;">Activate and take the assessments</h4><p class="page-sub" style="margin:0;">Create an account, then unlock the full assessments with a school class code or an individual licence: the personality assessment and, in Grade 9, the subject-choice assessment.</p></div></div>
       <div style="display:flex;gap:14px;"><div class="step-num">3</div><div><h4 style="margin-bottom:4px;">Get your report</h4><p class="page-sub" style="margin:0;">See your personality type, best-suited careers and Grade 10 subject recommendations — ready to print or share.</p></div></div>
     </div>
+  </div>
+</section>
+
+<section class="section" id="faq" style="padding-top:0;">
+  <h2 data-reveal style="font-size:26px;text-align:center;margin-bottom:12px;">Questions people ask</h2>
+  <div class="faq" data-reveal>
+    <details>
+      <summary>Is Iroli free?</summary>
+      <p>The 4-question quiz is free and needs no account. The full assessments and report need a licence: a school class code, or an individual licence for a once-off R300 that lasts until the end of Grade 12. <a href="pricing.html">See pricing</a></p>
+    </details>
+    <details>
+      <summary>What does a school pay?</summary>
+      <p>R300 once-off per learner, covering them until the end of Grade 12, with class codes and the teacher dashboard included. There is no payment in the app: we invoice the school, and a trial licence is available while that is arranged. <a href="mailto:info@iroli.co.za?subject=Iroli%20school%20enquiry">Make a school enquiry</a></p>
+    </details>
+    <details>
+      <summary>Who can see my results?</summary>
+      <p>You can always see your own. Teachers see only the learners in the classes they manage, and the Iroli team who run the platform can see learner records to support schools. No other learner can see your data, and it is never sold or used for advertising. <a href="privacy.html">Read our Privacy Notice</a></p>
+    </details>
+    <details>
+      <summary>Does it work on a phone?</summary>
+      <p>Yes. Iroli runs in the browser on any phone, tablet or computer, with nothing to install. Your report downloads as a PDF.</p>
+    </details>
+    <details>
+      <summary>Which grades is it for?</summary>
+      <p>Grades 9 to 12. Grade 9 learners also get the Subject Choice Assessment for choosing Grade 10 subjects. If you're not at school, you can still use Iroli to explore careers.</p>
+    </details>
   </div>
 </section>
 

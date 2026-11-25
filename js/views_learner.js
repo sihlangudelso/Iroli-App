@@ -1003,13 +1003,17 @@ function viewAccount(){
 // code itself is the payment proof, see join_class_by_code()) or
 // individual activation via the super admin, matching pricing.html's own
 // "Contact us to activate" pattern exactly.
+// What each welcome-screen card opens, for the activation screen's wording.
+const ACTIVATE_WANTED_LABELS = { assessment:'the Personality Assessment', matches:'Career Matching', explore:'Explore Careers', marks:'the APS Calculator' };
 function viewActivateAccount(){
   const firstName = (ME.name||'there').split(' ')[0];
+  const wanted = ACTIVATE_WANTED && ACTIVATE_WANTED_LABELS[ACTIVATE_WANTED];
   return `
+  <button class="btn btn-ghost btn-sm" style="margin-bottom:12px;" onclick="navigate('onboarding')">${icon('chevron')} Back to the start</button>
   ${pageHeadHTML('Activate your account')}
   <div class="card" style="margin-bottom:20px;">
     <h3>Hi ${esc(firstName)}, you're almost ready</h3>
-    <p class="page-sub" style="margin:0;">Access to the assessments, career matches and your full report needs an active licence first. There are two ways to get activated:</p>
+    <p class="page-sub" style="margin:0;">${wanted ? 'To open ' + esc(wanted) + ', activate your account first.' : 'Access to the assessments, career matches and your full report needs an active licence first.'} There are two ways to get activated:</p>
   </div>
   <div class="grid grid-2">
     <div class="card">
