@@ -101,7 +101,7 @@
   .hero-note{font-size:13px;color:#4A3F66;margin:0;}
   /* Example quick-quiz result, overlapping the bottom of the hero. A real result from the app's own scoring
      (Investigative & Analytical / Quantitative and Analytical / Earning a good, stable income / Analysing data). */
-  .hero-example{position:relative;z-index:3;max-width:900px;margin:-56px auto 0;padding:22px 24px 18px;
+  .hero-example{position:relative;z-index:3;max-width:900px;margin:44px auto 0;padding:22px 24px 18px;
     background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-soft);}
   .ex-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px 16px;flex-wrap:wrap;margin-bottom:14px;}
   .ex-label{font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--on-pink);background:var(--t-pink);padding:4px 10px;border-radius:999px;}
@@ -114,11 +114,10 @@
   .ex-dir p{font-size:13.5px;color:var(--muted);margin:0 0 10px;line-height:1.5;}
   .ex-foot{display:flex;justify-content:space-between;align-items:center;gap:10px 16px;flex-wrap:wrap;margin-top:14px;font-size:13px;color:var(--muted);}
   .ex-foot a{font-weight:600;color:var(--link);}
-  @media (max-width:640px){ .ex-dirs{grid-template-columns:1fr;} .hero-example{margin:-44px 12px 0;padding:18px 16px 16px;} }
+  @media (max-width:640px){ .ex-dirs{grid-template-columns:1fr;} .hero-example{margin:28px 12px 0;padding:18px 16px 16px;} }
   /* ---------- After the hero: sections alternate centre / left / right, one idea each ---------- */
-  /* Each section after the hero sits in its own bordered panel. */
-  .section.panel{width:calc(100% - 40px);max-width:1180px;margin:28px auto;padding:64px 56px;background:var(--surface);border:1.5px solid var(--t-line);border-radius:28px;}
-  .section.panel:first-of-type{margin-top:48px;}
+  /* After the hero the page is plain white (the dark-theme surface in dark mode): no panels, just space. */
+  body{background:var(--surface);}
   .eyebrow{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--on-pink);background:var(--t-pink);padding:4px 11px;border-radius:999px;margin-bottom:14px;}
   .sec-head{max-width:640px;margin:0 auto 44px;text-align:center;}
   .sec-title{font-size:32px;line-height:1.2;letter-spacing:-.01em;margin:0 0 12px;}
@@ -132,8 +131,11 @@
   .ticks li::before{content:"\2713";display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;flex-shrink:0;background:var(--t-blue);color:var(--on-blue);font-size:12px;font-weight:800;margin-top:1px;}
   .fine{font-size:13.5px;color:var(--muted);margin:0 0 22px;line-height:1.55;}
   /* The quick-quiz counters, under the example result. */
-  .stats-row{display:flex;justify-content:center;gap:12px 64px;flex-wrap:wrap;max-width:900px;margin:40px auto 0;padding:0 20px;text-align:center;}
-  .stats-row b{display:block;font-family:var(--font-head);font-size:36px;font-weight:800;color:var(--link);line-height:1.1;font-variant-numeric:tabular-nums;}
+  .stats-row{position:relative;z-index:3;max-width:760px;margin:-48px auto 0;display:grid;grid-template-columns:repeat(3,1fr);text-align:center;
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-md);box-shadow:var(--shadow-soft);}
+  .stats-row > div{padding:18px 20px;}
+  .stats-row > div + div{border-left:1px solid var(--line);}
+  .stats-row b{display:block;font-family:var(--font-head);font-size:32px;font-weight:800;color:var(--link);line-height:1.1;font-variant-numeric:tabular-nums;}
   .stats-row span{font-size:13.5px;color:var(--muted);}
   /* Learners (centre): three decisions by grade. */
   .decision-card{padding:26px 24px;}
@@ -200,7 +202,6 @@
   .faq details p a{color:var(--link);font-weight:600;}
   @media (max-width:900px){
     .section{padding:64px 20px;}
-    .section.panel{width:calc(100% - 24px);margin:16px auto;padding:44px 20px;border-radius:22px;}
     .sec-title{font-size:26px;}
     .split,.faq-split{grid-template-columns:1fr;gap:36px;}
     .split.flip .split-text{order:0;}
@@ -209,7 +210,7 @@
     .steps-row{grid-template-columns:1fr;gap:28px;}
     .steps-row::before{display:none;}
   }
-  @media (max-width:480px){ .stats-row{gap:8px 28px;margin-top:28px;} .stats-row b{font-size:28px;} }
+  @media (max-width:640px){ .stats-row{margin:-40px 12px 0;} .stats-row > div{padding:14px 6px;} .stats-row b{font-size:24px;} .stats-row span{font-size:11.5px;} }
   @media (max-width:420px){ .dm-bar{grid-template-columns:92px 1fr 22px;} }
   @media (max-width:1280px){ .hero h1{font-size:42px;} .hero-copy{max-width:440px;} }
   @media (max-width:1140px){
@@ -242,7 +243,7 @@
   .motion .hero-photo img{ animation:landSettle 1.1s cubic-bezier(.2,.7,.2,1) both; }
   .motion .hero h1 .mark::after{ transform-origin:left center; animation:landDraw .7s cubic-bezier(.2,.7,.2,1) .55s both; }
   .motion .hero-eyebrow i{ animation:landPulse 2.4s ease-out 1s 3; }
-  .motion .hero-example{ animation:landUp .6s cubic-bezier(.2,.7,.2,1) .35s both; }
+  .motion .hero-example{ animation:landUp .6s cubic-bezier(.2,.7,.2,1) .5s both; }
   /* Scroll reveal, both ways (see the script at the end): scrolling down, blocks rise up into place; scrolling
      back up, the ones above drop down into place. Out of view they reset, so it plays every time. */
   .motion [data-reveal]{ opacity:0; transform:translateY(28px); transition:opacity .65s cubic-bezier(.2,.7,.2,1), transform .65s cubic-bezier(.2,.7,.2,1), box-shadow .2s ease; }
@@ -291,6 +292,11 @@
       <p class="hero-note">A school class code or an individual licence unlocks the full assessments and your report.</p>
     </div>
   </div>
+  <div class="stats-row" data-reveal data-stats>
+    <div><b data-count="77" aria-hidden="true">77</b><span class="sr-only">77 </span><span>real careers</span></div>
+    <div><b data-count="15" aria-hidden="true">15</b><span class="sr-only">15 </span><span>career fields</span></div>
+    <div><b data-count="4" aria-hidden="true">4</b><span class="sr-only">4 </span><span>questions to start</span></div>
+  </div>
   <section class="hero-example" aria-labelledby="ex-title">
     <div class="ex-head">
       <span class="ex-label" id="ex-title">Example quick-quiz result</span>
@@ -315,14 +321,9 @@
       <a href="assets/sample-report.pdf" target="_blank" rel="noopener">See a sample full report (PDF) →</a>
     </div>
   </section>
-  <div class="stats-row" data-reveal data-stats>
-    <div><b data-count="77" aria-hidden="true">77</b><span class="sr-only">77 </span><span>real careers</span></div>
-    <div><b data-count="15" aria-hidden="true">15</b><span class="sr-only">15 </span><span>career fields</span></div>
-    <div><b data-count="4" aria-hidden="true">4</b><span class="sr-only">4 </span><span>questions to start</span></div>
-  </div>
 </header>
 
-<section class="section panel" id="what-we-do">
+<section class="section" id="what-we-do">
   <div class="sec-head" data-reveal>
     <span class="eyebrow">For learners</span>
     <h2 class="sec-title">Help with the decision in front of you</h2>
@@ -360,7 +361,7 @@
   <p class="honest-note" data-reveal>Every result is framed as “worth exploring”, never “you can't become this”: a starting point for a conversation, not a verdict on your future.</p>
 </section>
 
-<section class="section panel" id="parents">
+<section class="section" id="parents">
   <div class="split">
     <div class="split-text" data-reveal>
       <span class="eyebrow">For parents and guardians</span>
@@ -389,7 +390,7 @@
   </div>
 </section>
 
-<section class="section panel" id="schools" style="scroll-margin-top:8px;">
+<section class="section" id="schools" style="scroll-margin-top:8px;">
   <div class="split flip">
     <div class="split-text" data-reveal style="--d:1;">
       <span class="eyebrow">For schools</span>
@@ -425,7 +426,7 @@
   </div>
 </section>
 
-<section class="section panel" id="how-it-works">
+<section class="section" id="how-it-works">
   <div class="sec-head" data-reveal>
     <span class="eyebrow">How it works</span>
     <h2 class="sec-title">From a quick quiz to a full report</h2>
@@ -437,7 +438,7 @@
   </div>
 </section>
 
-<section class="section panel" id="faq">
+<section class="section" id="faq">
   <div class="faq-split">
     <div class="split-text" data-reveal>
       <span class="eyebrow">FAQ</span>
