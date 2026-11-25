@@ -58,12 +58,12 @@
   .section{max-width:1180px;margin:0 auto;padding:88px 20px;}
   .feature-card{border-top:4px solid var(--indigo);height:100%;}
   .feature-card .ico{width:40px;height:40px;border-radius:12px;background:var(--t-violet);display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
-  .step-num{width:30px;height:30px;border-radius:50%;background:var(--brand-grad);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-family:var(--font-head);font-size:14px;flex-shrink:0;}
-  /* Closing call-to-action on the pink -> yellow -> orange brand gradient: fixed dark text in every theme. */
+  .step-num{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#F5BBD3,#7CC8F8);color:#0B2545;display:flex;align-items:center;justify-content:center;font-weight:800;font-family:var(--font-head);font-size:14px;flex-shrink:0;}
+  /* Closing call-to-action on a pink gradient: fixed dark text in every theme. */
   .cta-band{background:linear-gradient(110deg,#F6BDD3 0%,#F3A9CF 65%,#F7CADD 100%);border-radius:var(--radius-lg);padding:48px 32px;text-align:center;color:#0B2545;}
   .cta-band h1,.cta-band h2{color:#0B2545;}
   .cta-band p{color:#423345;}
-  .feature-card:nth-child(3n+1){border-top-color:var(--hero-yellow);}
+  .feature-card:nth-child(3n+1){border-top-color:var(--hero-pink);}
   .feature-card:nth-child(3n+2){border-top-color:var(--hero-blue);}
   /* Top bar + hero: full-bleed, edge to edge, in the photo's own light-pink studio backdrop (#F5BBD3), so the bar,
      the panel and the photo read as one piece with no seam. Fixed colours in every theme; text is dark ink
@@ -108,7 +108,7 @@
   .ex-head p{margin:0;font-size:13.5px;color:var(--muted);}
   .ex-dirs{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
   .ex-dir{border:1px solid var(--line);border-radius:var(--radius-md);padding:14px 16px;border-top:4px solid var(--hero-blue);}
-  .ex-dir + .ex-dir{border-top-color:var(--hero-yellow);}
+  .ex-dir + .ex-dir{border-top-color:var(--hero-pink);}
   .ex-dir small{display:block;font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--muted);}
   .ex-dir h3{font-size:17px;margin:3px 0 6px;}
   .ex-dir p{font-size:13.5px;color:var(--muted);margin:0 0 10px;line-height:1.5;}
@@ -116,6 +116,9 @@
   .ex-foot a{font-weight:600;color:var(--link);}
   @media (max-width:640px){ .ex-dirs{grid-template-columns:1fr;} .hero-example{margin:-44px 12px 0;padding:18px 16px 16px;} }
   /* ---------- After the hero: sections alternate centre / left / right, one idea each ---------- */
+  /* Each section after the hero sits in its own bordered panel. */
+  .section.panel{width:calc(100% - 40px);max-width:1180px;margin:28px auto;padding:64px 56px;background:var(--surface);border:1.5px solid var(--t-line);border-radius:28px;}
+  .section.panel:first-of-type{margin-top:48px;}
   .eyebrow{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--on-pink);background:var(--t-pink);padding:4px 11px;border-radius:999px;margin-bottom:14px;}
   .sec-head{max-width:640px;margin:0 auto 44px;text-align:center;}
   .sec-title{font-size:32px;line-height:1.2;letter-spacing:-.01em;margin:0 0 12px;}
@@ -165,14 +168,14 @@
   .dm-tiles div{background:var(--chip-bg);border-radius:12px;padding:10px;}
   .dm-tiles b{display:block;font-family:var(--font-head);font-size:20px;line-height:1.1;}
   .dm-tiles span{font-size:11.5px;color:var(--muted);}
-  .dm-tiles .flag{background:var(--t-amber);}
-  .dm-tiles .flag b,.dm-tiles .flag span{color:var(--on-amber);}
+  .dm-tiles .flag{background:var(--t-pink);}
+  .dm-tiles .flag b,.dm-tiles .flag span{color:var(--on-pink);}
   .dm-sub{font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--muted);margin:0 0 6px;}
   .dm-bar{display:grid;grid-template-columns:118px 1fr 26px;gap:8px;align-items:center;margin-bottom:6px;font-size:12px;}
   .dm-bar i{display:block;height:8px;border-radius:8px;background:var(--hero-blue);}
   .dm-bar em{font-style:normal;color:var(--muted);text-align:right;}
   .dm-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:12.5px;}
-  .dm-row span:last-child{color:var(--on-amber);background:var(--t-amber);border-radius:8px;padding:1px 8px;font-size:11.5px;font-weight:600;align-self:center;text-align:right;}
+  .dm-row span:last-child{color:var(--on-pink);background:var(--t-pink);border-radius:8px;padding:1px 8px;font-size:11.5px;font-weight:600;align-self:center;text-align:right;}
   .privacy-line{display:flex;gap:10px;align-items:flex-start;margin:20px 0 0;font-size:13px;color:var(--muted);line-height:1.5;}
   .privacy-line svg{flex-shrink:0;margin-top:1px;}
   .privacy-line a{color:var(--link);font-weight:600;}
@@ -180,7 +183,7 @@
   .steps-row{display:grid;grid-template-columns:repeat(3,1fr);gap:36px;position:relative;}
   .steps-row::before{content:"";position:absolute;top:21px;left:17%;right:17%;height:2px;background:var(--line);}
   .step{text-align:center;position:relative;}
-  .step .step-num{width:44px;height:44px;font-size:17px;margin:0 auto 16px;box-shadow:0 0 0 6px var(--bg);}
+  .step .step-num{width:44px;height:44px;font-size:17px;margin:0 auto 16px;box-shadow:0 0 0 6px var(--surface);}
   .step h4{margin:0 0 6px;}
   .step p{margin:0 auto;max-width:300px;}
   /* FAQ (heading left, questions right): native <details>, so it opens and closes with no script and works with a keyboard. */
@@ -197,6 +200,7 @@
   .faq details p a{color:var(--link);font-weight:600;}
   @media (max-width:900px){
     .section{padding:64px 20px;}
+    .section.panel{width:calc(100% - 24px);margin:16px auto;padding:44px 20px;border-radius:22px;}
     .sec-title{font-size:26px;}
     .split,.faq-split{grid-template-columns:1fr;gap:36px;}
     .split.flip .split-text{order:0;}
@@ -318,7 +322,7 @@
   </div>
 </header>
 
-<section class="section" id="what-we-do">
+<section class="section panel" id="what-we-do">
   <div class="sec-head" data-reveal>
     <span class="eyebrow">For learners</span>
     <h2 class="sec-title">Help with the decision in front of you</h2>
@@ -356,7 +360,7 @@
   <p class="honest-note" data-reveal>Every result is framed as “worth exploring”, never “you can't become this”: a starting point for a conversation, not a verdict on your future.</p>
 </section>
 
-<section class="section" id="parents">
+<section class="section panel" id="parents">
   <div class="split">
     <div class="split-text" data-reveal>
       <span class="eyebrow">For parents and guardians</span>
@@ -385,7 +389,7 @@
   </div>
 </section>
 
-<section class="section" id="schools" style="scroll-margin-top:8px;">
+<section class="section panel" id="schools" style="scroll-margin-top:8px;">
   <div class="split flip">
     <div class="split-text" data-reveal style="--d:1;">
       <span class="eyebrow">For schools</span>
@@ -421,7 +425,7 @@
   </div>
 </section>
 
-<section class="section" id="how-it-works">
+<section class="section panel" id="how-it-works">
   <div class="sec-head" data-reveal>
     <span class="eyebrow">How it works</span>
     <h2 class="sec-title">From a quick quiz to a full report</h2>
@@ -433,7 +437,7 @@
   </div>
 </section>
 
-<section class="section" id="faq">
+<section class="section panel" id="faq">
   <div class="faq-split">
     <div class="split-text" data-reveal>
       <span class="eyebrow">FAQ</span>
