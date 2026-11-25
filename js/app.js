@@ -412,7 +412,7 @@ async function applyGradeRollover(){
   const r = gradeRollover(LEARNER);
   if(!r) return;
   const ok = await saveLearnerOrRevert(r.changes, { quiet:true });
-  if(ok && r.moved) ROLLOVER_NOTICE = { toGrade: r.toGrade, year: currentSchoolYear() };
+  if(ok && r.moved) ROLLOVER_NOTICE = { toGrade: r.toGrade, year: currentSchoolYear(), prefilled: !!r.prefilled, fromGrade: r.fromGrade };
 }
 
 async function loadClasses(){
@@ -430,7 +430,7 @@ function myClasses(){
 
 async function loadCohort(){
   const { data, error } = await sb.from('learners').select('*');
-  COHORT = error ? [] : (data || []);
+  COHORT = error ? [] : (data || []).map(withCurrentGrade);
 }
 
 // Only loaded for super admins, so Classes & Licences can show who already
@@ -869,6 +869,19 @@ function statedPreferenceFit(learner, career){
   return learner.favourites.includes(career.id) ? 100 : 50;
 }
 
+// How academically ready a learner is for a career, 0-100. Before any marks it is
+// whether they take the subjects the career asks for. Once there are marks, the
+// marks decide -- and a learner in Grades 10-12 also has to take those subjects, so
+// it is the lower of the two. (It used to be the higher one: simply taking Maths
+// scored 100 and hid a 30% mark, so a struggling learner was told they were
+// "already performing well". Grade 9 learners have no FET subjects yet, so for
+// them it is the marks alone.) Shared by the career groups and the pathway
+// readiness, so the Careers page, the report and the dashboard agree.
+function careerReadinessFit(learner, subjectFit, academicFit){
+  if(academicFit == null) return subjectFit;
+  const takesSubjects = !!(learner.subjects && learner.subjects.length);
+  return takesSubjects ? Math.min(subjectFit, academicFit) : academicFit;
+}
 function evaluateCareer(learner, career){
   const riasec = learner.riasec || {};
   const strengths = learner.strengths || {};
@@ -895,7 +908,7 @@ function evaluateCareer(learner, career){
 
   let category = null;
   if(hasAssessment){
-    const best = academicFitRaw==null ? subjectFit : Math.max(subjectFit, academicFitRaw);
+    const best = careerReadinessFit(learner, subjectFit, academicFitRaw);
     if(interestFit>=65 && best>=65) category = 'strong';
     else if(best>=65) category = 'academic';
     else if(interestFit>=65) category = 'interest';
@@ -1015,7 +1028,29 @@ function gradeRollover(l){
   const from = Number(l.gradeYear);
   if(from >= year || grade >= 12) return null;
   const to = Math.min(12, grade + (year - from));
-  return { changes:{ grade: to, gradeYear: from + (to - grade) }, moved:true, fromGrade: grade, toGrade: to };
+  const changes = { grade: to, gradeYear: from + (to - grade) };
+  // Leaving Grade 9: start Grade 10 with the subjects they said they were leaning
+  // toward (if they have no FET subjects yet), so their matches are not scored as
+  // if they took nothing. Home then asks them to confirm them.
+  let prefilled = false;
+  if(grade === 9 && !(l.subjects && l.subjects.length)){
+    const planned = (l.intendedSubjects || []).filter(function(s){ return CORE_ELECTIVES.indexOf(s) !== -1; });
+    if(planned.length){ changes.subjects = planned; prefilled = true; }
+    if(!l.mathType && (l.intendedMathType === 'Mathematics' || l.intendedMathType === 'MathLit')){ changes.mathType = l.intendedMathType; prefilled = true; }
+  }
+  return { changes, moved:true, fromGrade: grade, toGrade: to, prefilled };
+}
+// A learner in Grades 10-12 whose subjects (or Maths choice) are not set yet: their
+// career matches cannot use subjects until they are. Home asks for them.
+function needsFetSubjects(l){
+  return !!l && !l.exploringOnly && Number(l.grade) >= 10 && (!(l.subjects && l.subjects.length) || !l.mathType);
+}
+// The grade a stored learner row is in this year (the same move-up the learner gets
+// when they next sign in). Admin views use this, so last year's Grade 9s who have not
+// signed in since January are not counted as this year's Grade 9s.
+function withCurrentGrade(l){
+  const r = gradeRollover(l);
+  return (r && r.moved) ? Object.assign({}, l, r.changes, { movedUpFrom: r.fromGrade }) : l;
 }
 // The Pathway is for Grade 11 and 12 learners.
 function pathwayGrade(l){ return !!l && !l.exploringOnly && (Number(l.grade) === 11 || Number(l.grade) === 12); }
@@ -1082,7 +1117,7 @@ function facultyAlignmentFit(learner, facultyId){
   // Readiness is left as-is: subjectFit/academicFit carry real signal
   // from a learner's chosen subjects or entered marks independent of
   // whether they've finished the separate interest assessment.
-  const readiness = avg(evals.map(e=>e.academicFit==null ? e.subjectFit : Math.max(e.subjectFit, e.academicFit)));
+  const readiness = avg(evals.map(e=>careerReadinessFit(learner, e.subjectFit, e.academicFit)));
   return { alignment, readiness };
 }
 // The 65 "strong" threshold matches evaluateCareer's own category
@@ -1357,15 +1392,8 @@ function buildSubjectRelevanceTiers(learner){
 // Never fires before the assessment is done -- that's a data-completeness
 // gap, not a guidance one; there's nothing concrete to flag yet.
 function isGuidanceRequired(learner){
-  if(!learner.assessmentCompletedAt) return false;
-  const top = computePathwayMatches(learner)[0];
-  if(!top || top.alignment==null) return false;
-  const conflict = subjectConflictForFaculty(learner, top.faculty.id);
-  if(conflict && conflict.hasConflict) return true;
-  if(top.alignment>=65 && top.readiness!=null && top.readiness<50) return true;
-  // Noting the Grade 10 subjects you lean toward is a Grade 9 task.
-  if(isGrade9Learner(learner) && (!learner.intendedSubjects || !learner.intendedSubjects.length)) return true;
-  return false;
+  // One definition, shared with the dashboard's tile and table (learnerGuidance in views_admin.js).
+  return !!learnerGuidance(learner).action;
 }
 // Personalised, always-actionable "what should I do next" list -- built
 // from the same computed data as the rest of the report, never generic

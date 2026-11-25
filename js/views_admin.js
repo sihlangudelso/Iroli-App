@@ -343,6 +343,58 @@ function adminSCEntry(l){
   ADMIN_SC_CACHE.set(l, entry);
   return entry;
 }
+// ---- One top pathway and one guidance check per learner ----
+// The learner's top pathway is the first career area of their own report, so the
+// dashboard's bars, its guidance table and the learner's report all name the same
+// area. (Before, the bars used the faculty of the single best career and the
+// guidance count ranked faculties by interest alone, so they could disagree.)
+// Learners with no report yet fall back to the interest ranking. Cached per learner
+// row, like the Subject Choice results above.
+const ADMIN_TOP_CACHE = new WeakMap();
+function adminTopPathwayFor(l){
+  if(!l || !l.assessmentCompletedAt) return null;
+  const hit = ADMIN_TOP_CACHE.get(l);
+  if(hit && hit.at === l.updatedAt) return hit.top;
+  let top = null;
+  try{
+    const R = buildLearnerReport(l);
+    const a = R && R.areas && R.areas.ready ? R.areas.list[0] : null;
+    if(a) top = { faculty: a.faculty, status: a.status, alignment: a.alignment, readiness: a.readiness };
+  }catch(e){ console.error('Could not build the report for the dashboard', e); }
+  if(!top){
+    const p = computePathwayMatches(l)[0];
+    if(p && p.alignment != null) top = { faculty: p.faculty, status: null, alignment: p.alignment, readiness: p.readiness };
+  }
+  ADMIN_TOP_CACHE.set(l, { at: l.updatedAt, top });
+  return top;
+}
+// Whether a learner needs a guidance conversation, and why. The overview tile, the
+// guidance table and isGuidanceRequired() all use this, so the count and the table
+// always match.
+function learnerGuidance(l){
+  const top = adminTopPathwayFor(l);
+  const faculty = top ? top.faculty : null;
+  const conflict = faculty ? subjectConflictForFaculty(l, faculty.id) : null;
+  const readiness = faculty ? academicReadinessFor(l, faculty.id) : null;
+  const rec = adminSubjectRecFor(l);
+  const differs = (rec && rec.differs) || [];
+  const hasIntended = !!(l.intendedSubjects && l.intendedSubjects.length);
+  let concern = null;
+  if(readiness && readiness.pct != null && readiness.pct < 50) concern = `${readiness.subject} currently ${markBandLabel(readiness.pct)} (${readiness.pct}%)`;
+  else if(top && (top.status === 'developing' || (top.status == null && top.alignment >= 65 && top.readiness != null && top.readiness < 50))) concern = `Results still developing for ${faculty.name}`;
+  const action = (conflict && conflict.hasConflict) ? 'Discuss subject choice vs. stated career interest'
+    : differs.length ? 'Discuss intended subjects vs. Subject Choice recommendation'
+    : concern ? 'Consider additional academic support'
+    : (top && isGrade9Learner(l) && !hasIntended) ? 'Confirm Grade 10 subject choices'
+    : null;
+  return { top, faculty, conflict, readiness, rec, differs, hasIntended, concern, action };
+}
+// The best-suited career inside a pathway (the "career interest" a teacher sees).
+function topCareerIn(l, facultyId){
+  const all = bestSuitedCareers(l, CAREERS.length);
+  return all.find(m=>m.career.faculty===facultyId) || all[0] || null;
+}
+
 function buildAdminSubjectRec(l, rep){
   if(!rep.ready.personality) return { state:'needsPersonality' };
   const m = rep.mathChoice;
@@ -506,14 +558,9 @@ function buildSchoolDashboardData(classFilter){
   const assessed = rows.filter(l=>l.assessmentCompletedAt);
 
   const enriched = assessed.map(l=>{
-    const top = bestSuitedCareers(l,1)[0];
-    const faculty = top ? facultyById(top.career.faculty) : null;
-    if(!faculty) return null;
-    return {
-      learner: l, top, faculty,
-      readiness: academicReadinessFor(l, faculty.id),
-      conflict: subjectConflictForFaculty(l, faculty.id),
-    };
+    const g = learnerGuidance(l);
+    if(!g.faculty) return null;
+    return { learner: l, top: topCareerIn(l, g.faculty.id), faculty: g.faculty, readiness: g.readiness, conflict: g.conflict, guidance: g };
   }).filter(Boolean);
 
   const pathwayDistribution = pathwayDistributionFrom(enriched, assessed.length);
@@ -522,7 +569,7 @@ function buildSchoolDashboardData(classFilter){
   const combinations = combinationCountsFrom(rows);
   const progress = progressByClassFrom(rows);
   const supportNeeds = supportNeedsFrom(rows);
-  const guidanceRows = guidanceRowsFrom(enriched);
+  const guidanceRows = guidanceRowsFrom(rows);
   const readinessByPathway = readinessCrossTabFrom(enriched);
   const personalityTrends = personalityTrendsFrom(rows);
 
@@ -530,7 +577,7 @@ function buildSchoolDashboardData(classFilter){
     totalLearners: rows.length,
     learnersAssessed: assessed.length,
     completionRate: rows.length ? Math.round(100*assessed.length/rows.length) : 0,
-    guidanceRequired: rows.filter(l=>isGuidanceRequired(l) || recDiffers(l)).length,
+    guidanceRequired: guidanceRows.length,
     conflictCount: enriched.filter(e=>e.conflict && e.conflict.hasConflict).length,
     // Grade 10 planning headline numbers (also kept in snapshots, so a later
     // term can be compared with this one).
@@ -688,29 +735,21 @@ function supportNeedsFrom(rows){
     .sort((a,b)=>(b.count-a.count) || a.subject.localeCompare(b.subject));
 }
 
-function guidanceRowsFrom(enriched){
-  return enriched.map(e=>{
-    const concern = (e.readiness && e.readiness.pct!=null && e.readiness.pct<50)
-      ? `${e.readiness.subject} currently ${markBandLabel(e.readiness.pct)} (${e.readiness.pct}%)` : null;
-    const hasIntended = e.learner.intendedSubjects && e.learner.intendedSubjects.length;
-    const rec = adminSubjectRecFor(e.learner);
-    const differs = (rec && rec.differs) || [];
-    const action = (e.conflict && e.conflict.hasConflict) ? 'Discuss subject choice vs. stated career interest'
-      : differs.length ? 'Discuss intended subjects vs. Subject Choice recommendation'
-      : concern ? 'Consider additional academic support'
-      : !hasIntended ? 'Confirm Grade 10 subject choices'
-      : null;
-    if(!action) return null;
+function guidanceRowsFrom(rows){
+  return rows.map(l=>{
+    const g = learnerGuidance(l);
+    if(!g.action) return null;
+    const top = g.faculty ? topCareerIn(l, g.faculty.id) : null;
     return {
-      learnerId: e.learner.id,
-      learnerName: cohortLearnerName(e.learner.id),
-      pathway: e.faculty.name,
-      interest: e.top.career.name,
-      concern: concern || '—',
-      planned: (e.conflict && e.conflict.hasConflict) ? e.conflict.plannedSubject : (hasIntended ? e.learner.intendedSubjects.join(', ') : 'Not yet specified'),
-      conflict: [(e.conflict && e.conflict.hasConflict) ? e.conflict.reason : null].concat(differs).filter(Boolean).join('; ') || '—',
-      recommended: rec ? adminRecSubjectsLine(rec) : 'Not yet completed',
-      action,
+      learnerId: l.id,
+      learnerName: cohortLearnerName(l.id),
+      pathway: g.faculty ? g.faculty.name : 'Not yet assessed',
+      interest: top ? top.career.name : '—',
+      concern: g.concern || '—',
+      planned: (g.conflict && g.conflict.hasConflict) ? g.conflict.plannedSubject : (g.hasIntended ? l.intendedSubjects.join(', ') : 'Not yet specified'),
+      conflict: [(g.conflict && g.conflict.hasConflict) ? g.conflict.reason : null].concat(g.differs).filter(Boolean).join('; ') || '—',
+      recommended: g.rec ? adminRecSubjectsLine(g.rec) : 'Not yet completed',
+      action: g.action,
     };
   }).filter(Boolean);
 }

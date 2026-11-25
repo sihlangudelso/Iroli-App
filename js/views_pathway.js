@@ -179,7 +179,7 @@ function viewSchoolFinished(){
 function pwRolloverBannerHTML(){
   if(!ROLLOVER_NOTICE) return '';
   return `<div class="disclaimer" style="margin-bottom:18px;align-items:center;">${icon('info','ic')}
-    <div style="flex:1;">We've moved you to <b>Grade ${esc(ROLLOVER_NOTICE.toGrade)}</b> for ${esc(ROLLOVER_NOTICE.year)}. <a href="#" onclick="App.pwNotMyGrade();return false;">Not my grade? Change it</a></div>
+    <div style="flex:1;">We've moved you to <b>Grade ${esc(ROLLOVER_NOTICE.toGrade)}</b> for ${esc(ROLLOVER_NOTICE.year)}.${ROLLOVER_NOTICE.prefilled ? ' We filled in your subjects from the ones you planned in Grade 9.' : ''} <a href="#" onclick="App.pwNotMyGrade();return false;">${ROLLOVER_NOTICE.prefilled ? 'Check your subjects' : 'Not my grade? Change it'}</a></div>
     <button class="btn btn-ghost btn-sm" onclick="App.pwDismissRollover()">OK</button></div>`;
 }
 

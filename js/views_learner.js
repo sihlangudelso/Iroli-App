@@ -116,6 +116,7 @@ function homeNextSteps(l){
   const yearTerms = (l.termMarks && l.termMarks[thisYear] && l.termMarks[thisYear].terms) || {};
   const hasTermMarks = Object.keys(yearTerms).some(function(t){ return Object.keys(yearTerms[t]||{}).length; });
   const hasMarks = g9 ? !!l.grade9Report : (hasTermMarks || Object.keys(l.subjectMarks||{}).length > 0);
+  if(needsFetSubjects(l)) steps.push({ text: 'Confirm your Grade ' + Number(l.grade) + ' subjects, so your career matches use them.', route:'profile', label: 'Add subjects' });
   if(school && !hasMarks) steps.push({ text: g9 ? 'Add your Grade 9 report results.' : 'Add your marks for this term.', route:'marks', label: 'Add marks' });
   if(!l.assessmentCompletedAt) steps.push({ text:'Take the personality assessment to find careers that suit you.', route:'assessment', label:'Start' });
   if(subjectChoiceAvailable(l) && !(l.subjectChoice && l.subjectChoice.completedAt)) steps.push({ text:'Take the Subject Choice Assessment to see which Grade 10 subjects fit you.', route:'subject-choice', label:'Start' });
@@ -546,7 +547,7 @@ function careerRowHTML(career, score, l, category, origin){
 }
 const MATCH_GROUP_ORDER = [
   ['strong', 'Strong matches', 'Your interests, strengths and current academic performance all line up with these.'],
-  ['academic', 'Academic strength matches', 'You’re already performing well in subjects these careers value, even if you hadn’t considered them yet.'],
+  ['academic', 'Academic strength matches', 'Your subjects and results already suit what these careers ask for, even if you hadn’t considered them yet.'],
   ['interest', 'Interest matches', 'You show strong interest here — your subjects or marks may need some development to fully back it up.'],
   ['possible', 'Possible pathways', 'Not a clear match yet on interest or academics — still genuinely worth exploring, especially this early on.'],
   ['low', 'Also worth browsing', 'Less aligned with your profile today, but never hidden — every career here is worth a look.'],
