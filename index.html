@@ -53,7 +53,7 @@
 }
 </script>
 <style>
-  .topbar-land{display:flex;align-items:center;justify-content:space-between;max-width:1180px;margin:0 auto;padding:20px 20px;}
+  .topbar-land{display:flex;align-items:center;justify-content:space-between;max-width:1400px;margin:0 auto;padding:20px clamp(20px,3vw,48px);}
   .topbar-land .brand-wordmark{height:28px;display:block;}
   .section{max-width:1180px;margin:0 auto;padding:88px 20px;}
   .feature-card{border-top:4px solid var(--indigo);height:100%;}
@@ -110,7 +110,8 @@
   .hero-photo{position:absolute;top:0;right:0;height:100%;margin:0;display:block;}
   .hero-photo img{height:100%;width:auto;display:block;
     -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 10%);mask-image:linear-gradient(90deg,transparent 0,#000 10%);}
-  .hero-copy{position:relative;z-index:2;max-width:480px;padding:116px 20px 80px;margin-left:max(0px,calc((100vw - 1180px)/2));}
+  /* On wide screens the copy lines up with the logo in a 1400px frame, so it sits further left than the 1180px content below. */
+  .hero-copy{position:relative;z-index:2;max-width:calc(440px + 2 * clamp(20px,3vw,48px));padding:116px clamp(20px,3vw,48px) 80px;margin-left:max(0px,calc((100vw - 1400px)/2));}
   .hero-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;letter-spacing:.02em;
     padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.9);color:#0B2545;margin-bottom:20px;}
   .hero-eyebrow i{width:8px;height:8px;border-radius:50%;background:#3BA4EC;display:block;}
@@ -253,7 +254,7 @@
   }
   @media (max-width:640px){ .stats-row{margin:-40px 12px 0;} .stats-row > div{padding:14px 6px;} .stats-row b{font-size:24px;} .stats-row span{font-size:11.5px;} }
   @media (max-width:420px){ .dm-bar{grid-template-columns:92px 1fr 22px;} }
-  @media (max-width:1280px){ .hero h1{font-size:42px;} .hero-copy{max-width:440px;} }
+  @media (max-width:1280px){ .hero h1{font-size:42px;} .hero-copy{max-width:calc(400px + 2 * clamp(20px,3vw,48px));} }
   @media (max-width:1140px){
     .hero{flex-direction:column;align-items:stretch;height:auto;background:#F5BBD3;}
     .hero::before{display:none;}
