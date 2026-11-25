@@ -30,6 +30,12 @@ let PATHWAY_DRAFT = null;
 let PROFILE_DRAFT = null;
 let SUBJECT_CHOICE_DRAFT = null;
 let MINI_DRAFT = null;
+// The landing page's Log In / Sign Up links say which form they want
+// (app.html?auth=signin / ?auth=signup). Read once in boot(); once used, the
+// signed-out view stays on the sign-in card (AUTH_GATE_PINNED) instead of
+// falling back to a saved quiz result when the auth listener fires again.
+let AUTH_LINK_MODE = null;
+let AUTH_GATE_PINNED = false;
 let AUTH_READY = false;
 let learnerChannel = null;
 let JUST_CONFIRMED_EMAIL = false;
@@ -173,6 +179,10 @@ function boot(){
   // "set a new password" screen instead of silently back in the app with
   // their old password unchanged.
   AUTH_RECOVERY_MODE = /type=recovery/.test(window.location.hash);
+  try{
+    const m = new URLSearchParams(window.location.search).get('auth');
+    if(m === 'signin' || m === 'signup') AUTH_LINK_MODE = m;
+  }catch(e){ /* old browser: fall back to the default routing */ }
   sb.auth.onAuthStateChange((_event, session)=>{ handleSession(session); });
   sb.auth.getSession().then(({data})=> handleSession(data.session));
 }
@@ -207,7 +217,14 @@ async function handleSession(session){
     // AUTH_RECOVERY_MODE is decided once -- but only if it isn't already
     // set, so a re-fire of this listener (e.g. on tab refocus, same as the
     // signed-in case above) never wipes out-of-progress answers.
-    if(!MINI_DRAFT){
+    // An explicit Log In / Sign Up link wins over the quiz routing below. The
+    // saved quiz result itself is left alone (it still carries into a new
+    // account), and nothing is persisted, unlike declineAnonFlow.
+    if(AUTH_LINK_MODE){
+      AUTH_MODE = AUTH_LINK_MODE; AUTH_ERROR = '';
+      AUTH_LINK_MODE = null; AUTH_GATE_PINNED = true; MINI_DRAFT = null;
+    }
+    if(!MINI_DRAFT && !AUTH_GATE_PINNED){
       // `answers` (a completed result) and `declined` (an explicit "I
       // already have an account") are independent facts, not one status
       // enum -- a visitor can decline the invitation to sign up right now
