@@ -55,7 +55,7 @@
 <style>
   .topbar-land{display:flex;align-items:center;justify-content:space-between;max-width:1180px;margin:0 auto;padding:20px 20px;}
   .topbar-land .brand-wordmark{height:28px;display:block;}
-  .section{max-width:1180px;margin:0 auto;padding:60px 20px;}
+  .section{max-width:1180px;margin:0 auto;padding:88px 20px;}
   .feature-card{border-top:4px solid var(--indigo);height:100%;}
   .feature-card .ico{width:40px;height:40px;border-radius:12px;background:var(--t-violet);display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
   .step-num{width:30px;height:30px;border-radius:50%;background:var(--brand-grad);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-family:var(--font-head);font-size:14px;flex-shrink:0;}
@@ -115,19 +115,49 @@
   .ex-foot{display:flex;justify-content:space-between;align-items:center;gap:10px 16px;flex-wrap:wrap;margin-top:14px;font-size:13px;color:var(--muted);}
   .ex-foot a{font-weight:600;color:var(--link);}
   @media (max-width:640px){ .ex-dirs{grid-template-columns:1fr;} .hero-example{margin:-44px 12px 0;padding:18px 16px 16px;} }
-  .decision-card .grade{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.03em;color:var(--on-blue);background:var(--t-blue);padding:3px 9px;border-radius:999px;margin-bottom:10px;}
-  .decision-card ul{margin:10px 0 0;padding-left:18px;font-size:14px;color:var(--muted);line-height:1.55;}
+  /* ---------- After the hero: sections alternate centre / left / right, one idea each ---------- */
+  .eyebrow{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--on-pink);background:var(--t-pink);padding:4px 11px;border-radius:999px;margin-bottom:14px;}
+  .sec-head{max-width:640px;margin:0 auto 44px;text-align:center;}
+  .sec-title{font-size:32px;line-height:1.2;letter-spacing:-.01em;margin:0 0 12px;}
+  .sec-lead{font-size:16px;color:var(--muted);line-height:1.6;margin:0;}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;}
+  .split > *{min-width:0;}
+  .split.flip .split-text{order:2;}
+  .split-actions{display:flex;gap:12px;flex-wrap:wrap;}
+  .ticks{list-style:none;margin:22px 0 26px;padding:0;display:grid;gap:12px;}
+  .ticks li{display:flex;gap:12px;align-items:flex-start;font-size:15px;line-height:1.5;}
+  .ticks li::before{content:"\2713";display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;flex-shrink:0;background:var(--t-blue);color:var(--on-blue);font-size:12px;font-weight:800;margin-top:1px;}
+  .fine{font-size:13.5px;color:var(--muted);margin:0 0 22px;line-height:1.55;}
+  /* The quick-quiz counters, under the example result. */
+  .stats-row{display:flex;justify-content:center;gap:12px 64px;flex-wrap:wrap;max-width:900px;margin:40px auto 0;padding:0 20px;text-align:center;}
+  .stats-row b{display:block;font-family:var(--font-head);font-size:36px;font-weight:800;color:var(--link);line-height:1.1;font-variant-numeric:tabular-nums;}
+  .stats-row span{font-size:13.5px;color:var(--muted);}
+  /* Learners (centre): three decisions by grade. */
+  .decision-card{padding:26px 24px;}
+  .decision-card .grade{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.03em;color:var(--on-blue);background:var(--t-blue);padding:3px 9px;border-radius:999px;margin-bottom:12px;}
+  .decision-card h3{margin-bottom:8px;}
+  .decision-card ul{margin:12px 0 0;padding-left:18px;font-size:14px;color:var(--muted);line-height:1.55;}
   .decision-card li+li{margin-top:4px;}
-  .honest-note{max-width:640px;margin:26px auto 0;text-align:center;font-size:14px;color:var(--muted);}
-  /* For schools: how a teacher uses Iroli, with a small mock-up of the Grade 9 dashboard (made-up class). */
-  .schools{display:grid;grid-template-columns:1fr 1.05fr;gap:32px;align-items:center;}
-  .schools > *{min-width:0;}
-  .schools-steps{list-style:none;margin:20px 0 24px;padding:0;display:grid;gap:16px;}
+  .honest-note{max-width:620px;margin:32px auto 0;text-align:center;font-size:14px;color:var(--muted);}
+  /* Parents (text left): a peek at the report, using lines from the sample report. */
+  .report-peek{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-soft);overflow:hidden;max-width:470px;margin-left:auto;width:100%;}
+  .rp-band{background:linear-gradient(100deg,#F5BBD3,#BFE3FB);padding:18px 22px;color:#0B2545;}
+  .rp-band b{display:block;font-family:var(--font-head);font-size:17px;}
+  .rp-band small{font-size:12.5px;color:#2B2645;}
+  .rp-body{padding:20px 22px;display:grid;gap:16px;}
+  .rp-row > small{display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+  .rp-row p{margin:0;font-size:14px;line-height:1.5;}
+  .rp-fit{display:flex;gap:8px;flex-wrap:wrap;}
+  .rp-fit span{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--chip-bg);color:var(--ink);}
+  .rp-fit span.strong{background:var(--t-blue);color:var(--on-blue);}
+  .rp-foot{border-top:1px solid var(--line);padding:13px 22px;font-size:13px;}
+  .rp-foot a{color:var(--link);font-weight:600;}
+  /* Schools (text right): steps beside a mock-up of the Grade 9 dashboard (made-up class). */
+  .schools-steps{list-style:none;margin:22px 0 26px;padding:0;display:grid;gap:16px;}
   .schools-steps li{display:flex;gap:14px;}
   .schools-steps h4{margin:0 0 3px;}
   .schools-steps p{margin:0;}
-  .schools-actions{display:flex;gap:12px;flex-wrap:wrap;}
-  .dash-mock{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-soft);padding:18px;font-size:13px;}
+  .dash-mock{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-soft);padding:20px;font-size:13px;}
   .dash-mock .dm-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;}
   .dash-mock .dm-top b{font-family:var(--font-head);font-size:15px;}
   .dash-mock .dm-top span{font-size:11.5px;color:var(--muted);}
@@ -143,24 +173,39 @@
   .dm-bar em{font-style:normal;color:var(--muted);text-align:right;}
   .dm-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:12.5px;}
   .dm-row span:last-child{color:var(--on-amber);background:var(--t-amber);border-radius:8px;padding:1px 8px;font-size:11.5px;font-weight:600;align-self:center;text-align:right;}
-  @media (max-width:900px){ .schools{grid-template-columns:1fr;} }
-  .privacy-line{display:flex;gap:10px;align-items:flex-start;margin:18px 0 0;font-size:13px;color:var(--muted);line-height:1.5;}
+  .privacy-line{display:flex;gap:10px;align-items:flex-start;margin:20px 0 0;font-size:13px;color:var(--muted);line-height:1.5;}
   .privacy-line svg{flex-shrink:0;margin-top:1px;}
   .privacy-line a{color:var(--link);font-weight:600;}
-  /* For parents: one band between the learner cards and the schools section. */
-  .parents{display:flex;gap:18px 28px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:26px 28px;background:var(--t-blue);border:1px solid var(--info-line);border-radius:var(--radius-lg);}
-  .parents h2{font-size:20px;margin:0 0 6px;color:var(--ink);}
-  .parents p{margin:0;max-width:640px;color:var(--ink);font-size:14.5px;line-height:1.55;}
-  /* FAQ: native <details>, so it opens and closes with no script and works with a keyboard. */
-  .faq{max-width:760px;margin:0 auto;}
+  /* How it works (centre): three steps on one line, joined by a thin rule. */
+  .steps-row{display:grid;grid-template-columns:repeat(3,1fr);gap:36px;position:relative;}
+  .steps-row::before{content:"";position:absolute;top:21px;left:17%;right:17%;height:2px;background:var(--line);}
+  .step{text-align:center;position:relative;}
+  .step .step-num{width:44px;height:44px;font-size:17px;margin:0 auto 16px;box-shadow:0 0 0 6px var(--bg);}
+  .step h4{margin:0 0 6px;}
+  .step p{margin:0 auto;max-width:300px;}
+  /* FAQ (heading left, questions right): native <details>, so it opens and closes with no script and works with a keyboard. */
+  .faq-split{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:64px;align-items:start;}
+  .faq-split .split-text{position:sticky;top:28px;}
   .faq details{border-bottom:1px solid var(--line);}
-  .faq summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px 2px;font-family:var(--font-head);font-weight:700;font-size:16px;color:var(--ink);}
+  .faq details:first-child{border-top:1px solid var(--line);}
+  .faq summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px 2px;font-family:var(--font-head);font-weight:700;font-size:16px;color:var(--ink);}
   .faq summary::-webkit-details-marker{display:none;}
   .faq summary::after{content:"+";font-size:22px;font-weight:400;color:var(--link);line-height:1;transition:transform .2s ease;}
   .faq details[open] summary::after{transform:rotate(45deg);}
   .faq summary:focus-visible{outline:2px solid var(--link);outline-offset:2px;border-radius:6px;}
-  .faq details p{margin:0 2px 16px;color:var(--muted);font-size:14.5px;line-height:1.6;}
+  .faq details p{margin:0 2px 18px;color:var(--muted);font-size:14.5px;line-height:1.6;}
   .faq details p a{color:var(--link);font-weight:600;}
+  @media (max-width:900px){
+    .section{padding:64px 20px;}
+    .sec-title{font-size:26px;}
+    .split,.faq-split{grid-template-columns:1fr;gap:36px;}
+    .split.flip .split-text{order:0;}
+    .faq-split .split-text{position:static;}
+    .report-peek{margin:0 auto;}
+    .steps-row{grid-template-columns:1fr;gap:28px;}
+    .steps-row::before{display:none;}
+  }
+  @media (max-width:480px){ .stats-row{gap:8px 28px;margin-top:28px;} .stats-row b{font-size:28px;} }
   @media (max-width:420px){ .dm-bar{grid-template-columns:92px 1fr 22px;} }
   @media (max-width:1280px){ .hero h1{font-size:42px;} .hero-copy{max-width:440px;} }
   @media (max-width:1140px){
@@ -194,9 +239,12 @@
   .motion .hero h1 .mark::after{ transform-origin:left center; animation:landDraw .7s cubic-bezier(.2,.7,.2,1) .55s both; }
   .motion .hero-eyebrow i{ animation:landPulse 2.4s ease-out 1s 3; }
   .motion .hero-example{ animation:landUp .6s cubic-bezier(.2,.7,.2,1) .35s both; }
-  /* Scroll reveal: [data-reveal] blocks rise in as they come into view (see the script at the end). */
-  .motion [data-reveal]{ opacity:0; transform:translateY(18px); transition:opacity .6s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1), box-shadow .2s ease; transition-delay:calc(var(--d, 0) * 80ms); }
-  .motion [data-reveal].in{ opacity:1; transform:none; }
+  /* Scroll reveal, both ways (see the script at the end): scrolling down, blocks rise up into place; scrolling
+     back up, the ones above drop down into place. Out of view they reset, so it plays every time. */
+  .motion [data-reveal]{ opacity:0; transform:translateY(28px); transition:opacity .65s cubic-bezier(.2,.7,.2,1), transform .65s cubic-bezier(.2,.7,.2,1), box-shadow .2s ease; }
+  .motion [data-reveal].from-above{ transform:translateY(-28px); }
+  .motion [data-reveal].in{ opacity:1; transform:none; transition-delay:calc(var(--d, 0) * 90ms); }
+  .motion [data-reveal].in:hover{ transition-delay:0s; }
   .motion .feature-card.in:hover{ transform:translateY(-4px); }
   .feature-card{ transition:transform .2s ease, box-shadow .2s ease; }
   .feature-card:hover{ transform:translateY(-4px); box-shadow:var(--shadow-soft); }
@@ -263,14 +311,20 @@
       <a href="assets/sample-report.pdf" target="_blank" rel="noopener">See a sample full report (PDF) →</a>
     </div>
   </section>
+  <div class="stats-row" data-reveal data-stats>
+    <div><b data-count="77" aria-hidden="true">77</b><span class="sr-only">77 </span><span>real careers</span></div>
+    <div><b data-count="15" aria-hidden="true">15</b><span class="sr-only">15 </span><span>career fields</span></div>
+    <div><b data-count="4" aria-hidden="true">4</b><span class="sr-only">4 </span><span>questions to start</span></div>
+  </div>
 </header>
 
-<section class="section" id="what-we-do" style="padding-top:64px;">
-  <div data-reveal style="text-align:center;max-width:640px;margin:0 auto 36px;">
-    <h2 style="font-size:28px;">Help with the decision in front of you</h2>
-    <p class="page-sub">Whatever grade you're in, Iroli starts from who you are: your interests, strengths, subjects and marks, never marks alone.</p>
+<section class="section" id="what-we-do">
+  <div class="sec-head" data-reveal>
+    <span class="eyebrow">For learners</span>
+    <h2 class="sec-title">Help with the decision in front of you</h2>
+    <p class="sec-lead">Whatever grade you're in, Iroli starts from who you are: your interests, strengths, subjects and marks, never marks alone.</p>
   </div>
-  <div class="grid grid-3" style="gap:18px;">
+  <div class="grid grid-3" style="gap:20px;">
     <div class="card feature-card decision-card" data-reveal style="--d:0;">
       <span class="grade">Grade 9</span>
       <h3>Choose your Grade 10 subjects</h3>
@@ -302,34 +356,53 @@
   <p class="honest-note" data-reveal>Every result is framed as “worth exploring”, never “you can't become this”: a starting point for a conversation, not a verdict on your future.</p>
 </section>
 
-<section class="section" id="parents" style="padding-top:0;">
-  <div class="parents" data-reveal>
-    <div>
-      <h2>For parents and guardians</h2>
-      <p>The full report is written to be talked through together at home: your child's interests, best-fit careers, subject advice and next steps, ready to print or save as a PDF. If their school doesn't use Iroli, an individual licence is a once-off R300 and lasts until the end of Grade 12.</p>
+<section class="section" id="parents">
+  <div class="split">
+    <div class="split-text" data-reveal>
+      <span class="eyebrow">For parents and guardians</span>
+      <h2 class="sec-title">A report you can talk through together</h2>
+      <p class="sec-lead">The full report turns your child's answers and marks into something you can sit down and discuss at home.</p>
+      <ul class="ticks">
+        <li>Their interests, strengths and best-fit careers</li>
+        <li>Subject advice, with the reasons behind it</li>
+        <li>Clear next steps, ready to print or save as a PDF</li>
+      </ul>
+      <p class="fine">If their school doesn't use Iroli, an individual licence is a once-off R300 and lasts until the end of Grade 12.</p>
+      <div class="split-actions">
+        <a href="assets/sample-report.pdf" target="_blank" rel="noopener" class="btn btn-primary">See a sample report</a>
+        <a href="pricing.html" class="btn btn-ghost">See pricing</a>
+      </div>
     </div>
-    <a href="pricing.html" class="btn btn-ghost">See pricing</a>
+    <div class="report-peek" data-reveal style="--d:1;" role="img" aria-label="A preview of the sample Grade 9 Subject Choice Report: best-fit subjects Maths, Physical Sciences and Life Sciences, a strong overall fit, and a next step to talk it through with a teacher or parent.">
+      <div class="rp-band"><b>Grade 9 Subject Choice Report</b><small>Sample learner · 4 pages</small></div>
+      <div class="rp-body">
+        <div class="rp-row"><small>Best-fit subjects</small><div class="pill-list"><span class="tag">Maths</span><span class="tag">Physical Sciences</span><span class="tag">Life Sciences</span></div></div>
+        <div class="rp-row"><small>How well they fit</small><div class="rp-fit"><span class="strong">Interest: Very strong</span><span class="strong">Personality: Strong</span><span>Academic: Moderate</span></div></div>
+        <div class="rp-row"><small>Next step</small><p>Talk this report through with your Life Orientation teacher, counsellor or parent/guardian.</p></div>
+      </div>
+      <div class="rp-foot"><a href="assets/sample-report.pdf" target="_blank" rel="noopener">Open the full sample report (PDF) →</a></div>
+    </div>
   </div>
 </section>
 
-<section class="section" id="schools" style="padding-top:0;scroll-margin-top:16px;">
-  <div class="schools">
-    <div data-reveal>
-      <span class="ex-label">For schools</span>
-      <h2 style="font-size:28px;margin:12px 0 8px;">See who may need guidance before subject choices are final</h2>
-      <p class="page-sub" style="margin:0;">Iroli gives teachers and Life Orientation staff a class-wide view, so conversations go to the learners who need them most.</p>
+<section class="section" id="schools" style="scroll-margin-top:8px;">
+  <div class="split flip">
+    <div class="split-text" data-reveal style="--d:1;">
+      <span class="eyebrow">For schools</span>
+      <h2 class="sec-title">See who may need guidance before subject choices are final</h2>
+      <p class="sec-lead">Iroli gives teachers and Life Orientation staff a class-wide view, so conversations go to the learners who need them most.</p>
       <ol class="schools-steps">
         <li><div class="step-num">1</div><div><h4>Share a class code</h4><p class="page-sub">Learners join your class with one code. Seats are tracked for you.</p></div></li>
         <li><div class="step-num">2</div><div><h4>Learners take the assessments</h4><p class="page-sub">In class or at home, on a phone or a computer.</p></div></li>
         <li><div class="step-num">3</div><div><h4>Open the Grade 9 dashboard</h4><p class="page-sub">Pathway trends, subject demand and the learners requiring guidance, with a class summary you can download. Each teacher sees only the classes they manage.</p></div></li>
       </ol>
-      <div class="schools-actions">
+      <div class="split-actions">
         <a href="mailto:info@iroli.co.za?subject=Iroli%20school%20enquiry" class="btn btn-primary">Make a school enquiry</a>
         <a href="pricing.html" class="btn btn-ghost">See school pricing</a>
       </div>
       <p class="privacy-line"><svg viewBox="0 0 24 24" width="18" height="18" stroke="var(--link)" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>Learners see only their own results, and a teacher sees only the classes they manage. Learner data is never sold or used for advertising. <a href="privacy.html">Read our Privacy Notice</a></span></p>
     </div>
-    <div class="dash-mock" data-reveal style="--d:1;" role="img" aria-label="Example Grade 9 dashboard for a made-up class: 32 learners, 28 assessed, 5 requiring guidance, with the top career pathways and two learners flagged for a conversation.">
+    <div class="dash-mock" data-reveal style="--d:0;" role="img" aria-label="Example Grade 9 dashboard for a made-up class: 32 learners, 28 assessed, 5 requiring guidance, with the top career pathways and two learners flagged for a conversation.">
       <div class="dm-top"><b>Grade 9 Dashboard</b><span>Example class · 9B</span></div>
       <div class="dm-tiles">
         <div><b>32</b><span>Learners</span></div>
@@ -348,20 +421,26 @@
   </div>
 </section>
 
-<section class="section" style="padding-top:0;">
-  <div class="card" data-reveal style="padding:36px;">
-    <h2 style="font-size:24px;text-align:center;margin-bottom:28px;">How it works</h2>
-    <div class="grid grid-3" style="gap:24px;">
-      <div style="display:flex;gap:14px;"><div class="step-num">1</div><div><h4 style="margin-bottom:4px;">Try the free quiz</h4><p class="page-sub" style="margin:0;">Answer 4 quick questions for a first look at careers worth exploring. It's free and needs no account.</p></div></div>
-      <div style="display:flex;gap:14px;"><div class="step-num">2</div><div><h4 style="margin-bottom:4px;">Activate and take the assessments</h4><p class="page-sub" style="margin:0;">Create an account, then unlock the full assessments with a school class code or an individual licence: the personality assessment and, in Grade 9, the subject-choice assessment.</p></div></div>
-      <div style="display:flex;gap:14px;"><div class="step-num">3</div><div><h4 style="margin-bottom:4px;">Get your report</h4><p class="page-sub" style="margin:0;">See your personality type, best-suited careers and Grade 10 subject recommendations — ready to print or share.</p></div></div>
-    </div>
+<section class="section" id="how-it-works">
+  <div class="sec-head" data-reveal>
+    <span class="eyebrow">How it works</span>
+    <h2 class="sec-title">From a quick quiz to a full report</h2>
+  </div>
+  <div class="steps-row">
+    <div class="step" data-reveal style="--d:0;"><div class="step-num">1</div><h4>Try the free quiz</h4><p class="page-sub">Answer 4 quick questions for a first look at careers worth exploring. It's free and needs no account.</p></div>
+    <div class="step" data-reveal style="--d:1;"><div class="step-num">2</div><h4>Unlock the assessments</h4><p class="page-sub">Create an account, then use a school class code or an individual licence for the personality assessment and, in Grade 9, the subject-choice assessment.</p></div>
+    <div class="step" data-reveal style="--d:2;"><div class="step-num">3</div><h4>Get your report</h4><p class="page-sub">Your personality type, best-suited careers and Grade 10 subject recommendations, ready to print or share.</p></div>
   </div>
 </section>
 
-<section class="section" id="faq" style="padding-top:0;">
-  <h2 data-reveal style="font-size:26px;text-align:center;margin-bottom:12px;">Questions people ask</h2>
-  <div class="faq" data-reveal>
+<section class="section" id="faq">
+  <div class="faq-split">
+    <div class="split-text" data-reveal>
+      <span class="eyebrow">FAQ</span>
+      <h2 class="sec-title">Questions people ask</h2>
+      <p class="sec-lead">Can't find your answer? Email <a href="mailto:info@iroli.co.za" style="color:var(--link);font-weight:600;">info@iroli.co.za</a>.</p>
+    </div>
+  <div class="faq" data-reveal style="--d:1;">
     <details>
       <summary>Is Iroli free?</summary>
       <p>The 4-question quiz is free and needs no account. The full assessments and report need a licence: a school class code, or an individual licence for a once-off R300 that lasts until the end of Grade 12. <a href="pricing.html">See pricing</a></p>
@@ -383,9 +462,10 @@
       <p>Grades 9 to 12. Grade 9 learners also get the Subject Choice Assessment for choosing Grade 10 subjects. If you're not at school, you can still use Iroli to explore careers.</p>
     </details>
   </div>
+  </div>
 </section>
 
-<section class="section" style="padding-top:0;">
+<section class="section" style="padding-top:24px;">
   <div class="cta-band" data-reveal>
     <h2 style="font-size:26px;">Ready to find your path?</h2>
     <p style="max-width:480px;margin:0 auto 20px;">Start with the free 4-question quiz, no account needed. A school class code or an individual licence unlocks the full assessments and your report.</p>
@@ -409,24 +489,43 @@
 </div>
 
 <script>
-  // Scroll reveal. Only runs with motion on (see the head script);
-  // anything the observer cannot handle is simply shown.
+  // Scroll reveal in both directions, and the counters counting up each time they come into view.
+  // Only runs with motion on (see the head script); without it everything simply shows, numbers and all.
   (function(){
     var root = document.documentElement;
     if(!root.classList.contains('motion')) return;
     var blocks = document.querySelectorAll('[data-reveal]');
     if(!('IntersectionObserver' in window)){ blocks.forEach(function(b){ b.classList.add('in'); }); return; }
+    function countUp(box){
+      box.querySelectorAll('[data-count]').forEach(function(el){
+        var end = Number(el.getAttribute('data-count')), t0 = null, dur = 1100, run = (el._run || 0) + 1;
+        el._run = run; el.textContent = '0';
+        function step(t){
+          if(el._run !== run) return;
+          if(t0 === null) t0 = t;
+          var p = Math.min(1, (t - t0) / dur);
+          el.textContent = Math.round(end * (1 - Math.pow(1 - p, 3)));
+          if(p < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+        // A background tab pauses animation frames: always end on the real number.
+        setTimeout(function(){ if(el._run === run) el.textContent = String(end); }, dur + 200);
+      });
+    }
     var fired = false;
     var io = new IntersectionObserver(function(entries){
       fired = true;
       entries.forEach(function(e){
-        // In view, or already scrolled past (a jump, or a reload half-way down): show it.
-        if(!e.isIntersecting && e.boundingClientRect.top > 0) return;
-        var el = e.target; el.classList.add('in'); io.unobserve(el);
-        // Once it is in, hover should respond at once (the stagger delay was only for the entrance).
-        setTimeout(function(){ el.style.setProperty('--d', '0'); }, 900);
+        var el = e.target;
+        if(e.isIntersecting){
+          if(!el.classList.contains('in')){ el.classList.add('in'); if(el.hasAttribute('data-stats')) countUp(el); }
+        } else {
+          // Out of view: reset, remembering which side it left by, so it comes back from that side.
+          el.classList.remove('in');
+          el.classList.toggle('from-above', e.boundingClientRect.top < 0);
+        }
       });
-    }, { rootMargin:'0px 0px -8% 0px', threshold:0.12 });
+    }, { rootMargin:'0px 0px -8% 0px', threshold:0 });
     blocks.forEach(function(b){ io.observe(b); });
     // Safety net: if the browser never reports what is on screen, show everything.
     function fallback(){ if(document.visibilityState === 'visible') setTimeout(function(){ if(!fired) blocks.forEach(function(b){ b.classList.add('in'); }); }, 2500); }
