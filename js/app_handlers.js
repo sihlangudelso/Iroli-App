@@ -225,6 +225,7 @@ const App = {
   },
   startExploring(route){
     ensureLearnerObj();
+    ACTIVATE_WANTED = LEARNER.licenseStatus === 'active' ? null : route;
     if(LEARNER.exploringOnly !== false){
       LEARNER.exploringOnly = true;
       PROFILE_DRAFT = null;
@@ -600,7 +601,8 @@ const App = {
       if(!readErr && fresh) Object.assign(LEARNER, fresh);
     }catch(e){ console.error('Could not reload the learner after joining', e); }
     toast('Joined '+row.class_name+'. Your account is now active.');
-    navigate('home');
+    const wanted = ACTIVATE_WANTED; ACTIVATE_WANTED = null;
+    navigate(wanted || 'home');
   },
   async leaveClass(){
     if(PREVIEW_MODE){ toast('Leaving a class is switched off while you preview.'); return; }
@@ -901,3 +903,4 @@ function csvEscape(v){
 
 // The Grade 11-12 Pathway's handlers live beside its screens (views_pathway.js).
 Object.assign(App, PATHWAY_HANDLERS);
+Object.assign(App, DISCOVERY_HANDLERS);

@@ -582,6 +582,7 @@ function viewExplore(){
   const fac = ROUTE_PARAM && typeof ROUTE_PARAM==='object' ? ROUTE_PARAM.fac : (ROUTE_PARAM||'all');
   return `
   ${careersHeadHTML('explore', 'Browse all ' + CAREERS.length + ' careers across ' + FACULTIES.length + ' faculties. Open any career to see its degree programmes and entry requirements.')}
+  ${fac==='all' && !EXPLORE_SEARCH ? dsDiscoverHTML(l) : ''}
   <button class="btn btn-ghost btn-sm" style="margin-bottom:14px;" onclick="navigate('clusters')">${icon('layers')} Not sure where to start? Browse by career cluster instead</button>
   <div class="filter-bar">
     <button class="chip-select ${fac==='all'?'on':''}" onclick="navigate('explore','all')">All faculties</button>
@@ -682,6 +683,7 @@ function viewCareerDetail(param){
   const isFav = (l.favourites||[]).includes(career.id);
   const inCompare = (l.compare||[]).includes(career.id);
   const ytUrl = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(career.videoQuery);
+  dsMarkViewed(career.id);
   return `
   <button class="btn btn-ghost btn-sm" style="margin-bottom:16px;" onclick="navigate(${paramLiteral(from.route)}${from.param!=null?`,${paramLiteral(from.param)}`:''})">${icon('chevron')} Back</button>
   <div class="detail-hero" style="background:linear-gradient(135deg, ${fac.color}, #14172A);">
@@ -693,6 +695,7 @@ function viewCareerDetail(param){
 
   <div class="card" style="margin-bottom:18px;">
     <h3>Why this may (or may not) suit you</h3>
+    ${dsFitMetersHTML(l, ev)}
     ${careerExplanationHTML(l, career, ev)}
   </div>
 
@@ -836,7 +839,8 @@ function careersHeadHTML(active, sub){
   return `${pageHeadHTML('Careers', sub)}
   <div class="filter-bar tabs-bar" role="tablist" aria-label="Careers">
     ${CAREER_TABS.map(t=>`<button class="chip-select ${active===t[0]?'on':''}" role="tab" aria-selected="${active===t[0]}" onclick="navigate('${t[0]}')">${t[1]}${t[0]==='favourites' && n ? ' (' + n + ')' : ''}</button>`).join('')}
-  </div>`;
+  </div>
+  ${dsTrailHTML()}`;
 }
 // Saved careers, with up to three of them side by side.
 function viewSaved(){
@@ -999,13 +1003,17 @@ function viewAccount(){
 // code itself is the payment proof, see join_class_by_code()) or
 // individual activation via the super admin, matching pricing.html's own
 // "Contact us to activate" pattern exactly.
+// What each welcome-screen card opens, for the activation screen's wording.
+const ACTIVATE_WANTED_LABELS = { assessment:'the Personality Assessment', matches:'Career Matching', explore:'Explore Careers', marks:'the APS Calculator' };
 function viewActivateAccount(){
   const firstName = (ME.name||'there').split(' ')[0];
+  const wanted = ACTIVATE_WANTED && ACTIVATE_WANTED_LABELS[ACTIVATE_WANTED];
   return `
+  <button class="btn btn-ghost btn-sm" style="margin-bottom:12px;" onclick="navigate('onboarding')">${icon('chevron')} Back to the start</button>
   ${pageHeadHTML('Activate your account')}
   <div class="card" style="margin-bottom:20px;">
     <h3>Hi ${esc(firstName)}, you're almost ready</h3>
-    <p class="page-sub" style="margin:0;">Access to the assessments, career matches and your full report needs an active licence first. There are two ways to get activated:</p>
+    <p class="page-sub" style="margin:0;">${wanted ? 'To open ' + esc(wanted) + ', activate your account first.' : 'Access to the assessments, career matches and your full report needs an active licence first.'} There are two ways to get activated:</p>
   </div>
   <div class="grid grid-2">
     <div class="card">
