@@ -339,8 +339,8 @@ application deadlines, a final-marks reminder and application tracking switch on
    run the file again.
 
 **Who sees it:** Grade 11 and 12 learners on the Pro plan, from `PRO_ENABLED_FROM`
-(1 January 2027, in `js/app.js`). Before that date only an admin previewing the
-learner view can open it. A Grade 11-12 learner on Standard sees what Pro adds and
+(19 November 2026, in `js/app.js`; it was first planned for 1 January 2027). Before
+that date only an admin previewing the learner view can open it. A Grade 11-12 learner on Standard sees what Pro adds and
 how to upgrade. Give Pro to a learner on their page in Cohort, or to a whole class
 by setting the class's plan (applies to learners who join with its code from then on).
 

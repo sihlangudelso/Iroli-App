@@ -1030,7 +1030,9 @@ function learnerGate(l){
 // ---- School year, Pro plan and the Grade 11-12 Pathway ------------------
 // The Pro plan (and with it the Pathway) opens to learners on this date;
 // before it, only an admin previewing the learner view can open it.
-const PRO_ENABLED_FROM = '2027-01-01';
+// Opened on 19 Nov 2026, when the pricing page started saying Pro is "Now Available"
+// (it was planned for 1 Jan 2027).
+const PRO_ENABLED_FROM = '2026-11-19';
 // "Today" in one place, so the year logic can be tested with any date.
 let IROLI_NOW = null;
 function nowDate(){ return IROLI_NOW ? new Date(IROLI_NOW) : new Date(); }
