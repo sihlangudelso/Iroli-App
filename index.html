@@ -72,11 +72,37 @@
   .topbar-band{background:#F5BBD3;position:relative;z-index:4;}
   .topbar-band .brand-wordmark{background:#fff;border-radius:999px;padding:6px 12px;height:40px;box-sizing:border-box;}
   .topbar-band .btn-ghost{color:#1A1733;border-color:rgba(26,23,51,.28);}
-  .topbar-band .btn-ghost{background:rgba(255,255,255,.55);}
+  .topbar-band .btn-ghost{background:rgba(255,255,255,.88);}
   .topbar-band .btn-ghost:hover{border-color:#0B2545;background:#fff;}
   .topbar-band .btn-primary{background:#7CC8F8;color:#0B2545;}
   .topbar-band .btn-primary:hover{background:#A5DAFB;}
   @media (min-width:1141px){ .topbar-band{position:absolute;top:0;left:0;right:0;background:transparent;} }
+  /* Top bar links (Pricing, Privacy, Contact) in a soft white pill, readable on the pink and on the photo.
+     On phones they fold into a Menu button (only when JavaScript runs; without it they stay visible). */
+  .top-nav{display:flex;align-items:center;gap:10px;position:relative;}
+  .top-links{display:flex;align-items:center;gap:2px;background:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.95);border-radius:999px;padding:3px;margin-right:4px;}
+  .top-links a{color:#1A1733;font-size:14px;font-weight:600;text-decoration:none;padding:6px 13px;border-radius:999px;transition:background-color .2s ease;}
+  .top-links a:hover{background:#fff;}
+  .top-links a:focus-visible,.top-menu:focus-visible{outline:2px solid #0B2545;outline-offset:2px;}
+  .top-menu{display:none;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;border:1px solid rgba(26,23,51,.28);background:rgba(255,255,255,.55);color:#1A1733;cursor:pointer;padding:0;}
+  .top-menu svg{display:block;}
+  @media (max-width:760px){
+    .js .top-menu{display:inline-flex;}
+    .js .top-links{display:none;position:absolute;top:calc(100% + 10px);right:0;z-index:10;flex-direction:column;align-items:stretch;min-width:180px;padding:6px;border-radius:16px;background:#fff;border:1px solid rgba(26,23,51,.12);box-shadow:0 14px 30px -12px rgba(11,37,69,.35);margin:0;}
+    .js .top-links.open{display:flex;}
+    .js .top-links a{padding:10px 14px;border-radius:10px;}
+    .js .top-links a:hover{background:#FDE7F0;}
+    .top-nav{gap:8px;}
+  }
+  @media (max-width:760px){ html:not(.js) .topbar-land{flex-wrap:wrap;gap:10px;} }
+  .top-nav .btn{white-space:nowrap;}
+  @media (max-width:400px){
+    .topbar-land{padding:16px 14px;}
+    .topbar-band .brand-wordmark{height:34px;padding:5px 10px;}
+    .top-nav{gap:6px;}
+    .top-nav .btn-sm{padding:7px 11px;font-size:13px;}
+    .top-menu{width:34px;height:34px;}
+  }
   .hero-wrap{padding:0;margin-top:-1px;}
   .hero{position:relative;overflow:hidden;height:clamp(640px,50vw,900px);display:flex;align-items:center;background:#F5BBD3;color:#1A1733;}
   .hero::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
@@ -266,7 +292,7 @@
     .hero .btn{flex:1 1 100%;justify-content:center;text-align:center;}
   }
   .land-footer{border-top:1px solid var(--line);margin-top:20px;}
-  .land-footer-inner{max-width:1180px;margin:0 auto;padding:28px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;}
+  .land-footer-inner{max-width:1180px;margin:0 auto;padding:24px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--muted);}
   /* ---------- Subtle motion (only with JavaScript on and "reduce motion" off: the .motion class
      is added by the script just below; without it everything simply shows) ---------- */
   @keyframes landUp{ from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:none;} }
@@ -318,6 +344,7 @@
 </style>
 <script>
   // Motion only when the device has not asked to reduce it; added before the page draws, so nothing flickers.
+  document.documentElement.classList.add('js');
   try{ if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('motion'); }catch(e){}
 </script>
 </head>
@@ -325,11 +352,17 @@
 
 <div class="topbar-band"><div class="topbar-land">
   <img class="brand-wordmark" src="assets/logo-wordmark.png" alt="Iroli Career Pathway"/>
-  <div style="display:flex;gap:10px;">
+  <nav class="top-nav" aria-label="Main">
+    <div class="top-links" id="top-links">
+      <a href="pricing.html">Pricing</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="mailto:info@iroli.co.za">Contact</a>
+    </div>
+    <button type="button" class="top-menu" aria-expanded="false" aria-controls="top-links" aria-label="Menu"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     <a href="app.html?auth=signin" class="btn btn-ghost btn-sm">Log In</a>
     <a href="app.html?auth=signup" class="btn btn-primary btn-sm">Sign Up</a>
-  </div>
-</div>
+  </nav>
+</div></div>
 </div>
 
 <header class="hero-wrap">
@@ -547,16 +580,20 @@
 <div class="land-footer">
   <div class="land-footer-inner">
     <img src="assets/logo-mark.png" alt="Iroli" width="28" height="28"/>
-    <div style="display:flex;gap:18px;flex-wrap:wrap;font-size:13.5px;">
-      <a href="pricing.html">Pricing</a>
-      <a href="privacy.html">Privacy Notice</a>
-      <a href="mailto:info@iroli.co.za">Contact</a>
-      <a href="app.html?auth=signin">Log In</a>
-    </div>
+    <span>© 2026 Iroli Career Pathway</span>
   </div>
 </div>
 
 <script>
+  // Phone menu for the top-bar links: opens and closes, and closes on Escape or a tap elsewhere.
+  (function(){
+    var btn = document.querySelector('.top-menu'), links = document.getElementById('top-links');
+    if(!btn || !links) return;
+    function set(open){ links.classList.toggle('open', open); btn.setAttribute('aria-expanded', open ? 'true' : 'false'); }
+    btn.addEventListener('click', function(e){ e.stopPropagation(); set(!links.classList.contains('open')); if(links.classList.contains('open')) links.querySelector('a').focus(); });
+    document.addEventListener('click', function(e){ if(!links.contains(e.target)) set(false); });
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && links.classList.contains('open')){ set(false); btn.focus(); } });
+  })();
   // View report: the four page images load only when the report is opened.
   (function(){
     var btn = document.querySelector('.rv-toggle'), box = document.getElementById('rv-pages');
