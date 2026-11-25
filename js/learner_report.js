@@ -256,7 +256,7 @@ function lrProfile(l, rep){
   const areas = lrInterestAreas(l, rep);
   return {
     available: true,
-    code: p.code, names: p.top.map(function(t){ return t.name; }),
+    code: p.code, names: p.top.map(function(t){ return t.name; }), typeName: p.typeName, typeHook: p.typeHook,
     traits: lrKeyTraits(l),
     interests: areas.list, interestAll: areas.all, interestBasis: areas.basis,
     learn: lrLearnBest(l),
@@ -940,7 +940,7 @@ function lrSummary(l, c){
     rows.push({ area: 'Overall recommendation', kind:'fit', fit: overall, note: note });
     return { complete: true, rows: rows };
   }
-  if(c.p) rows.push(text('Personality type', c.p.code + ' — ' + c.p.top.map(function(t){ return t.name; }).join(' · ')));
+  if(c.p) rows.push(text('Personality type', c.p.typeName + ' (' + c.p.code + ') — ' + c.p.top.map(function(t){ return t.name; }).join(' · ')));
   if(c.matches.length) rows.push(text('Best-suited careers', c.matches.slice(0, 3).map(function(m){ return m.career.name; }).join(', ')));
   if(c.academic.has) rows.push(level('Academic readiness', lrLevel(c.academic.average, 'academic'), 'Average of your entered results.'));
   if(c.grade9) rows.push({ area:'Best-fit subjects', kind:'todo', result: !c.p ? 'Take the personality assessment first' : 'Take the Subject Choice Assessment to see them' });
@@ -1128,7 +1128,7 @@ function rpProfileHTML(R){
     <div class="rp-pcol rp-pint">
       <h3 class="rp-h3">Your interests</h3>
       <ul class="rp-ibars">${bars}</ul>
-      <p class="rp-type">Your personality type: <b>${esc(pr.code)}</b> — ${esc(pr.names.join(' · '))}</p>
+      <p class="rp-type">Your personality type: <b>${esc(pr.typeName)}</b> (${esc(pr.code)}) — ${esc(pr.names.join(' · '))}${pr.typeHook ? `<br><i>${esc(pr.typeHook)}</i>` : ''}</p>
     </div>
   </div>`;
 }

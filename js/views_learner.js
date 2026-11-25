@@ -130,6 +130,21 @@ function homeNextSteps(l){
   if(l.assessmentCompletedAt) steps.push({ text:'Read your report and talk it through with a teacher or parent.', route:'report', label:'My Report' });
   return steps.slice(0, 3);
 }
+// The getting-started stages as a row: ticked when done, the next one highlighted,
+// the rest still to come. Each stage opens its screen. On a phone the row becomes a
+// short list, so the names stay readable.
+function stageTrackerHTML(stages){
+  const next = stages.findIndex(s=>!s.done);
+  return `<ol class="stages" aria-label="Your progress">${stages.map((s, i)=>{
+    const state = s.done ? 'done' : (i === next ? 'now' : 'todo');
+    const word = s.done ? 'done' : (i === next ? 'next' : 'still to do');
+    return `<li class="stage ${state}"><button type="button" onclick="navigate('${s.route}')" aria-label="${esc(s.stage)}: ${word}">
+      <span class="stage-dot" aria-hidden="true">${s.done ? '\u2713' : (i + 1)}</span>
+      <span class="stage-name">${esc(s.stage)}</span>
+      <span class="stage-state">${s.done ? 'Done' : (i === next ? 'Up next' : 'To do')}</span>
+    </button></li>`;
+  }).join('')}</ol>`;
+}
 function viewHome(){
   const l = ensureLearnerObj();
   const matches = bestSuitedCareers(l, 3);
@@ -145,10 +160,11 @@ function viewHome(){
   </div>`:''}
   <div class="card pw-next" style="margin-bottom:20px;">
     <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;">
-      <h3 style="margin:0;">What to do next</h3>
-      <span class="page-sub" style="margin:0;">${doneCount} of ${done.length} getting-started steps done</span>
+      <h3 style="margin:0;">Your progress</h3>
+      <span class="page-sub" style="margin:0;">${doneCount === done.length ? 'All ' + done.length + ' stages done' : doneCount + ' of ' + done.length + ' stages done · ' + (done.length - doneCount) + ' to go'}</span>
     </div>
-    <div class="aps-bar" style="margin:10px 0 4px;"><div style="width:${pct}%"></div></div>
+    ${stageTrackerHTML(done)}
+    <h4 class="next-title">What to do next</h4>
     ${steps.length ? `<ol class="pw-steps">${steps.map(s=>`<li><span>${s.html || esc(s.text)}</span><button class="btn btn-ghost btn-sm" onclick="${s.action || `navigate('${s.route}')`}">${esc(s.label)}</button></li>`).join('')}</ol>`
       : `<p class="page-sub" style="margin:8px 0 0;">You\u2019re up to date. Keep your marks current each term.</p>`}
   </div>
@@ -907,7 +923,7 @@ function viewAssessments(){
       <span class="badge ${l.assessmentCompletedAt ? 'badge-strong' : 'badge-good'}">${l.assessmentCompletedAt ? 'Done' : (inProgress ? 'In progress' : 'Not started')}</span>
       <h3 style="margin-top:10px;">Personality Assessment</h3>
       <p class="page-sub">${RIASEC_QUESTIONS.length + STRENGTH_KEYS.length} questions about what you enjoy and what you\u2019re good at. It shapes your career matches and your report.</p>
-      ${info ? `<p style="margin:0 0 12px;">Your personality type: <b>${esc(info.code)}</b> \u2014 ${esc(info.top.map(d=>d.name).join(' and '))}.</p>` : ''}
+      ${info ? `<p style="margin:0 0 4px;">Your personality type: <b>${esc(info.typeName)}</b> (${esc(info.code)}) \u2014 ${esc(info.top.map(d=>d.name).join(' and '))}.</p>${info.typeHook ? `<p class="page-sub" style="margin:0 0 12px;"><i>${esc(info.typeHook)}</i></p>` : ''}` : ''}
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         ${l.assessmentCompletedAt
           ? `<button class="btn btn-primary" onclick="navigate('report')">See my results</button><button class="btn btn-ghost" onclick="App.assessRetake();navigate('assessment')">Retake</button>`

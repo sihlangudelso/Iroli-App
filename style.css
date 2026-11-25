@@ -804,6 +804,7 @@ td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
 .a4-ipct{text-align:right;font-weight:700;}
 .a4-type{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4.5mm;align-items:center;}
 .a4-strengths{margin-top:1.4mm;}
+.a4-type-names{margin-top:1mm;}
 .a4-code{display:grid;place-items:center;width:19mm;height:19mm;border-radius:4mm;background:linear-gradient(135deg,var(--indigo),var(--c3));color:#fff;font:800 18pt/1 var(--font-head);letter-spacing:.02em;}
 .a4-sliders{list-style:none;display:grid;gap:2.6mm;margin-bottom:2.4mm;}
 .a4-sl-l{display:flex;justify-content:space-between;gap:4mm;font-size:8.5pt;line-height:1.3;color:var(--muted);}
@@ -1070,3 +1071,28 @@ td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
 .step-num{color:#0B2545;}
 .card-top-accent{border-top-color:var(--hero-pink);}
 :focus-visible{outline-color:var(--link);}
+
+/* Home: the stage tracker (stageTrackerHTML). Done stages are filled pink-to-blue with a tick,
+   the next stage has a blue ring, the rest are plain; a thin line joins them. */
+.stages{list-style:none;margin:14px 0 6px;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:0;counter-reset:none;}
+.stage{position:relative;text-align:center;min-width:0;}
+.stage + .stage::before{content:"";position:absolute;top:17px;right:50%;width:100%;height:2px;background:var(--line);z-index:0;}
+.stage.done + .stage::before{background:linear-gradient(90deg,var(--hero-pink),var(--hero-blue));}
+.stage button{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;padding:0 4px;box-sizing:border-box;position:relative;z-index:1;}
+.stage button:focus-visible .stage-dot{outline:2px solid var(--link);outline-offset:3px;}
+.stage-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 15px/1 var(--font-head);
+  background:var(--surface);border:2px solid var(--ctl-line);color:var(--muted);box-sizing:border-box;}
+.stage.done .stage-dot{background:linear-gradient(135deg,#F5BBD3,#7CC8F8);border-color:transparent;color:#0B2545;}
+.stage.now .stage-dot{border-color:var(--link);color:var(--link);box-shadow:0 0 0 4px var(--t-blue);}
+.stage-name{font-size:12.5px;font-weight:600;color:var(--ink);line-height:1.25;}
+.stage-state{font-size:11.5px;color:var(--muted);}
+.stage.now .stage-state{color:var(--link);font-weight:600;}
+.next-title{margin:18px 0 0;font-size:14px;}
+@media (max-width:560px){
+  .stages{grid-template-columns:1fr;gap:10px;}
+  .stage{text-align:left;}
+  .stage + .stage::before{display:none;}
+  .stage button{flex-direction:row;gap:12px;padding:0;}
+  .stage-dot{width:30px;height:30px;font-size:13px;flex-shrink:0;}
+  .stage-name{flex:1;}
+}

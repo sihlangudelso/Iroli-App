@@ -229,7 +229,7 @@ function subjectChoiceReportHTML(l){
   <div class="section-title"><h2>1. Your subject choice profile</h2></div>
   <div class="card card-top-accent">
     ${rep.profile.summary.map(function(s){ return `<p>${esc(s)}</p>`; }).join('')}
-    ${pti ? `<div class="sc-label">Your personality type</div><div class="pill-list"><span class="pill rec"><b>${esc(pti.code)}</b> · ${esc(pti.top[0].name)} · ${esc(pti.top[1].name)}</span></div>` : ''}
+    ${pti ? `<div class="sc-label">Your personality type</div><div class="pill-list"><span class="pill rec"><b>${esc(pti.typeName)}</b> · ${esc(pti.code)} · ${esc(pti.top[0].name)} · ${esc(pti.top[1].name)}</span></div>` : ''}
     <p class="page-sub" style="margin-top:12px;font-size:12.5px;"><a href="help.html#subjects" target="_blank" rel="noopener">How subject matches are worked out</a></p>
   </div>
 

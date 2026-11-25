@@ -206,6 +206,36 @@ const RIASEC = [
 // strengthsRaw, so existing entries must never be reordered or removed --
 // see ensureAssessDraft() in views_learner.js for how an older, shorter
 // saved array is padded when this list grows.
+// Personality type names: one for each pair of the two strongest interest types
+// (the Holland code, in either order: "IR" and "RI" are both The Inventor). Written
+// to feel like a character a learner would want to be, not a test label; each has a
+// one-line hook in the second person. Change a name or hook here and the app, the
+// report and the PDF all follow.
+const PERSONALITY_TYPES = {
+  RI: { name:'The Inventor',     hook:'You want to know how things work, then build something better.' },
+  RA: { name:'The Artisan',      hook:'You turn ideas into real things you can hold, and make them beautiful.' },
+  RS: { name:'The Guardian',     hook:'You step in, fix what is broken and look after the people around you.' },
+  RE: { name:'The Trailblazer',  hook:'You would rather be out in front, making things happen.' },
+  RC: { name:'The Navigator',    hook:'Steady, precise and practical, you keep things on course.' },
+  IA: { name:'The Visionary',    hook:'You see possibilities that other people miss.' },
+  IS: { name:'The Healer',       hook:'You use what you know to make life better for others.' },
+  IE: { name:'The Strategist',   hook:'You think a few moves ahead, then act.' },
+  IC: { name:'The Codebreaker',  hook:'Patterns, puzzles and fine detail are where you shine.' },
+  AS: { name:'The Storyteller',  hook:'You move people with ideas, words and images.' },
+  AE: { name:'The Trendsetter',  hook:'You spot what is next and get everyone excited about it.' },
+  AC: { name:'The Curator',      hook:'You bring order and style together.' },
+  SE: { name:'The Changemaker',  hook:'You bring people together to make a difference.' },
+  SC: { name:'The Anchor',       hook:'Caring and reliable, you are the one people count on.' },
+  EC: { name:'The Captain',      hook:'You set the course, organise the crew and deliver.' },
+};
+// The entry for a two-letter code, in either order (null for an unknown code).
+function personalityTypeFor(code){
+  if(!code || code.length !== 2) return null;
+  const order = 'RIASEC';
+  const key = code.split('').sort(function(a, b){ return order.indexOf(a) - order.indexOf(b); }).join('');
+  return PERSONALITY_TYPES[key] || null;
+}
+
 const STRENGTH_KEYS = [
   { id:'maths', label:'Mathematics' },
   { id:'sciences', label:'Sciences' },

@@ -247,7 +247,7 @@ function viewAdminLearnerDetail(id){
       <div class="kv"><b>Maths track</b><span>${esc(l.mathType)||'—'}</span></div>
       <div class="kv"><b>Subjects</b><span>${esc((l.subjects||[]).join(', '))||'—'}</span></div>
       <div class="kv"><b>Top personality traits</b><span>${learnerTopTraits(l,3).length ? esc(learnerTopTraits(l,3).join(', ')) : 'Assessment not yet completed'}</span></div>
-      <div class="kv"><b>Personality (Holland code)</b><span>${esc(hollandCode(l.riasec))}</span></div>
+      <div class="kv"><b>Personality type</b><span>${esc(l.riasec ? ((personalityTypeFor(hollandCode(l.riasec))||{}).name || '') + ' (' + hollandCode(l.riasec) + ')' : '—')}</span></div>
       <div class="kv"><b>Licence</b><span>${l.licenseStatus==='active'?'Active':'Trial'}</span></div>
       <div class="kv"><b>Plan</b><span>${l.plan==='pro'?'Pro'+(l.planSource==='class'?' (from class)':''):'Standard'}</span></div>
       ${IS_SUPER_ADMIN? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;"><button class="btn btn-primary btn-sm" onclick="App.toggleLicense('${l.id}')">${l.licenseStatus==='active'?'Deactivate licence':'Activate licence'}</button>
@@ -469,7 +469,7 @@ function adminRecStatus(rec){
 // One learner's export row, shared by the cohort CSV, the cohort workbook and
 // the dashboard workbook's Learners sheet, so the three can never disagree.
 // Numbers stay numbers (the workbook keeps them as numbers; the CSV writes them out).
-const COHORT_EXPORT_HEADERS = ['Name','Grade','School','Class','Maths Track','Subjects','Top Personality Traits','Personality (Holland code)','Assessment Completed','Top 3 Career Matches',
+const COHORT_EXPORT_HEADERS = ['Name','Grade','School','Class','Maths Track','Subjects','Top Personality Traits','Personality Type','Assessment Completed','Top 3 Career Matches',
   'Subject Choice Assessment','Maths Recommendation','Physical/Technical Sciences Recommendation','IT/CAT Recommendation','Recommended Combination','Recommended Subjects','Other Strong Subject Matches',
   'Intended Maths','Intended Subjects','Intended vs Recommended',
   'Favourites Count','APS Estimate','Licence Status','Plan','Pathway Programme Goals','Subjects Needing Support','Bursary Goal','Last Updated'];
@@ -480,7 +480,7 @@ function cohortExportRow(l){
   const ready = rec && rec.state==='ready';
   return [
     cohortLearnerName(l.id), l.grade||'', l.school||'', cls?cls.name:'', l.mathType||'',
-    (l.subjects||[]).join('; '), learnerTopTraits(l,3).join('; '), hollandCode(l.riasec), l.assessmentCompletedAt?'Yes':'No',
+    (l.subjects||[]).join('; '), learnerTopTraits(l,3).join('; '), l.riasec ? (((personalityTypeFor(hollandCode(l.riasec))||{}).name || '') + ' (' + hollandCode(l.riasec) + ')') : '', l.assessmentCompletedAt?'Yes':'No',
     top3,
     subjectChoiceAvailable(l) ? adminRecStatus(rec) : 'Not applicable',
     ready ? rec.mathLabel : '', ready ? (rec.pairs.science||'') : '', ready ? (rec.pairs.computing||'') : '',

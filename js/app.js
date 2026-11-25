@@ -1264,8 +1264,11 @@ function personalityTypeInfo(l){
   const strengths = STRENGTH_KEYS
     .map(k=>({ id:k.id, label:k.label, val: (l.strengths && l.strengths[k.id]) || 0 }))
     .filter(k=>k.val>=65).sort((a,b)=>b.val-a.val).slice(0,3);
+  const named = personalityTypeFor(code);
   return {
     code, top, dims, strengths,
+    // The type's own name and one-line hook (PERSONALITY_TYPES in data.js).
+    typeName: named ? named.name : code, typeHook: named ? named.hook : '',
     // The blend phrases are written in the second person ("...to your work"); this sentence is about "people", so switch to "their".
     summary: 'People with this type tend to enjoy work that lets them '+top[0].blend.replace(/\byour\b/g,'their')+', and also '+top[1].blend.replace(/\byour\b/g,'their')+'.',
   };
@@ -1466,15 +1469,16 @@ function computeAPSFromMarks(marks){
 // left out instead of being ticked from the start (which began the ring at 50%).
 function progressState(l){
   const steps = [];
+  // `stage` is the short name on Home's stage tracker; `route` is where tapping it goes.
   if(!(l && l.exploringOnly)){
-    steps.push({ key:'profile', label:'Profile complete', done: !!(l && l.grade && l.school) });
+    steps.push({ key:'profile', label:'Profile complete', stage:'Profile', route:'profile', done: !!(l && l.grade && l.school) });
     steps.push(isGrade9Learner(l)
-      ? { key:'marks', label:'Grade 9 results added', done: !!l.grade9Report }
-      : { key:'marks', label:'Marks added', done: !!((l.termMarks && Object.keys(l.termMarks).length) || (l.subjectMarks && Object.keys(l.subjectMarks).length)) });
-    if(isGrade9Learner(l)) steps.push({ key:'subjects', label:'Subject Choice done', done: !!(l.subjectChoice && l.subjectChoice.completedAt) });
+      ? { key:'marks', label:'Grade 9 results added', stage:'Grade 9 results', route:'marks', done: !!l.grade9Report }
+      : { key:'marks', label:'Marks added', stage:'Your marks', route:'marks', done: !!((l.termMarks && Object.keys(l.termMarks).length) || (l.subjectMarks && Object.keys(l.subjectMarks).length)) });
   }
-  steps.push({ key:'assessment', label:'Personality assessment done', done: !!(l && l.assessmentCompletedAt) });
-  steps.push({ key:'explore', label:'Explored matches', done: !!(l && l.viewedMatches) });
+  steps.push({ key:'assessment', label:'Personality assessment done', stage:'Personality', route:'assessment', done: !!(l && l.assessmentCompletedAt) });
+  if(!(l && l.exploringOnly) && isGrade9Learner(l)) steps.push({ key:'subjects', label:'Subject Choice done', stage:'Subject Choice', route:'subject-choice', done: !!(l.subjectChoice && l.subjectChoice.completedAt) });
+  steps.push({ key:'explore', label:'Explored matches', stage:'Career matches', route:'matches', done: !!(l && l.viewedMatches) });
   const pct = Math.round(100*steps.filter(s=>s.done).length/steps.length);
   return { steps, pct };
 }

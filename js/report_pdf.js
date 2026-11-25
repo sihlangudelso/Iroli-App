@@ -86,7 +86,8 @@ function a4ProfileBody(R){
     <section class="a4-card a4-type">
       <div class="a4-code" aria-hidden="true">${esc(pr.code)}</div>
       <div class="a4-type-t">
-        <h3 class="a4-h3">Your personality type: ${esc(pr.names.join(' · '))}</h3>
+        <h3 class="a4-h3">Your personality type: ${esc(pr.typeName)}</h3>
+        <p class="a4-small a4-type-names">${esc(pr.names.join(' · '))}${pr.typeHook ? ' — ' + esc(pr.typeHook) : ''}</p>
         ${pr.strengths.length ? `<p class="a4-small a4-strengths" data-opt="8"><b>Strongest areas:</b> ${esc(pr.strengths.join(', '))}.</p>` : ''}
       </div>
     </section>`;
